@@ -1,3 +1,4 @@
+#include <sstream>
 #include "body.h"
 #include "rng.h"
 
@@ -33,4 +34,99 @@ int body::skill_level(challenge_type type)
  }
 
  return ret;
+}
+
+std::string body::save_data()
+{
+ std::stringstream ret;
+ ret << symbol.save_data() << name << " </> " << body_parts.size() <<
+        " ";
+ for (std::list<body_part>::iterator it = body_parts.begin();
+      it != body_parts.end(); it++)
+  ret << it->save_data << " ";
+
+ return ret.str();
+}
+
+void body::load_data(std::istream &datastream)
+{
+ symbol.load_data(datasream);
+ std::string tmpstr;
+ do {
+  datastream >> tmpstr;
+  if (tmpstr != "</>")
+   name += tmpstr + " ";
+ } while (tmpstr != "</>");
+
+ if (!name.empty())
+  name = name.substr(0, name.size() - 1); // Clear out the extra " "
+
+ int num_parts;
+ datasream >> numparts;
+
+ for (int i = 0; i < num_parts; i++) {
+  body_part tmppart;
+  tmppart.load_data(datastream);
+  body_parts.push_back(tmppart);
+ }
+}
+
+std::string body_part::save_data()
+{
+ std::stringstream ret;
+ ret << name << " </> " << stats.size() << " ";
+ for (std::list<body_stat>::iterator it = stats.begin();
+      it != stats.end(); it++)
+  ret << stats.save_data() << " ";
+
+ return ret.str();
+}
+
+void body_part::load_data(std::istream &datastream)
+{
+ std::string tmpstr;
+ do {
+  datastream >> tmpstr;
+  if (tmpstr != "</>")
+   name += tmpstr + " ";
+ } while (tmpstr != "</>");
+
+ int statsize;
+ datastream >> statsize;
+ for (int i = 0; i < statsize; i++) {
+  body_stat stattmp;
+  stattmp.load(datastream);
+  stats.push_back(stattmp);
+ }
+}
+
+std::string body_stat::save_data()
+{
+ std::stringstream ret;
+ ret << name << " </> " << value << " " << chals.size();
+ for (std::list<challenge_type>::iterator it = chals.begin();
+      it != chals.end(); it++)
+  ret << int(*it) << " ";
+
+ return ret.str();
+}
+
+void body_stat::load_data(std::istream &datastream)
+{
+ std::string tmpstr;
+ do {
+  datastream >> tmpstr;
+  if (tmpstr != "</>")
+   name += tmpstr + " ";
+ } while (tmpstr != "</>");
+
+ datastream >> value;
+
+ int numchals;
+ datastream >> numchals;
+ for (int i = 0; i < numchals; i++) {
+  int tmp;
+  datastream >> tmp;
+  chals.push_back( challenge_type(tmp) );
+ }
 }
