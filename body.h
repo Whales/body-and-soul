@@ -27,6 +27,7 @@ struct body_part
 
 struct body
 {
+ std::string name;
  std::list<body_part> body_parts;
  glyph symbol;
 

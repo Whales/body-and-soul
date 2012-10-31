@@ -43,14 +43,14 @@ std::string body::save_data()
         " ";
  for (std::list<body_part>::iterator it = body_parts.begin();
       it != body_parts.end(); it++)
-  ret << it->save_data << " ";
+  ret << it->save_data() << " ";
 
  return ret.str();
 }
 
 void body::load_data(std::istream &datastream)
 {
- symbol.load_data(datasream);
+ symbol.load_data(datastream);
  std::string tmpstr;
  do {
   datastream >> tmpstr;
@@ -62,7 +62,7 @@ void body::load_data(std::istream &datastream)
   name = name.substr(0, name.size() - 1); // Clear out the extra " "
 
  int num_parts;
- datasream >> numparts;
+ datastream >> num_parts;
 
  for (int i = 0; i < num_parts; i++) {
   body_part tmppart;
@@ -77,7 +77,7 @@ std::string body_part::save_data()
  ret << name << " </> " << stats.size() << " ";
  for (std::list<body_stat>::iterator it = stats.begin();
       it != stats.end(); it++)
-  ret << stats.save_data() << " ";
+  ret << it->save_data() << " ";
 
  return ret.str();
 }
@@ -95,7 +95,7 @@ void body_part::load_data(std::istream &datastream)
  datastream >> statsize;
  for (int i = 0; i < statsize; i++) {
   body_stat stattmp;
-  stattmp.load(datastream);
+  stattmp.load_data(datastream);
   stats.push_back(stattmp);
  }
 }

@@ -20,14 +20,16 @@
 void init_display();
 long input();
 void debugmsg(const char *mes, ...);
+void refresh_all(bool erase = false);
 
 class Window
 {
  public:
   Window();
   Window(int sizex, int sizey, int posx, int posy);
-  void init(int sizex, int sizey, int posx, int posy);
   ~Window();
+  void init(int sizex, int sizey, int posx, int posy);
+  void close();
 
   void outline();
 

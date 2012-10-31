@@ -1,17 +1,27 @@
 #include <vector>
 #include <string>
+#include <list>
 #include "window.h"
+#include "globals.h"
 
 Window::Window()
 {
  w = newwin(0, 0, 0, 0);
  outlined = false;
+ WINDOWLIST.push_back(this);
 }
 
 Window::Window(int sizex, int sizey, int posx, int posy)
 {
  w = newwin(sizey, sizex, posy, posx);
  outlined = false;
+ WINDOWLIST.push_back(this);
+}
+
+Window::~Window()
+{
+ delwin(w);
+ WINDOWLIST.remove(this);
 }
 
 void Window::init(int sizex, int sizey, int posx, int posy)
@@ -20,9 +30,11 @@ void Window::init(int sizex, int sizey, int posx, int posy)
  w = newwin(sizey, sizex, posy, posx);
 }
 
-Window::~Window()
+void Window::close()
 {
  delwin(w);
+ WINDOWLIST.remove(this);
+ refresh_all(true);
 }
 
 void Window::outline()
@@ -34,6 +46,10 @@ void Window::outline()
  
 void Window::putch(int x, int y, long sym, nc_color fg, nc_color bg)
 {
+ if (outlined) {
+  x++;
+  y++;
+ }
  long col = get_color_pair(fg, bg);
  wattron(w, col);
  mvwaddch(w, y, x, sym);
@@ -48,6 +64,10 @@ void Window::putglyph(int x, int y, glyph gl)
 void Window::putstr(int x, int y, nc_color fg, nc_color bg, std::string str,
                     ...)
 {
+ if (outlined) {
+  x++;
+  y++;
+ }
  va_list ap;
  va_start(ap, str);
  char buff[8192];
@@ -163,4 +183,14 @@ void debugmsg(const char *mes, ...)
  mvprintw(0, 0, "DEBUG: %s      \n  Press spacebar...", buff);
  while(getch() != ' ');
  attroff(c_red);
+}
+
+void refresh_all(bool erase) // erase defaults to false
+{
+ if (erase)
+  clear();
+
+ for (std::list<Window*>::iterator it = WINDOWLIST.begin();
+      it != WINDOWLIST.end(); it++)
+  (*it)->refresh();
 }
