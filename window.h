@@ -1,7 +1,7 @@
 #ifndef _WINDOW_H_
 #define _WINDOW_H_
 
-#include <ncurses>
+#include <curses.h>
 #include "glyph.h"
 
 //      LINE_NESW  - X for on, O for off
@@ -17,12 +17,16 @@
 #define LINE_OXXX 4194423
 #define LINE_XXXX 4194414
 
+void init_display();
+long input();
+void debugmsg(const char *mes, ...);
 
 class Window
 {
  public:
   Window();
   Window(int sizex, int sizey, int posx, int posy);
+  void init(int sizex, int sizey, int posx, int posy);
   ~Window();
 
   void outline();
@@ -32,7 +36,11 @@ class Window
 
   void putglyph(int x, int y, glyph gl);
   void putstr(int x, int y, nc_color fg, nc_color bg, std::string str, ...);
+
+  void refresh();
  private:
   WINDOW* w;
   bool outlined;
 };
+
+#endif

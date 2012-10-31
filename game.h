@@ -9,6 +9,11 @@ class game
  public:
   entity player;
   map curMap;
-  
+
+ private:
+  Window w_terrain;
+  Window w_body;
+  Window w_soul;
+};
 
 #endif

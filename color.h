@@ -1,6 +1,7 @@
 #ifndef _COLOR_H_
 #define _COLOR_H
 
+#include <string>
 #include <curses.h>
 
 void init_colors();
@@ -22,9 +23,11 @@ c_ltgreen,
 c_ltblue,
 c_ltcyan,
 c_pink,
-c_yellow
+c_yellow,
+c_null
 };
 
 long get_color_pair(nc_color fg, nc_color bg);
+nc_color color_string(std::string id);
 
 #endif

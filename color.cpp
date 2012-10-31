@@ -81,6 +81,11 @@ void init_colors()
 
 long get_color_pair(nc_color fg, nc_color bg)
 {
+ if (fg == c_null)
+  fg = c_ltgray;
+ if (bg == c_null)
+  bg = c_black;
+
  int pairnum = int(fg) % 8 + 1 + 8 * ( int(bg) % 8 );
  long ret = COLOR_PAIR(pairnum);
  if (fg >= c_dkgray)
@@ -89,4 +94,42 @@ long get_color_pair(nc_color fg, nc_color bg)
   ret |= A_BLINK;
 
  return ret;
+}
+
+nc_color color_string(std::string id)
+{
+ if (id == "black")
+  return c_black;
+ if (id == "ltgray")
+  return c_ltgray;
+ if (id == "red")
+  return c_red;
+ if (id == "green")
+  return c_green;
+ if (id == "blue")
+  return c_blue;
+ if (id == "cyan")
+  return c_cyan;
+ if (id == "magenta")
+  return c_magenta;
+ if (id == "brown")
+  return c_brown;
+ if (id == "dkgray")
+  return c_dkgray;
+ if (id == "white")
+  return c_white;
+ if (id == "ltred")
+  return c_ltred;
+ if (id == "ltgreen")
+  return c_ltgreen;
+ if (id == "ltblue")
+  return c_ltblue;
+ if (id == "ltcyan")
+  return c_ltcyan;
+ if (id == "pink")
+  return c_pink;
+ if (id == "yellow")
+  return c_yellow;
+
+ return c_null;
 }
