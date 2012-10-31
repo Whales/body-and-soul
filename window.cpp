@@ -8,6 +8,8 @@ Window::Window()
 {
  w = newwin(0, 0, 0, 0);
  outlined = false;
+ xdim = 0;
+ ydim = 0;
  WINDOWLIST.push_back(this);
 }
 
@@ -15,6 +17,8 @@ Window::Window(int sizex, int sizey, int posx, int posy)
 {
  w = newwin(sizey, sizex, posy, posx);
  outlined = false;
+ xdim = sizex;
+ ydim = sizey;
  WINDOWLIST.push_back(this);
 }
 
@@ -28,6 +32,8 @@ void Window::init(int sizex, int sizey, int posx, int posy)
 {
  delwin(w);
  w = newwin(sizey, sizex, posy, posx);
+ xdim = sizex;
+ ydim = sizey;
 }
 
 void Window::close()
@@ -40,16 +46,21 @@ void Window::close()
 void Window::outline()
 {
  outlined = true;
+ long col = get_color_pair(c_white, c_black);
+ wattron(w, col);
  wborder(w, LINE_XOXO, LINE_XOXO, LINE_OXOX, LINE_OXOX,
             LINE_OXXO, LINE_OOXX, LINE_XXOO, LINE_XOOX );
+ wattroff(w, col);
 }
  
 void Window::putch(int x, int y, long sym, nc_color fg, nc_color bg)
 {
+/*
  if (outlined) {
   x++;
   y++;
  }
+*/
  long col = get_color_pair(fg, bg);
  wattron(w, col);
  mvwaddch(w, y, x, sym);
@@ -64,10 +75,12 @@ void Window::putglyph(int x, int y, glyph gl)
 void Window::putstr(int x, int y, nc_color fg, nc_color bg, std::string str,
                     ...)
 {
+/*
  if (outlined) {
   x++;
   y++;
  }
+*/
  va_list ap;
  va_start(ap, str);
  char buff[8192];
@@ -147,6 +160,28 @@ void Window::putstr(int x, int y, nc_color fg, nc_color bg, std::string str,
   }
  } // We need to do color segments!
 
+}
+
+void Window::line_v(int x, nc_color fg, nc_color bg)
+{
+ for (int y = (outlined ? 1 : 0); y < (outlined ? ydim - 1 : ydim); y++)
+  putch(x, y, LINE_XOXO, fg, bg);
+
+ if (outlined) { // Alter the outline so it attaches to our line
+  putch(x, 0, LINE_OXXX, fg, bg);
+  putch(x, ydim - 1, LINE_XXOX, fg, bg);
+ }
+}
+
+void Window::line_h(int y, nc_color fg, nc_color bg)
+{
+ for (int x = (outlined ? 1 : 0); x < (outlined ? xdim - 1 : xdim); x++)
+  putch(x, y, LINE_OXOX, fg, bg);
+
+ if (outlined) { // Alter the outline so it attaches to our line
+  putch(0, y, LINE_XXXO, fg, bg);
+  putch(xdim - 1, y, LINE_XOXX, fg, bg);
+ }
 }
 
 void Window::refresh()

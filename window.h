@@ -33,16 +33,20 @@ class Window
 
   void outline();
 
+// The three essential output functions
   void putch(int x, int y, long sym,
              nc_color fg = c_ltgray, nc_color bg = c_black);
-
   void putglyph(int x, int y, glyph gl);
   void putstr(int x, int y, nc_color fg, nc_color bg, std::string str, ...);
+// Special helper drawing functions
+  void line_v(int x, nc_color fg = c_white, nc_color bg = c_black);
+  void line_h(int y, nc_color fg = c_white, nc_color bg = c_black);
 
   void refresh();
  private:
   WINDOW* w;
   bool outlined;
+  int xdim, ydim;
 };
 
 #endif
