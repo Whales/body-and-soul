@@ -13,7 +13,7 @@ Window::Window()
  WINDOWLIST.push_back(this);
 }
 
-Window::Window(int sizex, int sizey, int posx, int posy)
+Window::Window(int posx, int posy, int sizex, int sizey)
 {
  w = newwin(sizey, sizex, posy, posx);
  outlined = false;
@@ -28,7 +28,7 @@ Window::~Window()
  WINDOWLIST.remove(this);
 }
 
-void Window::init(int sizex, int sizey, int posx, int posy)
+void Window::init(int posx, int posy, int sizex, int sizey)
 {
  delwin(w);
  w = newwin(sizey, sizex, posy, posx);
@@ -53,7 +53,7 @@ void Window::outline()
  wattroff(w, col);
 }
  
-void Window::putch(int x, int y, long sym, nc_color fg, nc_color bg)
+void Window::putch(int x, int y, nc_color fg, nc_color bg, long sym)
 {
 /*
  if (outlined) {
@@ -69,7 +69,7 @@ void Window::putch(int x, int y, long sym, nc_color fg, nc_color bg)
 
 void Window::putglyph(int x, int y, glyph gl)
 {
- putch(x, y, gl.symbol, gl.fg, gl.bg);
+ putch(x, y, gl.fg, gl.bg, gl.symbol);
 }
 
 void Window::putstr(int x, int y, nc_color fg, nc_color bg, std::string str,
@@ -162,25 +162,33 @@ void Window::putstr(int x, int y, nc_color fg, nc_color bg, std::string str,
 
 }
 
+void clear_area(int x1, int y1, int x2, int y2)
+{
+ for (int x = x1; x <= x2; x++) {
+  for (int y = y1; y <= y2; y++)
+   putch(x, y, c_black, c_black, 'x');
+ }
+}
+
 void Window::line_v(int x, nc_color fg, nc_color bg)
 {
  for (int y = (outlined ? 1 : 0); y < (outlined ? ydim - 1 : ydim); y++)
-  putch(x, y, LINE_XOXO, fg, bg);
+  putch(x, y, fg, bg, LINE_XOXO);
 
  if (outlined) { // Alter the outline so it attaches to our line
-  putch(x, 0, LINE_OXXX, fg, bg);
-  putch(x, ydim - 1, LINE_XXOX, fg, bg);
+  putch(x, 0, fg, bg, LINE_OXXX);
+  putch(x, ydim - 1, fg, bg, LINE_XXOX);
  }
 }
 
 void Window::line_h(int y, nc_color fg, nc_color bg)
 {
  for (int x = (outlined ? 1 : 0); x < (outlined ? xdim - 1 : xdim); x++)
-  putch(x, y, LINE_OXOX, fg, bg);
+  putch(x, y, fg, bg, LINE_OXOX);
 
  if (outlined) { // Alter the outline so it attaches to our line
-  putch(0, y, LINE_XXXO, fg, bg);
-  putch(xdim - 1, y, LINE_XOXX, fg, bg);
+  putch(0, y, fg, bg, LINE_XXXO);
+  putch(xdim - 1, y, fg, bg, LINE_XOXX);
  }
 }
 
