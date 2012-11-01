@@ -32,7 +32,7 @@ void init_environment()
 void init_data()
 {
  if (DATADIR.empty()) {
-  debugmsg("DATADIR not initialized!");
+  debugmsg("DATADIR not initialized - can't load data!");
   return;
  }
 
@@ -79,3 +79,46 @@ void init_data()
  }
 
 }
+
+void save_data()
+{
+ if (DATADIR.empty()) {
+  debugmsg("DATADIR not initialized - can't save data!");
+  return;
+ }
+
+ std::ofstream fout;
+ std::string filename;
+
+ filename = DATADIR + "/stats.txt";
+ fout.open( filename.c_str() );
+ if (fout.is_open()) {
+  fout << BODY_STATS_POOL.size() << " ";
+  for (std::list<body_stat>::iterator it = BODY_STATS_POOL.begin();
+       it != BODY_STATS_POOL.end(); it++)
+   fout << it->save_data() << " ";
+  fout.close();
+ }
+
+ filename = DATADIR + "/parts.txt";
+ fout.open( filename.c_str() );
+ if (fout.is_open()) {
+  fout << BODY_PARTS_POOL.size() << " ";
+  for (std::list<body_part>::iterator it = BODY_PARTS_POOL.begin();
+       it != BODY_PARTS_POOL.end(); it++)
+   fout << it->save_data() << " ";
+  fout.close();
+ }
+
+ filename = DATADIR + "bodies.txt";
+ fout.open( filename.c_str() );
+ if (fout.is_open()) {
+  fout << BODIES_POOL.size() << " ";
+  for (std::list<body>::iterator it = BODIES_POOL.begin();
+       it != BODIES_POOL.end(); it++)
+   fout << it->save_data() < " ";
+  fout.close();
+ }
+
+}
+ 

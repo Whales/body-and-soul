@@ -14,5 +14,6 @@ extern std::list<Window*> WINDOWLIST;
 
 void init_environment();
 void init_data();
+void save_data();
 
 #endif
