@@ -91,6 +91,9 @@ void body_part::load_data(std::istream &datastream)
    name += tmpstr + " ";
  } while (tmpstr != "</>");
 
+ if (!name.empty())
+  name = name.substr(0, name.size() - 1); // Clear out the extra " "
+
  int statsize;
  datastream >> statsize;
  for (int i = 0; i < statsize; i++) {
@@ -119,6 +122,9 @@ void body_stat::load_data(std::istream &datastream)
   if (tmpstr != "</>")
    name += tmpstr + " ";
  } while (tmpstr != "</>");
+
+ if (!name.empty())
+  name = name.substr(0, name.size() - 1); // Clear out the extra " "
 
  datastream >> value;
 
