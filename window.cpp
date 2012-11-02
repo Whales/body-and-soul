@@ -53,6 +53,14 @@ void Window::outline()
             LINE_OXXO, LINE_OOXX, LINE_XXOO, LINE_XOOX );
  wattroff(w, col);
 }
+
+glyph Window::glyphat(int x, int y)
+{
+ glyph ret;
+ if (x < 0 || x >= xdim || y < 0 || y >= ydim)
+  return ret; // Whatever a default glyph is
+
+ 
  
 void Window::putch(int x, int y, nc_color fg, nc_color bg, long sym)
 {

@@ -41,6 +41,8 @@ class Window
 
   void outline();
 
+// Info functions
+  glyph glyphat(int x, int y);
 // The three essential output functions
   void putch(int x, int y, nc_color fg, nc_color, long sym);
   void putglyph(int x, int y, glyph gl);

@@ -10,6 +10,8 @@ struct glyph
  nc_color fg;
  nc_color bg;
 
+ glyph(); { symbol = ' '; fg = c_black; bg = c_black; };
+
  std::string save_data();
  void load_data(std::istream &datastream);
 
