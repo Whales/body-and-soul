@@ -30,6 +30,16 @@ namespace nci {
     int sizey;
     bool selected;
     bool selectable;
+
+    virtual bool set_data(std::string data) { return false; };
+    virtual bool add_data(std::string data) { return false; };
+
+    virtual bool set_data(std::vector<std::string> data) { return false; };
+    virtual bool add_data(std::vector<std::string> data) { return false; };
+
+    virtual bool set_data(int data) { return false; };
+    virtual bool add_data(int data) { return false; };
+
   };
 
   struct ele_drawing : public element
@@ -51,6 +61,12 @@ namespace nci {
  */
     std::vector<std::string> text;
     int offset;
+
+    virtual bool set_data(std::string data);
+    virtual bool add_data(std::string data);
+
+    virtual bool set_data(std::vector<std::string> data);
+    virtual bool add_data(std::vector<std::string> data);
   };
 
   struct ele_list : public element
@@ -61,6 +77,11 @@ namespace nci {
     std::vector<std::string> list;
     int offset;
     int selection;
+
+    virtual bool add_data(std::string data);
+
+    virtual bool set_data(std::vector<std::string> data);
+    virtual bool add_data(std::vector<std::string> data);
   };
 
   struct ele_textentry : public element
@@ -69,6 +90,9 @@ namespace nci {
     virtual void draw(Window *win);
 
     std::string text;
+
+    virtual bool set_data(std::string data);
+    virtual bool add_data(std::string data);
   };
 
   struct ele_number : public element
@@ -77,29 +101,38 @@ namespace nci {
     virtual void draw(Window *win);
 
     int value;
+
+    virtual bool set_data(int data);
+    virtual bool add_data(int data);
   };
       
   class interface
   {
    public:
+    interface();
+    void add_element(element_type type, std::string name, int posx, int posy,
+                     int sizex, int sizey, bool selectable = true);
+    void draw(Window *win);
+
+    element* selected();
+    element* find_by_name(std::string name);
+
+    void select_next();
+    void select_last();
+    bool select(std::string name);
 // set_data replaces the element's data with whatever is passed
 // add_data appends whatever is passed to the element's data
-// For text entry and text boxes
+// These are all defined for each element type; if they're invalid, the type
+//  just returns false.
     bool set_data(std::string name, std::string data);
     bool add_data(std::string name, std::string data);
-// For list selections
+
     bool set_data(std::string name, std::vector<std::string> data);
     bool add_data(std::string name, std::vector<std::string> data);
-// For sliders and number pickers
-// In this case, add_data literally adds it (i.e. + operator).
+
     bool set_data(std::string name, int data);
     bool add_data(std::string name, int data);
 
-    void add_element(element_type type, std::string name, int posx, int posy,
-                     int sizex, int sizey, bool selectable = true);
-    element* selected();
-    void select_next();
-    void select(std::string name);
    private:
     int active_element;
     std::vector<element> elements;
