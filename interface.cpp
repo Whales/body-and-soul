@@ -1,8 +1,9 @@
 #include "interface.h"
+#include "stringfunc.h"
+#include <sstream>
 
 void print_scrollbar(Window *win, int posx, int posy, int length, int offset,
                      int size, bool selected);
-std::vector<std::string> break_into_lines(std::string text, int linesize);
 
 using namespace nci;
 
@@ -17,13 +18,55 @@ using namespace nci;
   (ele).selected = false;\
   (ele).selectable = selectable
 
-// First we have all the drawing functions for the different elements.
+// Base save/load functions.
+std::string element::save_data()
+{
+ std::stringstream ret;
+ ret << name << " " << STD_DELIM << " " << posx << " " << posy << " " <<
+        sizex << " " << sizey << " " << selectable;
+ return ret.str();
+}
+
+void element::load_data(std::istream &datastream)
+{
+ name = load_to_delim(datastream, STD_DELIM);
+
+ if (!name.empty())
+  name = name.substr(0, name.size() - 1); // Clear out the extra " "
+
+ datastream >> posx >> posy >> sizex >> sizey >> selectable;
+}
+
+// *** DRAWING ELEMENT ***
 void ele_drawing::draw(Window *win)
 {
  for (int i = 0; i < drawing.size() && i < sizex * sizey; i++)
   win->putglyph(posx + i % sizex, posy + i / sizey, drawing[i]);
 }
 
+std::string ele_drawing::save_data()
+{
+ std::stringstream ret;
+ ret << element::save_data() << " " << drawing.size() << " ";
+ for (int i = 0; i < drawing.size(); i++)
+  ret << drawing[i].save_data() << " ";
+ return ret.str();
+}
+
+void ele_drawing::load_data(std::istream &datastream)
+{
+ element::load_data(datastream);
+ int tmpsize;
+ datastream >> tmpsize;
+ for (int i = 0; i < tmpsize; i++) {
+  glyph tmpglyph;
+  tmpglyph.load_data(datastream);
+  drawing.push_back(tmpglyph);
+ }
+}
+ 
+
+// *** TEXTBOX ELEMENT ***
 void ele_textbox::draw(Window *win)
 {
  win->clear_area(posx, posy, posx + sizex - 1, posy + sizey - 1);
@@ -34,7 +77,27 @@ void ele_textbox::draw(Window *win)
  if (selectable)
   print_scrollbar(win, posx + sizex - 1, posy, sizey, offset, text.size(),
                   selected);
+}
 
+std::string ele_textbox::save_data()
+{
+ std::stringstream ret;
+ ret << element::save_data() << " " << text.size();
+ for (int i = 0; i < text.size(); i++)
+  ret << text[i] << " " << STD_DELIM << " ";
+
+ return ret.str();
+}
+
+void ele_textbox::load_data(std::istream &datastream)
+{
+ element::load_data(datastream);
+ int tmpsize;
+ datastream >> tmpsize;
+ for (int i = 0; i < tmpsize; i++) {
+  std::string tmp = load_to_delim(datastream, STD_DELIM);
+  text.push_back(tmp);
+ }
 }
 
 bool ele_textbox::set_data(std::string data)
@@ -64,6 +127,7 @@ bool ele_textbox::add_data(std::vector<std::string> data)
  return true;
 }
 
+// *** LIST ELEMENT ***
 void ele_list::draw(Window *win)
 {
  win->clear_area(posx, posy, posx + sizex - 1, posy + sizey - 1);
@@ -76,6 +140,27 @@ void ele_list::draw(Window *win)
  if (selectable)
   print_scrollbar(win, posx + sizex - 1, posy, sizey, offset, list.size(),
                   selected);
+}
+
+std::string ele_list::save_data()
+{
+ std::stringstream ret;
+ ret << element::save_data() << " " << list.size();
+ for (int i = 0; i < list.size(); i++)
+  ret << list[i] << " " << STD_DELIM << " ";
+
+ return ret.str();
+}
+
+void ele_list::load_data(std::istream &datastream)
+{
+ element::load_data(datastream);
+ int tmpsize;
+ datastream >> tmpsize;
+ for (int i = 0; i < tmpsize; i++) {
+  std::string tmp = load_to_delim(datastream, STD_DELIM);
+  list.push_back(tmp);
+ }
 }
 
 bool ele_list::add_data(std::string data)
@@ -97,6 +182,8 @@ bool ele_list::add_data(std::vector<std::string> data)
  return true;
 }
 
+
+// *** TEXT ENTRY ELEMENT ***
 void ele_textentry::draw(Window *win)
 {
  nc_color bg = (selected ? SELECTCOLOR : c_black);
@@ -113,6 +200,19 @@ void ele_textentry::draw(Window *win)
   win->putch(x, posy, c_white, bg, '_');
 }
 
+std::string ele_textentry::save_data()
+{
+ std::stringstream ret;
+ ret << element::save_data() << " " << text << " " << STD_DELIM;
+ return ret.str();
+}
+
+void ele_textentry::load_data(std::istream &datastream)
+{
+ element::load_data(datastream);
+ text = load_to_delim(datastream, STD_DELIM);
+}
+
 bool ele_textentry::set_data(std::string data)
 {
  text = data;
@@ -125,11 +225,26 @@ bool ele_textentry::add_data(std::string data)
  return true;
 }
 
+
+// *** NUMBER ELEMENT ***
 // This function assumes that the number won't ever be too big for the field.
 void ele_number::draw(Window *win)
 {
  nc_color bg = (selected ? SELECTCOLOR : c_black);
  win->putstr(posx, posy, c_white, bg, "%d", value);
+}
+
+std::string ele_number::save_data()
+{
+ std::stringstream ret;
+ ret << element::save_data() << " " << value;
+ return ret.str();
+}
+
+void ele_number::load_data(std::istream &datastream)
+{
+ element::load_data(datastream);
+ datastream >> value;
 }
 
 bool ele_number::set_data(int data)
@@ -162,27 +277,6 @@ void print_scrollbar(Window *win, int posx, int posy, int length, int offset,
    win->putch(posx, y, barcol, c_black, ch);
   }
  }
-}
-
-std::vector<std::string> break_into_lines(std::string text, int linesize)
-{
- std::vector<std::string> ret;
-
- while (text.length() > linesize) {
-
-  size_t linebreak = text.find_last_of(" ", linesize);
-  std::string tmp;
-   if (linebreak == std::string::npos) {
-    linebreak = linesize - 1;
-    tmp = text.substr(0, linebreak) + "-";
-   } else
-    tmp = text.substr(0, linebreak);
-
-  ret.push_back(tmp);
-  text = text.substr(linebreak + 1);
- }
-
- return ret;
 }
 
 interface::interface()
@@ -244,6 +338,63 @@ void interface::draw(Window *win)
  win->refresh();
 }
 
+std::string interface::save_data()
+{
+ std::stringstream ret;
+ ret << name << " " << STD_DELIM << " " << elements.size() << " ";
+ for (int i = 0; i < elements.size(); i++)
+  ret << elements[i].type() << " " << elements[i].save_data() << " ";
+
+ return ret.str();
+}
+
+void interface::load_data(std::istream &datastream)
+{
+ name = load_to_delim(datastream, STD_DELIM);
+ int tmpcount;
+ datastream >> tmpcount;
+ for (int i = 0; i < tmpcount; i++) {
+  int tmptype;
+  datastream >> tmptype;
+  switch ( element_type(tmptype) ) {
+
+   case ELE_NULL:
+    debugmsg("Loaded NULL element!");
+    break;
+
+   case ELE_DRAWING: {
+    ele_drawing tmp;
+    tmp.load_data(datastream);
+    elements.push_back(tmp);
+   } break;
+
+   case ELE_TEXTBOX: {
+    ele_textbox tmp;
+    tmp.load_data(datastream);
+    elements.push_back(tmp);
+   } break;
+
+   case ELE_LIST: {
+    ele_list tmp;
+    tmp.load_data(datastream);
+    elements.push_back(tmp);
+   } break;
+
+   case ELE_TEXTENTRY: {
+    ele_textentry tmp;
+    tmp.load_data(datastream);
+    elements.push_back(tmp);
+   } break;
+
+   case ELE_NUMBER: {
+    ele_number tmp;
+    tmp.load_data(datastream);
+    elements.push_back(tmp);
+   } break;
+  }
+ } // for (int i = 0; i < tmpcount; i++) {
+}
+
 element* interface::selected()
 {
  if (active_element < 0 || active_element >= elements.size())
@@ -263,25 +414,31 @@ element* interface::find_by_name(std::string name)
 
 void interface::select_next()
 {
+ elements[active_element].selected = false;
  if (active_element == elements.size() - 1)
   active_element = 0;
  else
   active_element++;
+ elements[active_element].selected = true;
 }
 
 void interface::select_last()
 {
+ elements[active_element].selected = false;
  if (active_element == 0)
   active_element = elements.size() - 1;
  else
   active_element--;
+ elements[active_element].selected = true;
 }
 
 bool interface::select(std::string name)
 {
  for (int i = 0; i < elements.size(); i++) {
   if (elements[i].name == name) {
+   elements[active_element].selected = false;
    active_element = i;
+   elements[active_element].selected = true;
    return true;
   }
  }
@@ -341,4 +498,3 @@ bool interface::add_data(std::string name, int data)
 
  return ele->add_data(data);
 }
-

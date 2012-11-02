@@ -116,7 +116,7 @@ void save_data()
   fout << BODIES_POOL.size() << " ";
   for (std::list<body>::iterator it = BODIES_POOL.begin();
        it != BODIES_POOL.end(); it++)
-   fout << it->save_data() < " ";
+   fout << it->save_data() << " ";
   fout.close();
  }
 

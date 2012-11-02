@@ -1,6 +1,7 @@
 #include <vector>
 #include <string>
 #include <list>
+#include <cstring>
 #include "window.h"
 #include "globals.h"
 
@@ -236,4 +237,145 @@ void refresh_all(bool erase) // erase defaults to false
  for (std::list<Window*>::iterator it = WINDOWLIST.begin();
       it != WINDOWLIST.end(); it++)
   (*it)->refresh();
+}
+
+/*
+std::string file_selector(std::string start)
+{
+ #if (defined _WIN32 || defined __WIN32__)
+  debugmsg("Sorry, file_selector() not yet coded for Windows.");
+  return;
+ #endif
+ int winx, winy;
+ getmaxyx(stdscr, winx, winy); // Get window size
+
+ Window w_select(0, 0, winx, winy);
+ w_select.outline();
+ 
+*/
+
+std::string string_input_popup(const char *mes, ...)
+{
+ std::string ret;
+ va_list ap;
+ va_start(ap, mes);
+ char buff[1024];
+ vsprintf(buff, mes, ap);
+ va_end(ap);
+ int startx = strlen(buff) + 2;
+ Window w(0, 11, 80, 3);
+ w.outline();
+ w.putstr(1, 1, c_ltred, c_black, buff);
+ for (int i = startx + 1; i < 79; i++)
+  w.putch(i, 1, c_ltgray, c_black, '_');
+ int posx = startx;
+ w.putch(posx, 1, c_ltgray, c_blue, '_');
+ do {
+  w.refresh();
+  long ch = getch();
+  if (ch == 27) {	// Escape
+   return "";
+  } else if (ch == '\n') {
+   return ret;
+  } else if ((ch == KEY_BACKSPACE || ch == 127) && posx > startx) {
+// Move the cursor back and re-draw it
+   ret = ret.substr(0, ret.size() - 1);
+   w.putch(posx, 1, c_ltgray, c_black, '_');
+   posx--;
+   w.putch(posx, 1, c_ltgray, c_blue, '_');
+  } else {
+   ret += ch;
+   w.putch(posx, 1, c_magenta, c_black, ch);
+   posx++;
+   w.putch(posx, 1, c_ltgray, c_blue, '_');
+  }
+ } while (true);
+}
+
+
+char popup_getkey(const char *mes, ...)
+{
+ va_list ap;
+ va_start(ap, mes);
+ char buff[8192];
+ vsprintf(buff, mes, ap);
+ va_end(ap);
+ std::string tmp = buff;
+ int width = 0;
+ int height = 2;
+ size_t pos = tmp.find_first_of('\n');
+ while (pos != std::string::npos) {
+  height++;
+  if (pos > width)
+   width = pos;
+  tmp = tmp.substr(pos + 1);
+  pos = tmp.find_first_of('\n');
+ }
+ if (width == 0 || tmp.length() > width)
+  width = tmp.length();
+ width += 2;
+ if (height > 25)
+  height = 25;
+ Window w(int((80 - width) / 2), int((25 - height) / 2), width, height + 1);
+ w.outline();
+ tmp = buff;
+ pos = tmp.find_first_of('\n');
+ int line_num = 0;
+ while (pos != std::string::npos) {
+  std::string line = tmp.substr(0, pos);
+  line_num++;
+  w.putstr(1, line_num, c_white, c_black, line);
+  tmp = tmp.substr(pos + 1);
+  pos = tmp.find_first_of('\n');
+ }
+ line_num++;
+ w.putstr(1, line_num, c_white, c_black, tmp);
+ 
+ w.refresh();
+ char ch = getch();
+ return ch;
+}
+
+int menu_vec(const char *mes, std::vector<std::string> options)
+{
+ if (options.size() == 0) {
+  debugmsg("0-length menu (\"%s\")", mes);
+  return -1;
+ }
+ std::string title = mes;
+ int height = 3 + options.size(), width = title.length() + 2;
+ for (int i = 0; i < options.size(); i++) {
+  if (options[i].length() + 6 > width)
+   width = options[i].length() + 6;
+ }
+ Window w(10, 6, width, height);
+ w.outline();
+ w.putstr(1, 1, c_white, c_black, title);
+ 
+ for (int i = 0; i < options.size(); i++)
+  w.putstr(1, i + 2, c_white, c_black, "%d: %s", i + 1, options[i].c_str());
+ long ch;
+ w.refresh();
+ do
+  ch = getch();
+ while (ch < '1' || ch >= '1' + options.size());
+ return (ch - '1' + 1);
+}
+
+int menu(const char *mes, ...)
+{
+ va_list ap;
+ va_start(ap, mes);
+ char* tmp;
+ std::vector<std::string> options;
+ bool done = false;
+ while (!done) {
+  tmp = va_arg(ap, char*);
+  if (tmp != NULL) {
+   std::string strtmp = tmp;
+   options.push_back(strtmp);
+  } else
+   done = true;
+ }
+ return (menu_vec(mes, options));
 }

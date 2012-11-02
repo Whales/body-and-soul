@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <istream>
 #include "window.h"
 
 namespace nci {
@@ -20,9 +21,6 @@ namespace nci {
 
   struct element
   {
-    virtual element_type type() { return ELE_NULL; };
-    virtual void draw(Window *win) {};
-
     std::string name;
     int posx;
     int posy;
@@ -30,6 +28,12 @@ namespace nci {
     int sizey;
     bool selected;
     bool selectable;
+
+    virtual element_type type() { return ELE_NULL; };
+    virtual void draw(Window *win) {};
+
+    virtual std::string save_data();
+    virtual void load_data(std::istream &datastream);
 
     virtual bool set_data(std::string data) { return false; };
     virtual bool add_data(std::string data) { return false; };
@@ -44,24 +48,30 @@ namespace nci {
 
   struct ele_drawing : public element
   {
+    std::vector<glyph> drawing;
+
     virtual element_type type() { return ELE_DRAWING; };
     virtual void draw(Window *win);
 
-    std::vector<glyph> drawing;
+    virtual std::string save_data();
+    virtual void load_data(std::istream &datastream);
   };
 
   struct ele_textbox : public element
   {
+    std::vector<std::string> text;
+    int offset;
+
     virtual element_type type() { return ELE_TEXTBOX; };
     virtual void draw(Window *win);
+
+    virtual std::string save_data();
+    virtual void load_data(std::istream &datastream);
 
 /* We store this as a vector because the text needs to be split into seperate
  * lines.  It's more efficient to do this once, when the text is stored, than
  * every time we print.
  */
-    std::vector<std::string> text;
-    int offset;
-
     virtual bool set_data(std::string data);
     virtual bool add_data(std::string data);
 
@@ -71,12 +81,15 @@ namespace nci {
 
   struct ele_list : public element
   {
-    virtual element_type type() { return ELE_LIST; };
-    virtual void draw(Window *win);
-
     std::vector<std::string> list;
     int offset;
     int selection;
+
+    virtual element_type type() { return ELE_LIST; };
+    virtual void draw(Window *win);
+
+    virtual std::string save_data();
+    virtual void load_data(std::istream &datastream);
 
     virtual bool add_data(std::string data);
 
@@ -86,10 +99,13 @@ namespace nci {
 
   struct ele_textentry : public element
   {
+    std::string text;
+
     virtual element_type type() { return ELE_TEXTENTRY; };
     virtual void draw(Window *win);
 
-    std::string text;
+    virtual std::string save_data();
+    virtual void load_data(std::istream &datastream);
 
     virtual bool set_data(std::string data);
     virtual bool add_data(std::string data);
@@ -97,10 +113,13 @@ namespace nci {
 
   struct ele_number : public element
   {
+    int value;
+
     virtual element_type type() { return ELE_NUMBER; };
     virtual void draw(Window *win);
 
-    int value;
+    virtual std::string save_data();
+    virtual void load_data(std::istream &datastream);
 
     virtual bool set_data(int data);
     virtual bool add_data(int data);
@@ -113,6 +132,8 @@ namespace nci {
     void add_element(element_type type, std::string name, int posx, int posy,
                      int sizex, int sizey, bool selectable = true);
     void draw(Window *win);
+    std::string save_data();
+    void load_data(std::istream &datastream);
 
     element* selected();
     element* find_by_name(std::string name);
@@ -132,6 +153,8 @@ namespace nci {
 
     bool set_data(std::string name, int data);
     bool add_data(std::string name, int data);
+
+    std::string name;
 
    private:
     int active_element;

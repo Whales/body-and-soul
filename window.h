@@ -2,6 +2,7 @@
 #define _WINDOW_H_
 
 #include <curses.h>
+#include <vector>
 #include "glyph.h"
 
 //      LINE_NESW  - X for on, O for off
@@ -21,6 +22,13 @@ void init_display();
 long input();
 void debugmsg(const char *mes, ...);
 void refresh_all(bool erase = false);
+
+std::string file_selector(std::string start = ".");
+
+std::string string_input_popup(const char *mes, ...);
+char popup_getkey(const char *mes, ...);
+int  menu_vec(const char *mes, std::vector<std::string> options);
+int  menu(const char *mes, ...);
 
 class Window
 {

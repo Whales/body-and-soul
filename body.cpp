@@ -1,6 +1,7 @@
 #include <sstream>
 #include "body.h"
 #include "rng.h"
+#include "stringfunc.h"
 
 int body::challenge_roll(challenge_type type)
 {
@@ -39,8 +40,8 @@ int body::skill_level(challenge_type type)
 std::string body::save_data()
 {
  std::stringstream ret;
- ret << symbol.save_data() << name << " </> " << body_parts.size() <<
-        " ";
+ ret << symbol.save_data() << name << " " << STD_DELIM << " " <<
+        body_parts.size() << " ";
  for (std::list<body_part>::iterator it = body_parts.begin();
       it != body_parts.end(); it++)
   ret << it->save_data() << " ";
@@ -51,12 +52,7 @@ std::string body::save_data()
 void body::load_data(std::istream &datastream)
 {
  symbol.load_data(datastream);
- std::string tmpstr;
- do {
-  datastream >> tmpstr;
-  if (tmpstr != "</>")
-   name += tmpstr + " ";
- } while (tmpstr != "</>");
+ name = load_to_delim(datastream, STD_DELIM);
 
  if (!name.empty())
   name = name.substr(0, name.size() - 1); // Clear out the extra " "
@@ -74,7 +70,7 @@ void body::load_data(std::istream &datastream)
 std::string body_part::save_data()
 {
  std::stringstream ret;
- ret << name << " </> " << stats.size() << " ";
+ ret << name << " " << STD_DELIM << " " << stats.size() << " ";
  for (std::list<body_stat>::iterator it = stats.begin();
       it != stats.end(); it++)
   ret << it->save_data() << " ";
@@ -84,12 +80,7 @@ std::string body_part::save_data()
 
 void body_part::load_data(std::istream &datastream)
 {
- std::string tmpstr;
- do {
-  datastream >> tmpstr;
-  if (tmpstr != "</>")
-   name += tmpstr + " ";
- } while (tmpstr != "</>");
+ name = load_to_delim(datastream, STD_DELIM);
 
  if (!name.empty())
   name = name.substr(0, name.size() - 1); // Clear out the extra " "
@@ -106,7 +97,7 @@ void body_part::load_data(std::istream &datastream)
 std::string body_stat::save_data()
 {
  std::stringstream ret;
- ret << name << " </> " << value << " " << chals.size();
+ ret << name << " " << STD_DELIM << " " << value << " " << chals.size();
  for (std::list<challenge_type>::iterator it = chals.begin();
       it != chals.end(); it++)
   ret << int(*it) << " ";
@@ -116,12 +107,7 @@ std::string body_stat::save_data()
 
 void body_stat::load_data(std::istream &datastream)
 {
- std::string tmpstr;
- do {
-  datastream >> tmpstr;
-  if (tmpstr != "</>")
-   name += tmpstr + " ";
- } while (tmpstr != "</>");
+ name = load_to_delim(datastream, STD_DELIM);
 
  if (!name.empty())
   name = name.substr(0, name.size() - 1); // Clear out the extra " "
