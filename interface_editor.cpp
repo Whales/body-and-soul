@@ -25,14 +25,22 @@ int main()
  if (fin.is_open()) {
   edited.load_data(fin);
   fin.close();
- } else
+ } else {
   edited.name = "nci_editor";
+  edited.add_element(ELE_DRAWING, "BG", 0, 0, 80, 25, false);
+ }
 
- bool done = false;
+ bool done = false, drawmode = false;
 
  do {
   long ch = input();
+  if (drawmode) {
+   edited.
   switch (ch) {
+
+   case 'I': case 'i':
+    drawmode != drawmode;
+    break;
 
    case 'N': case 'n': {
     element_type type = ELE_NULL;
