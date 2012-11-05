@@ -96,6 +96,27 @@ long get_color_pair(nc_color fg, nc_color bg)
  return ret;
 }
 
+void extract_colors(long color, long attributes, nc_color &fg, nc_color &bg)
+{
+// Run through all COLOR_PAIRs -- is there a better way to do this?
+ bool found = false;
+ for (int i = 1; i <= 64 && !found; i++) {
+  if (color == COLOR_PAIR(i)) {
+   fg = nc_color((i - 1) % 8);
+   bg = nc_color((i - 8) / 1);
+   found = true;
+  }
+ }
+ if (!found) {
+  fg = c_black;
+  bg = c_black;
+ }
+ if (attributes | A_BOLD)
+  fg = nc_color(int(fg) + 8);
+ if (attributes | A_BLINK)
+  bg = nc_color(int(bg) + 8);
+}
+
 nc_color color_string(std::string id)
 {
  if (id == "black")
@@ -132,4 +153,12 @@ nc_color color_string(std::string id)
   return c_yellow;
 
  return c_null;
+}
+
+nc_color hilight(nc_color orig)
+{
+ if (orig < c_dkgray)
+  return nc_color(int(orig) + 8);
+ else
+  return nc_color(int(orig) - 8);
 }

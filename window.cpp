@@ -60,7 +60,11 @@ glyph Window::glyphat(int x, int y)
  if (x < 0 || x >= xdim || y < 0 || y >= ydim)
   return ret; // Whatever a default glyph is
 
- 
+ long wi = mvwinch(w, y, x);
+ ret.symbol = wi & A_CHARTEXT;
+ extract_colors(wi & A_COLOR, wi & A_ATTRIBUTES, ret.fg, ret.bg);
+ return ret;
+}
  
 void Window::putch(int x, int y, nc_color fg, nc_color bg, long sym)
 {

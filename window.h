@@ -18,6 +18,8 @@
 #define LINE_OXXX 4194423
 #define LINE_XXXX 4194414
 
+#define KEY_ESC 27
+
 void init_display();
 long input();
 void debugmsg(const char *mes, ...);

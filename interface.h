@@ -29,6 +29,9 @@ namespace nci {
     bool selected;
     bool selectable;
 
+    element() { name = ""; posx = 0; posy = 0; sizex = 0; sizey = 0;
+                selected = false; selected = false; };
+
     virtual element_type type() { return ELE_NULL; };
     virtual void draw(Window *win) {};
 
@@ -50,6 +53,9 @@ namespace nci {
   {
     std::vector<glyph> drawing;
 
+    ele_drawing() { name = ""; posx = 0; posy = 0; sizex = 0; sizey = 0;
+                    selected = false; selected = false; };
+
     virtual element_type type() { return ELE_DRAWING; };
     virtual void draw(Window *win);
 
@@ -61,6 +67,9 @@ namespace nci {
   {
     std::vector<std::string> text;
     int offset;
+
+    ele_textbox() { name = ""; posx = 0; posy = 0; sizex = 0; sizey = 0;
+                    selected = false; selected = false; offset = 0; };
 
     virtual element_type type() { return ELE_TEXTBOX; };
     virtual void draw(Window *win);
@@ -85,6 +94,10 @@ namespace nci {
     int offset;
     int selection;
 
+    ele_list() { name = ""; posx = 0; posy = 0; sizex = 0; sizey = 0;
+                 selected = false; selected = false; offset = 0;
+                 selection = 0; };
+
     virtual element_type type() { return ELE_LIST; };
     virtual void draw(Window *win);
 
@@ -101,6 +114,9 @@ namespace nci {
   {
     std::string text;
 
+    ele_textentry() { name = ""; posx = 0; posy = 0; sizex = 0; sizey = 0;
+                      selected = false; selected = false; text = ""; };
+
     virtual element_type type() { return ELE_TEXTENTRY; };
     virtual void draw(Window *win);
 
@@ -115,6 +131,8 @@ namespace nci {
   {
     int value;
 
+    ele_number() { name = ""; posx = 0; posy = 0; sizex = 0; sizey = 0;
+                   selected = false; selected = false; value = 0; };
     virtual element_type type() { return ELE_NUMBER; };
     virtual void draw(Window *win);
 
