@@ -103,7 +103,7 @@ void extract_colors(long color, long attributes, nc_color &fg, nc_color &bg)
  for (int i = 1; i <= 64 && !found; i++) {
   if (color == COLOR_PAIR(i)) {
    fg = nc_color((i - 1) % 8);
-   bg = nc_color((i - 8) / 1);
+   bg = nc_color((i - 1) / 8);
    found = true;
   }
  }

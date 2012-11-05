@@ -11,6 +11,9 @@ struct glyph
  nc_color bg;
 
  glyph() { symbol = ' '; fg = c_black; bg = c_black; };
+ glyph(long S, nc_color F, nc_color B) : symbol (S), fg (F), bg (B) { };
+
+ bool operator==(const glyph &rhs);
 
  std::string save_data();
  void load_data(std::istream &datastream);

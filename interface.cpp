@@ -65,6 +65,14 @@ void ele_drawing::load_data(std::istream &datastream)
  }
 }
  
+bool ele_drawing::set_data(glyph gl, int posx, int posy)
+{
+ if (posx < 0 || posx >= sizex || posy < 0 || posy >= sizey)
+  return false;
+ int index = posy * sizex + posx;
+ drawing[index] = gl;
+ return true;
+}
 
 // *** TEXTBOX ELEMENT ***
 void ele_textbox::draw(Window *win)
@@ -295,6 +303,9 @@ void interface::add_element(element_type type, std::string name, int posx,
  case ELE_DRAWING: {
   ele_drawing ele;
   PREP_ELEMENT(ele);
+  glyph tmpgl;
+  for (int i = 0; i < sizex * sizey; i++)
+   ele.drawing.push_back(tmpgl);
   elements.push_back(ele);
   } break;
 

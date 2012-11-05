@@ -20,3 +20,8 @@ void glyph::load_data(std::istream &datastream)
  fg = nc_color(fgtmp);
  bg = nc_color(bgtmp);
 }
+
+bool glyph::operator==(const glyph &rhs)
+{
+ return (rhs.fg == fg && rhs.bg == bg && rhs.symbol == symbol);
+}

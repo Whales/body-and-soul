@@ -47,6 +47,8 @@ namespace nci {
     virtual bool set_data(int data) { return false; };
     virtual bool add_data(int data) { return false; };
 
+    virtual bool set_data(glyph gl, int posx, int posy) { return false; };
+
   };
 
   struct ele_drawing : public element
@@ -61,6 +63,8 @@ namespace nci {
 
     virtual std::string save_data();
     virtual void load_data(std::istream &datastream);
+
+    virtual bool set_data(glyph gl, int posx, int posy);
   };
 
   struct ele_textbox : public element
@@ -171,6 +175,8 @@ namespace nci {
 
     bool set_data(std::string name, int data);
     bool add_data(std::string name, int data);
+
+    bool set_data(std::string name, glyph gl, int posx, int posy);
 
     std::string name;
 
