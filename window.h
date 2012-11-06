@@ -56,6 +56,7 @@ class Window
   void line_v(int x, nc_color fg = c_white, nc_color bg = c_black);
   void line_h(int y, nc_color fg = c_white, nc_color bg = c_black);
 
+  void clear();
   void refresh();
  private:
   WINDOW* w;

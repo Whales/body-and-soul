@@ -1,7 +1,7 @@
 #include <fstream>
 #include "interface.h"
 
-using namespace nci;
+using namespace cuss;
 
 bool pick_point(Window &w, int &x, int &y);
 void init_interface(interface &edited);
@@ -17,26 +17,26 @@ DM_OBJECT,
 DM_MAX
 };
 
+glyph pen;
+
 int main()
 { 
  init_display();
- timeout(500);
+ debugmsg("Test 1234567890");
  int sizex = 80, sizey = 25;
- nci::interface edited;
+ cuss::interface edited;
  Window w(0, 0, sizex, sizey);
 
  init_interface(edited);
- edited.draw(&w);
 
  draw_mode dm = DM_NULL;
 
  bool done = false, blink = true;
  int posx = 0, posy = 0, bufx = -1, bufy = -1;
- glyph pen('x', c_white, c_black);
+ pen = glyph('x', c_white, c_black);
 
  do {
-
-  edited.draw(&w);
+  edited.draw_prototype(&w);
   if (blink) {
    glyph gl_orig = w.glyphat(posx, posy);
    if (gl_orig == pen) {
@@ -45,8 +45,10 @@ int main()
    } else
     w.putglyph(posx, posy, pen);
   }
-
+  w.refresh();
+  timeout(200);
   long ch = getch();
+  timeout(-1);
   if (ch == ERR)
    blink = !blink;
 
@@ -124,7 +126,7 @@ int main()
       case DM_OBJECT: {
        element_type type = ELE_NULL;
        switch (menu("Element type:", "Drawing", "Text", "List", "Text Entry",
-                                     "Number", 0)) {
+                                     "Number", NULL)) {
         case 1: type = ELE_DRAWING;   break;
         case 2: type = ELE_TEXTBOX;   break;
         case 3: type = ELE_LIST;      break;
@@ -216,7 +218,7 @@ void init_interface(interface &edited)
 void draw_line(interface &ncint, int x1, int y1, int x2, int y2)
 {
  int xdir = 0, ydir = 0;
- char sym = '*';
+ long sym = '*';
  if (x1 == x2 && y1 == y2)
   return;
 
@@ -240,7 +242,41 @@ void draw_line(interface &ncint, int x1, int y1, int x2, int y2)
  }
 
  int x = x1, y = y1;
- glyph gl(sym, 
+ glyph gl(sym, pen.fg, pen.bg);
  do {
-  ncint.add_data("BG", 
-void draw_box (interface &ncint, int x1, int y1, int x2, int y2);
+  ncint.set_data("BG", gl, x, y);
+  x += xdir;
+  y += ydir;
+ } while (x != x2 || y != y2);
+}
+
+void draw_box (interface &ncint, int x1, int y1, int x2, int y2)
+{
+ if (x1 == x2 && y1 == y2)
+  return;
+
+ if (x1 > x2) {
+  int buf = x2;
+  x2 = x1;
+  x1 = buf;
+ }
+ if (y1 > y2) {
+  int buf = y2;
+  y2 = y1;
+  y1 = buf;
+ }
+
+ ncint.set_data("BG", glyph(LINE_OXXO, pen.fg, pen.bg), x1, y1);
+ ncint.set_data("BG", glyph(LINE_OOXX, pen.fg, pen.bg), x2, y1);
+ ncint.set_data("BG", glyph(LINE_XXOO, pen.fg, pen.bg), x1, y2);
+ ncint.set_data("BG", glyph(LINE_XOOX, pen.fg, pen.bg), x2, y2);
+
+ if (x1 + 1 < x2) {
+  draw_line(ncint, x1 + 1, y1, x2 - 1, y1);
+  draw_line(ncint, x1 + 1, y2, x2 - 1, y2);
+ }
+ if (y1 + 1 < y2) {
+  draw_line(ncint, x1, y1 + 1, x1, y2 - 1);
+  draw_line(ncint, x2, y1 + 1, x2, y2 - 1);
+ }
+}

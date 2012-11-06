@@ -5,7 +5,7 @@
 void print_scrollbar(Window *win, int posx, int posy, int length, int offset,
                      int size, bool selected);
 
-using namespace nci;
+using namespace cuss;
 
 #define SELECTCOLOR c_blue
 
@@ -344,9 +344,26 @@ void interface::add_element(element_type type, std::string name, int posx,
 
 void interface::draw(Window *win)
 {
+ win->clear();
  for (int i = 0; i < elements.size(); i++)
   elements[i].draw(win);
  win->refresh();
+}
+
+void interface::draw_prototype(Window *win)
+{
+ win->clear();
+ for (int i = 0; i < elements.size(); i++) {
+  int x1 = elements[i].posx, y1 = elements[i].posy;
+  int x2 = x1 + elements[i].sizex - 1, y2 = y1 + elements[i].sizey - 1;
+  for (int x = x1; x <= x2; x++) {
+   for (int y = y1; y <= y2; y++)
+    win->putch(x1, y1, c_ltblue, c_blue, '.');
+  }
+  win->putch(x1, y1, c_white, c_black, LINE_OXXO);
+  win->putch(x2, y2, c_white, c_black, LINE_XOOX);
+  win->putstr(x1 + 1, y1, c_magenta, c_black, elements[i].name);
+ }
 }
 
 std::string interface::save_data()
@@ -508,4 +525,13 @@ bool interface::add_data(std::string name, int data)
   return false;
 
  return ele->add_data(data);
+}
+
+bool interface::set_data(std::string name, glyph gl, int x, int y)
+{
+ element* ele = find_by_name(name);
+ if (!ele)
+  return false;
+
+ return ele->set_data(gl, x, y);
 }

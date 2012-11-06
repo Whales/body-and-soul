@@ -1,12 +1,12 @@
-#ifndef _NCI_H_
-#define _NCI_H_
+#ifndef _cuss_H_
+#define _cuss_H_
 
 #include <string>
 #include <vector>
 #include <istream>
 #include "window.h"
 
-namespace nci {
+namespace cuss {
 
   enum element_type
   {
@@ -153,7 +153,10 @@ namespace nci {
     interface();
     void add_element(element_type type, std::string name, int posx, int posy,
                      int sizex, int sizey, bool selectable = true);
+
     void draw(Window *win);
+    void draw_prototype(Window *win); // For the editor
+
     std::string save_data();
     void load_data(std::istream &datastream);
 
@@ -185,6 +188,6 @@ namespace nci {
     std::vector<element> elements;
   };
 
-}; // namespace nci
+}; // namespace cuss
 
 #endif

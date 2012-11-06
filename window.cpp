@@ -103,7 +103,7 @@ void Window::putstr(int x, int y, nc_color fg, nc_color bg, std::string str,
  std::string prepped = buff;
  long col = get_color_pair(fg, bg);
 
- if (prepped.find_first_of("<c=") == std::string::npos) {
+ if (prepped.find("<c=") == std::string::npos) {
 // No need to do color segments, so just print!
   wattron(w, col);
   mvwprintw(w, y, x, buff);
@@ -115,16 +115,17 @@ void Window::putstr(int x, int y, nc_color fg, nc_color bg, std::string str,
   std::vector<long> color_pairs;
   nc_color cur_fg = fg, cur_bg = bg;
 
-  while ( (tag = prepped.find_first_of("<c=")) != std::string::npos ) {
+  while ( (tag = prepped.find("<c=")) != std::string::npos ) {
 // Everything before the tag is a segment, with the current colors
    segments.push_back( prepped.substr(0, tag) );
    color_pairs.push_back( get_color_pair(cur_fg, cur_bg) );
 // Strip off everything up to and including "<c="
    prepped = prepped.substr(tag + 3);
 // Find the end of the tag
-   size_t tagend = prepped.find_first_of(">");
+   size_t tagend = prepped.find(">");
    if (tagend == std::string::npos) {
-    debugmsg("Unterminated color tag!");
+    debugmsg("Unterminated color tag! %d:%s:",
+             int(tag), str.c_str());
     return;
    }
    std::string tag = prepped.substr(0, tagend);
@@ -205,6 +206,11 @@ void Window::line_h(int y, nc_color fg, nc_color bg)
  }
 }
 
+void Window::clear()
+{
+ werase(w);
+}
+
 void Window::refresh()
 {
  wrefresh(w);
@@ -232,13 +238,13 @@ void debugmsg(const char *mes, ...)
 {
  va_list ap;
  va_start(ap, mes);
- char buff[1024];
+ char buff[2048];
  vsprintf(buff, mes, ap);
  va_end(ap);
- attron(c_red);
+ attron(COLOR_PAIR(3));
  mvprintw(0, 0, "DEBUG: %s      \n  Press spacebar...", buff);
  while(getch() != ' ');
- attroff(c_red);
+ attroff(COLOR_PAIR(3));
 }
 
 void refresh_all(bool erase) // erase defaults to false
@@ -315,13 +321,13 @@ char popup_getkey(const char *mes, ...)
  std::string tmp = buff;
  int width = 0;
  int height = 2;
- size_t pos = tmp.find_first_of('\n');
+ size_t pos = tmp.find('\n');
  while (pos != std::string::npos) {
   height++;
   if (pos > width)
    width = pos;
   tmp = tmp.substr(pos + 1);
-  pos = tmp.find_first_of('\n');
+  pos = tmp.find('\n');
  }
  if (width == 0 || tmp.length() > width)
   width = tmp.length();
@@ -331,17 +337,17 @@ char popup_getkey(const char *mes, ...)
  Window w(int((80 - width) / 2), int((25 - height) / 2), width, height + 1);
  w.outline();
  tmp = buff;
- pos = tmp.find_first_of('\n');
+ pos = tmp.find('\n');
  int line_num = 0;
  while (pos != std::string::npos) {
   std::string line = tmp.substr(0, pos);
   line_num++;
   w.putstr(1, line_num, c_white, c_black, line);
   tmp = tmp.substr(pos + 1);
-  pos = tmp.find_first_of('\n');
+  pos = tmp.find('\n');
  }
  line_num++;
- w.putstr(1, line_num, c_white, c_black, tmp);
+ w.putstr(1, line_num, c_white, c_black, std::string(tmp));
  
  w.refresh();
  char ch = getch();
@@ -402,13 +408,13 @@ void popup(const char *mes, ...)
  std::string tmp = buff;
  int width = 0;
  int height = 2;
- size_t pos = tmp.find_first_of('\n');
+ size_t pos = tmp.find('\n');
  while (pos != std::string::npos) {
   height++;
   if (pos > width)
    width = pos;
   tmp = tmp.substr(pos + 1);
-  pos = tmp.find_first_of('\n');
+  pos = tmp.find('\n');
  }
  if (width == 0 || tmp.length() > width)
   width = tmp.length();
@@ -418,14 +424,14 @@ void popup(const char *mes, ...)
  Window w(int((80 - width) / 2), int((25 - height) / 2), width, height + 1);
  w.outline();
  tmp = buff;
- pos = tmp.find_first_of('\n');
+ pos = tmp.find('\n');
  int line_num = 0;
  while (pos != std::string::npos) {
   std::string line = tmp.substr(0, pos);
   line_num++;
   w.putstr(1, line_num, c_white, c_black, line.c_str());
   tmp = tmp.substr(pos + 1);
-  pos = tmp.find_first_of('\n');
+  pos = tmp.find('\n');
  }
  line_num++;
  w.putstr(1, line_num, c_white, c_black, tmp.c_str());
