@@ -4,7 +4,9 @@
 #include <string>
 #include <vector>
 #include <istream>
+#include <map>
 #include "window.h"
+#include "geometry.h"
 
 namespace cuss {
 
@@ -53,7 +55,7 @@ namespace cuss {
 
   struct ele_drawing : public element
   {
-    std::vector<glyph> drawing;
+    std::map<point, glyph, pointcomp> drawing;
 
     ele_drawing() { name = ""; posx = 0; posy = 0; sizex = 0; sizey = 0;
                     selected = false; selected = false; };
@@ -185,7 +187,7 @@ namespace cuss {
 
    private:
     int active_element;
-    std::vector<element> elements;
+    std::vector<element*> elements;
   };
 
 }; // namespace cuss

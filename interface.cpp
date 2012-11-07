@@ -10,13 +10,13 @@ using namespace cuss;
 #define SELECTCOLOR c_blue
 
 #define PREP_ELEMENT(ele) \
-  (ele).name = name;\
-  (ele).posx = posx;\
-  (ele).posy = posy;\
-  (ele).sizex = sizex;\
-  (ele).sizey = sizey;\
-  (ele).selected = false;\
-  (ele).selectable = selectable
+  (ele)->name = name;\
+  (ele)->posx = posx;\
+  (ele)->posy = posy;\
+  (ele)->sizex = sizex;\
+  (ele)->sizey = sizey;\
+  (ele)->selected = false;\
+  (ele)->selectable = selectable
 
 // Base save/load functions.
 std::string element::save_data()
@@ -31,25 +31,25 @@ void element::load_data(std::istream &datastream)
 {
  name = load_to_delim(datastream, STD_DELIM);
 
- if (!name.empty())
-  name = name.substr(0, name.size() - 1); // Clear out the extra " "
-
  datastream >> posx >> posy >> sizex >> sizey >> selectable;
 }
 
 // *** DRAWING ELEMENT ***
 void ele_drawing::draw(Window *win)
 {
- for (int i = 0; i < drawing.size() && i < sizex * sizey; i++)
-  win->putglyph(posx + i % sizex, posy + i / sizey, drawing[i]);
+ std::map<point, glyph>::iterator it;
+ for (it = drawing.begin(); it != drawing.end(); it++)
+  win->putglyph( it->first.x, it->first.y, it->second);
 }
 
 std::string ele_drawing::save_data()
 {
  std::stringstream ret;
  ret << element::save_data() << " " << drawing.size() << " ";
- for (int i = 0; i < drawing.size(); i++)
-  ret << drawing[i].save_data() << " ";
+ std::map<point, glyph>::iterator it;
+ for (it = drawing.begin(); it != drawing.end(); it++)
+  ret << it->first.x << " " << it->first.y << " " << it->second.save_data() <<
+         " ";
  return ret.str();
 }
 
@@ -59,9 +59,11 @@ void ele_drawing::load_data(std::istream &datastream)
  int tmpsize;
  datastream >> tmpsize;
  for (int i = 0; i < tmpsize; i++) {
+  point tmppoint;
   glyph tmpglyph;
+  datastream >> tmppoint.x >> tmppoint.y;
   tmpglyph.load_data(datastream);
-  drawing.push_back(tmpglyph);
+  drawing[tmppoint] = tmpglyph;
  }
 }
  
@@ -69,8 +71,7 @@ bool ele_drawing::set_data(glyph gl, int posx, int posy)
 {
  if (posx < 0 || posx >= sizex || posy < 0 || posy >= sizey)
   return false;
- int index = posy * sizex + posx;
- drawing[index] = gl;
+ drawing[ point(posx, posy) ] = gl;
  return true;
 }
 
@@ -301,34 +302,31 @@ void interface::add_element(element_type type, std::string name, int posx,
   return; // We don't have any reason to actually add these, right?
 
  case ELE_DRAWING: {
-  ele_drawing ele;
+  ele_drawing *ele = new ele_drawing;
   PREP_ELEMENT(ele);
-  glyph tmpgl;
-  for (int i = 0; i < sizex * sizey; i++)
-   ele.drawing.push_back(tmpgl);
   elements.push_back(ele);
   } break;
 
  case ELE_TEXTBOX: {
-  ele_textbox ele;
+  ele_textbox *ele = new ele_textbox;
   PREP_ELEMENT(ele);
   elements.push_back(ele);
   } break;
 
  case ELE_LIST: {
-  ele_list ele;
+  ele_list *ele = new ele_list;
   PREP_ELEMENT(ele);
   elements.push_back(ele);
   } break;
 
  case ELE_TEXTENTRY: {
-  ele_textentry ele;
+  ele_textentry *ele = new ele_textentry;
   PREP_ELEMENT(ele);
   elements.push_back(ele);
   } break;
 
  case ELE_NUMBER: {
-  ele_number ele;
+  ele_number *ele = new ele_number;
   PREP_ELEMENT(ele);
   elements.push_back(ele);
   } break;
@@ -346,7 +344,7 @@ void interface::draw(Window *win)
 {
  win->clear();
  for (int i = 0; i < elements.size(); i++)
-  elements[i].draw(win);
+  elements[i]->draw(win);
  win->refresh();
 }
 
@@ -354,15 +352,23 @@ void interface::draw_prototype(Window *win)
 {
  win->clear();
  for (int i = 0; i < elements.size(); i++) {
-  int x1 = elements[i].posx, y1 = elements[i].posy;
-  int x2 = x1 + elements[i].sizex - 1, y2 = y1 + elements[i].sizey - 1;
-  for (int x = x1; x <= x2; x++) {
-   for (int y = y1; y <= y2; y++)
-    win->putch(x1, y1, c_ltblue, c_blue, '.');
+  if (elements[i]->name != "BG") {
+   int x1 = elements[i]->posx, y1 = elements[i]->posy;
+   int x2 = x1 + elements[i]->sizex - 1, y2 = y1 + elements[i]->sizey - 1;
+   for (int x = x1; x <= x2; x++) {
+    for (int y = y1; y <= y2; y++) {
+     element_type type = elements[i]->type();
+     win->putch(x, y, c_black,
+                type == ELE_DRAWING ? c_dkgray : nc_color(2 + type), ' ');
+    }
+   }
+   win->putch(x1, y1, c_white, c_black, LINE_OXXO);
+   win->putch(x2, y2, c_white, c_black, LINE_XOOX);
+   win->putstr(x1 + 1, y1, c_magenta, c_black,
+               elements[i]->name.substr(0, elements[i]->sizex));
   }
-  win->putch(x1, y1, c_white, c_black, LINE_OXXO);
-  win->putch(x2, y2, c_white, c_black, LINE_XOOX);
-  win->putstr(x1 + 1, y1, c_magenta, c_black, elements[i].name);
+  if (elements[i]->type() == ELE_DRAWING)
+   elements[i]->draw(win);
  }
 }
 
@@ -371,7 +377,7 @@ std::string interface::save_data()
  std::stringstream ret;
  ret << name << " " << STD_DELIM << " " << elements.size() << " ";
  for (int i = 0; i < elements.size(); i++)
-  ret << elements[i].type() << " " << elements[i].save_data() << " ";
+  ret << elements[i]->type() << " " << elements[i]->save_data() << " ";
 
  return ret.str();
 }
@@ -391,32 +397,32 @@ void interface::load_data(std::istream &datastream)
     break;
 
    case ELE_DRAWING: {
-    ele_drawing tmp;
-    tmp.load_data(datastream);
+    ele_drawing *tmp = new ele_drawing;
+    tmp->load_data(datastream);
     elements.push_back(tmp);
    } break;
 
    case ELE_TEXTBOX: {
-    ele_textbox tmp;
-    tmp.load_data(datastream);
+    ele_textbox *tmp = new ele_textbox;
+    tmp->load_data(datastream);
     elements.push_back(tmp);
    } break;
 
    case ELE_LIST: {
-    ele_list tmp;
-    tmp.load_data(datastream);
+    ele_list *tmp = new ele_list;
+    tmp->load_data(datastream);
     elements.push_back(tmp);
    } break;
 
    case ELE_TEXTENTRY: {
-    ele_textentry tmp;
-    tmp.load_data(datastream);
+    ele_textentry *tmp = new ele_textentry;
+    tmp->load_data(datastream);
     elements.push_back(tmp);
    } break;
 
    case ELE_NUMBER: {
-    ele_number tmp;
-    tmp.load_data(datastream);
+    ele_number *tmp = new ele_number;
+    tmp->load_data(datastream);
     elements.push_back(tmp);
    } break;
   }
@@ -428,45 +434,48 @@ element* interface::selected()
  if (active_element < 0 || active_element >= elements.size())
   return NULL;
 
- return &(elements[active_element]);
+ return elements[active_element];
 }
 
 element* interface::find_by_name(std::string name)
 {
  for (int i = 0; i < elements.size(); i++) {
-  if (elements[i].name == name)
-   return &(elements[i]);
+  if (elements[i]->name == name)
+   return elements[i];
  }
  return NULL;
 }
 
 void interface::select_next()
 {
- elements[active_element].selected = false;
+ if (active_element >= 0 && active_element < elements.size())
+  elements[active_element]->selected = false;
  if (active_element == elements.size() - 1)
   active_element = 0;
  else
   active_element++;
- elements[active_element].selected = true;
+ elements[active_element]->selected = true;
 }
 
 void interface::select_last()
 {
- elements[active_element].selected = false;
+ if (active_element >= 0 && active_element < elements.size())
+  elements[active_element]->selected = false;
  if (active_element == 0)
   active_element = elements.size() - 1;
  else
   active_element--;
- elements[active_element].selected = true;
+ elements[active_element]->selected = true;
 }
 
 bool interface::select(std::string name)
 {
  for (int i = 0; i < elements.size(); i++) {
-  if (elements[i].name == name) {
-   elements[active_element].selected = false;
+  if (elements[i]->name == name) {
+   if (active_element >= 0 && active_element < elements.size())
+    elements[active_element]->selected = false;
    active_element = i;
-   elements[active_element].selected = true;
+   elements[active_element]->selected = true;
    return true;
   }
  }

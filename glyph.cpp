@@ -4,12 +4,8 @@
 std::string glyph::save_data()
 {
  std::stringstream ret;
- if (symbol < 256)
-  ret << char(symbol);
- else
-  ret << symbol;
-
- ret << " " << int(fg) << " " << int(bg);
+ ret << symbol << " " << int(fg) << " " << int(bg);
+ return ret.str();
 };
 
 void glyph::load_data(std::istream &datastream)

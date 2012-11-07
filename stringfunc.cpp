@@ -30,7 +30,7 @@ std::string load_to_delim(std::istream &datastream, std::string delim)
    ret += tmp + " ";
  } while (tmp != delim);
 
- if (!ret.empty())
+ if (!ret.empty() && ret[ret.size() - 1] == ' ')
   ret = ret.substr(0, ret.size() - 1);
 
  return ret;

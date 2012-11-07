@@ -61,6 +61,7 @@ glyph Window::glyphat(int x, int y)
   return ret; // Whatever a default glyph is
 
  long wi = mvwinch(w, y, x);
+ //ret.symbol = wi - ((wi & A_COLOR) + (wi & A_ATTRIBUTES));
  ret.symbol = wi & A_CHARTEXT;
  extract_colors(wi & A_COLOR, wi & A_ATTRIBUTES, ret.fg, ret.bg);
  return ret;

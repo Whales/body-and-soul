@@ -111,9 +111,9 @@ void extract_colors(long color, long attributes, nc_color &fg, nc_color &bg)
   fg = c_black;
   bg = c_black;
  }
- if (attributes | A_BOLD)
+ if (attributes & A_BOLD)
   fg = nc_color(int(fg) + 8);
- if (attributes | A_BLINK)
+ if (attributes & A_BLINK)
   bg = nc_color(int(bg) + 8);
 }
 
