@@ -48,19 +48,24 @@ int main()
  pen = glyph('x', c_white, c_black);
 
  do {
+  if (dm == DM_DRAW)
+   paint(edited, posx, posy);
+
   edited.draw_prototype(&w);
+  glyph gl_orig = w.glyphat(posx, posy);
   if (blink) {
-   glyph gl_orig = w.glyphat(posx, posy);
    if (gl_orig == pen) {
     glyph tmp(pen.symbol, pen.fg, hilight(pen.bg));
     w.putglyph(posx, posy, tmp);
    } else
     w.putglyph(posx, posy, pen);
   }
+
   if (dm == DM_LINE)
    temp_line(w, bufx, bufy, posx, posy);
   if (dm == DM_BOX || dm == DM_OBJECT)
    temp_box(w, bufx, bufy, posx, posy);
+
   w.refresh();
   timeout(200);
   long ch = getch();
@@ -86,6 +91,9 @@ int main()
      if (posy > 0) posy--;
     } else if (ch == KEY_DOWN) {
      if (posy < sizey - 1) posy++;
+    } else if (ch == KEY_BACKSPACE || ch == 127) {
+     edited.set_data("BG", glyph(-1, c_black, c_black), posx, posy);
+     if (posx > 0) posx--;
     } else {
      pen.symbol = ch;
      edited.set_data("BG", pen, posx, posy);
@@ -93,8 +101,6 @@ int main()
      if (posx < sizex - 1) posx++;
     }
    } else { // Not typing.
-    if (dm == DM_DRAW)
-     paint(edited, posx, posy);
  
     int movex = 0, movey = 0;
     if (ch == 'y' || ch == 'h' || ch == 'b' || ch == '7' || ch == '4' ||
@@ -119,6 +125,8 @@ int main()
      if (posy >= sizey) posy = sizey - 1;
     } else if (ch == '?') {
      help();
+    } else if (ch == 'c' || ch == 'C') {
+     pen = gl_orig;
     } else if (ch == '\'') {
      set_pen_symbol();
     } else if (ch == '"') {
@@ -140,6 +148,8 @@ int main()
      dm = DM_DRAW;
     } else if (ch == '.') {
      paint(edited, posx, posy);
+    } else if (ch == 'x') {
+     edited.set_data("BG", glyph(-1, c_black, c_black), posx, posy);
     } else if (ch == '/') {
      fix_lines(edited);
     } else if (ch == 'S' || ch == 's') {
@@ -213,7 +223,7 @@ int main()
  } while (!done);
 
  std::ofstream fout;
- fout.open("editor.nci");
+ fout.open("editor.cuss");
  if (fout.is_open()) {
   fout << edited.save_data();
   fout.close();
@@ -261,12 +271,12 @@ bool pick_point(Window &w, int &x, int &y)
 void init_interface(interface &edited)
 {
  std::ifstream fin;
- fin.open("editor.nci");
+ fin.open("editor.cuss");
  if (fin.is_open()) {
   edited.load_data(fin);
   fin.close();
  } else {
-  edited.name = "nci_editor";
+  edited.name = "cuss_editor";
   edited.add_element(ELE_DRAWING, "BG", 0, 0, 80, 25, false);
  }
 }
@@ -476,29 +486,35 @@ bool is_line(long ch)
  return (ch == LINE_OOXX || ch == LINE_OXOX || ch == LINE_OXXO ||
          ch == LINE_OXXX || ch == LINE_XOOX || ch == LINE_XOXO ||
          ch == LINE_XOXX || ch == LINE_XXOO || ch == LINE_XXOX ||
-         ch == LINE_XXXO || ch == LINE_XXXX   );
+         ch == LINE_XXXO || ch == LINE_XXXX);
 }
 
 void help()
 {
  popup("\
-S Save & quit\n\
-Enter Start drawing object\n\
-\" Start freeform line drawing\n\
-' Set pen symbol\n\
-/ Fix lines\n\
-[] Set foreground / background color\n\
-; Draw line\n\
-: Draw box\n\
-i enter type mode\n\
-> enter draw mode\n\
-. place current symbol\n\
-Esc exit pen mode");
+S     Save & quit\n\
+-     Open element browser\n\
+Enter Create element\n\
+\"     Start freeform line drawing\n\
+i     enter type mode\n\
+>     enter draw mode\n\
+;     Draw line\n\
+:     Draw box\n\
+Esc   Exit type/draw mode or cancel object, box or line\n\
+.     place current symbol\n\
+x     delete drawing under cursor\n\
+/     Fix lines\n\
+c     Copy symbol under pen\n\
+'     Set pen symbol\n\
+[]    Set foreground / background color\n\
+");
 }
 
 void set_pen_symbol()
 {
- pen.symbol = getch();
+ long ch = getch();
+ if (ch != ' ')
+  pen.symbol = ch;
 }
 
 void set_pen_fg()

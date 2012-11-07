@@ -30,9 +30,11 @@ namespace cuss {
     int sizey;
     bool selected;
     bool selectable;
+    nc_color fg;
+    nc_color bg;
 
     element() { name = ""; posx = 0; posy = 0; sizex = 0; sizey = 0;
-                selected = false; selected = false; };
+                selected = false; selected = false; fg = c_white; bg = c_black;}
 
     virtual element_type type() { return ELE_NULL; };
     virtual void draw(Window *win) {};
@@ -51,6 +53,7 @@ namespace cuss {
 
     virtual bool set_data(glyph gl, int posx, int posy) { return false; };
 
+    virtual bool set_data(nc_color FG, nc_color BG = c_null);
   };
 
   struct ele_drawing : public element
@@ -58,7 +61,8 @@ namespace cuss {
     std::map<point, glyph, pointcomp> drawing;
 
     ele_drawing() { name = ""; posx = 0; posy = 0; sizex = 0; sizey = 0;
-                    selected = false; selected = false; };
+                    selected = false; selected = false;
+                    fg = c_white; bg = c_black; }
 
     virtual element_type type() { return ELE_DRAWING; };
     virtual void draw(Window *win);
@@ -67,6 +71,8 @@ namespace cuss {
     virtual void load_data(std::istream &datastream);
 
     virtual bool set_data(glyph gl, int posx, int posy);
+
+    virtual bool set_data(nc_color FG, nc_color BG = c_null);
   };
 
   struct ele_textbox : public element
@@ -75,7 +81,8 @@ namespace cuss {
     int offset;
 
     ele_textbox() { name = ""; posx = 0; posy = 0; sizex = 0; sizey = 0;
-                    selected = false; selected = false; offset = 0; };
+                    selected = false; selected = false; offset = 0;
+                    fg = c_white; bg = c_black; }
 
     virtual element_type type() { return ELE_TEXTBOX; };
     virtual void draw(Window *win);
@@ -102,7 +109,7 @@ namespace cuss {
 
     ele_list() { name = ""; posx = 0; posy = 0; sizex = 0; sizey = 0;
                  selected = false; selected = false; offset = 0;
-                 selection = 0; };
+                 selection = 0; fg = c_white; bg = c_black; }
 
     virtual element_type type() { return ELE_LIST; };
     virtual void draw(Window *win);
@@ -121,7 +128,8 @@ namespace cuss {
     std::string text;
 
     ele_textentry() { name = ""; posx = 0; posy = 0; sizex = 0; sizey = 0;
-                      selected = false; selected = false; text = ""; };
+                      selected = false; selected = false; text = "";
+                      fg = c_white; bg = c_black; }
 
     virtual element_type type() { return ELE_TEXTENTRY; };
     virtual void draw(Window *win);
@@ -138,7 +146,8 @@ namespace cuss {
     int value;
 
     ele_number() { name = ""; posx = 0; posy = 0; sizex = 0; sizey = 0;
-                   selected = false; selected = false; value = 0; };
+                   selected = false; selected = false; value = 0;
+                   fg = c_white; bg = c_black; }
     virtual element_type type() { return ELE_NUMBER; };
     virtual void draw(Window *win);
 
@@ -153,6 +162,7 @@ namespace cuss {
   {
    public:
     interface();
+    interface(std::string N, int X, int Y) : name (N), sizex (X), sizey (Y) {}
     void add_element(element_type type, std::string name, int posx, int posy,
                      int sizex, int sizey, bool selectable = true);
 
@@ -161,6 +171,9 @@ namespace cuss {
 
     std::string save_data();
     void load_data(std::istream &datastream);
+
+    bool save_to_file(std::string filename);
+    bool load_from_file(std::string filename);
 
     element* selected();
     element* find_by_name(std::string name);
@@ -183,7 +196,10 @@ namespace cuss {
 
     bool set_data(std::string name, glyph gl, int posx, int posy);
 
+    bool set_data(std::string name, nc_color fg, nc_color bg = c_null);
+
     std::string name;
+    int sizex, sizey;
 
    private:
     int active_element;

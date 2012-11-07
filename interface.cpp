@@ -1,6 +1,7 @@
 #include "interface.h"
 #include "stringfunc.h"
 #include <sstream>
+#include <fstream>
 
 void print_scrollbar(Window *win, int posx, int posy, int length, int offset,
                      int size, bool selected);
@@ -32,6 +33,15 @@ void element::load_data(std::istream &datastream)
  name = load_to_delim(datastream, STD_DELIM);
 
  datastream >> posx >> posy >> sizex >> sizey >> selectable;
+}
+
+bool element::set_data(nc_color FG, nc_color BG)
+{
+ fg = FG;
+ if (BG != c_null) // bg defaults to c_null
+  bg = BG;
+
+ return true;
 }
 
 // *** DRAWING ELEMENT ***
@@ -71,7 +81,24 @@ bool ele_drawing::set_data(glyph gl, int posx, int posy)
 {
  if (posx < 0 || posx >= sizex || posy < 0 || posy >= sizey)
   return false;
- drawing[ point(posx, posy) ] = gl;
+
+ if (gl.symbol == -1)
+  drawing.erase( point(posx, posy) );
+ else
+  drawing[ point(posx, posy) ] = gl;
+
+ return true;
+}
+
+bool ele_drawing::set_data(nc_color FG, nc_color BG)
+{
+ std::map<point, glyph>::iterator it;
+ for (it = drawing.begin(); it != drawing.end(); it++) {
+  it->second.fg = FG;
+  if (BG != c_null) // bg defaults to c_null
+   it->second.bg = BG;
+ }
+
  return true;
 }
 
@@ -81,7 +108,7 @@ void ele_textbox::draw(Window *win)
  win->clear_area(posx, posy, posx + sizex - 1, posy + sizey - 1);
 
  for (int i = 0; i + offset < text.size() && i < sizey; i++)
-  win->putstr(posx, posy + i, c_white, c_black, text[i + offset]);
+  win->putstr(posx, posy + i, fg, bg, text[i + offset]);
 
  if (selectable)
   print_scrollbar(win, posx + sizex - 1, posy, sizey, offset, text.size(),
@@ -142,8 +169,8 @@ void ele_list::draw(Window *win)
  win->clear_area(posx, posy, posx + sizex - 1, posy + sizey - 1);
 
  for (int i = 0; i + offset < list.size() && i < sizey; i++) {
-  nc_color bg = (selection == i + offset ? SELECTCOLOR : c_black);
-  win->putstr(posx, posy + i, c_white, bg, list[i + offset]);
+  nc_color hilite = (selection == i + offset ? SELECTCOLOR : bg);
+  win->putstr(posx, posy + i, fg, hilite, list[i + offset]);
  }
 
  if (selectable)
@@ -195,7 +222,7 @@ bool ele_list::add_data(std::vector<std::string> data)
 // *** TEXT ENTRY ELEMENT ***
 void ele_textentry::draw(Window *win)
 {
- nc_color bg = (selected ? SELECTCOLOR : c_black);
+ nc_color hilite = (selected ? SELECTCOLOR : bg);
 // Ensure we see the end of the word--and a blank space
  int start = (selected ? text.size() + 1 - sizex : 0);
  if (start < 0)
@@ -204,9 +231,9 @@ void ele_textentry::draw(Window *win)
 
  std::string print = text.substr(start, length);
 
- win->putstr(posx, posy, c_white, bg, print);
+ win->putstr(posx, posy, fg, hilite, print);
  for (int x = posx + print.length(); x < posx + sizex; x++)
-  win->putch(x, posy, c_white, bg, '_');
+  win->putch(x, posy, bg, hilite, '_');
 }
 
 std::string ele_textentry::save_data()
@@ -239,8 +266,8 @@ bool ele_textentry::add_data(std::string data)
 // This function assumes that the number won't ever be too big for the field.
 void ele_number::draw(Window *win)
 {
- nc_color bg = (selected ? SELECTCOLOR : c_black);
- win->putstr(posx, posy, c_white, bg, "%d", value);
+ nc_color hilite = (selected ? SELECTCOLOR : bg);
+ win->putstr(posx, posy, fg, hilite, "%d", value);
 }
 
 std::string ele_number::save_data()
@@ -426,7 +453,31 @@ void interface::load_data(std::istream &datastream)
     elements.push_back(tmp);
    } break;
   }
- } // for (int i = 0; i < tmpcount; i++) {
+ } // for (int i = 0; i < tmpcount; i++)
+}
+
+bool interface::save_to_file(std::string filename)
+{
+ std::ofstream fout;
+ fout.open(filename.c_str());
+ if (!fout.is_open())
+  return false;
+
+ fout << save_data();
+ fout.close();
+ return true;
+}
+
+bool interface::load_from_file(std::string filename)
+{
+ std::ifstream fin;
+ fin.open(filename.c_str());
+ if (!fin.is_open())
+  return false;
+
+ load_data(fin);
+ fin.close();
+ return true;
 }
 
 element* interface::selected()
@@ -543,4 +594,14 @@ bool interface::set_data(std::string name, glyph gl, int x, int y)
   return false;
 
  return ele->set_data(gl, x, y);
+}
+
+// bg defaults to c_null
+bool interface::set_data(std::string name, nc_color fg, nc_color bg)
+{
+ element* ele = find_by_name(name);
+ if (!ele)
+  return false;
+
+ return ele->set_data(fg, bg);
 }
