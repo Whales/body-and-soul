@@ -389,10 +389,18 @@ void interface::draw_prototype(Window *win)
                 type == ELE_DRAWING ? c_dkgray : nc_color(2 + type), ' ');
     }
    }
-   win->putch(x1, y1, c_white, c_black, LINE_OXXO);
-   win->putch(x2, y2, c_white, c_black, LINE_XOOX);
+   if (y1 == y2) {
+    win->putch(x1, y1, c_white, c_black, LINE_XXXO);
+    win->putch(x2, y2, c_white, c_black, LINE_XOXX);
+   } else if (x1 == x2) {
+    win->putch(x1, y1, c_white, c_black, LINE_OXXX);
+    win->putch(x2, y2, c_white, c_black, LINE_XXOX);
+   } else {
+    win->putch(x1, y1, c_white, c_black, LINE_OXXO);
+    win->putch(x2, y2, c_white, c_black, LINE_XOOX);
+   }
    win->putstr(x1 + 1, y1, c_magenta, c_black,
-               elements[i]->name.substr(0, elements[i]->sizex));
+               elements[i]->name.substr(0, elements[i]->sizex - 2));
   }
   if (elements[i]->type() == ELE_DRAWING)
    elements[i]->draw(win);
