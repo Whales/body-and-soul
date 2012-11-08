@@ -193,8 +193,9 @@ namespace cuss {
     element* selected();
     element* find_by_name(std::string name);
 
-    void select_next();
-    void select_last();
+    void select_next(bool force = false);
+    void select_last(bool force = false);
+    void select_none();
     bool select(std::string name);
 // set_data replaces the element's data with whatever is passed
 // add_data appends whatever is passed to the element's data

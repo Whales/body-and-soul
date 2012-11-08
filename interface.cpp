@@ -170,6 +170,8 @@ void ele_list::draw(Window *win)
 
  for (int i = 0; i + offset < list.size() && i < sizey; i++) {
   nc_color hilite = (selection == i + offset ? SELECTCOLOR : bg);
+  if (!selected)
+   hilite = bg;
   win->putstr(posx, posy + i, fg, hilite, list[i + offset]);
  }
 
@@ -447,8 +449,8 @@ void interface::draw_prototype(Window *win)
     win->putch(x1, y1, c_white, c_black, LINE_OXXO);
     win->putch(x2, y2, c_white, c_black, LINE_XOOX);
    }
-   win->putstr(x1 + 1, y1, c_magenta, c_black,
-               elements[i]->name.substr(0, elements[i]->sizex - 2));
+   win->putstr(x1 + 1, y1, (elements[i]->selected ? c_magenta : c_yellow),
+               c_black, elements[i]->name.substr(0, elements[i]->sizex - 2));
   }
   if (elements[i]->type() == ELE_DRAWING)
    elements[i]->draw(win);
@@ -563,26 +565,66 @@ element* interface::find_by_name(std::string name)
  return NULL;
 }
 
-void interface::select_next()
+void interface::select_next(bool force)
 {
+ if (elements.empty()) {
+  active_element = -1;
+  return;
+ }
+
  if (active_element >= 0 && active_element < elements.size())
   elements[active_element]->selected = false;
- if (active_element == elements.size() - 1)
-  active_element = 0;
+
+ int tried = 0;
+ do {
+  tried++;
+  if (active_element == elements.size() - 1)
+   active_element = 0;
+  else
+   active_element++;
+ } while ((!force && tried < elements.size() &&
+           !elements[active_element]->selectable) ||
+          elements[active_element]->name == "BG");
+
+ if (tried == elements.size() && !elements[active_element]->selectable)
+  active_element = -1;
  else
-  active_element++;
- elements[active_element]->selected = true;
+  elements[active_element]->selected = true;
 }
 
-void interface::select_last()
+void interface::select_last(bool force)
+{
+ if (elements.empty()) {
+  active_element = -1;
+  return;
+ }
+
+ if (active_element >= 0 && active_element < elements.size())
+  elements[active_element]->selected = false;
+
+ int tried = 0;
+ do {
+  tried++;
+  if (active_element == 0)
+   active_element = elements.size() - 1;
+  else
+   active_element--;
+ } while ((!force && tried < elements.size() &&
+           !elements[active_element]->selectable) ||
+          elements[active_element]->name == "BG");
+
+ if (tried == elements.size() && !elements[active_element]->selectable)
+  active_element = -1;
+ else
+  elements[active_element]->selected = true;
+}
+
+void interface::select_none()
 {
  if (active_element >= 0 && active_element < elements.size())
   elements[active_element]->selected = false;
- if (active_element == 0)
-  active_element = elements.size() - 1;
- else
-  active_element--;
- elements[active_element]->selected = true;
+
+ active_element = -1;
 }
 
 bool interface::select(std::string name)

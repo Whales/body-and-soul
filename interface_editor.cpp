@@ -5,15 +5,16 @@
 
 using namespace cuss;
 
-void starting_window(interface &ncint);
+void starting_window(interface &edited);
+void elements_window(interface &edited);
 
 void init_interface(interface &edited, std::string name);
-void draw_line(interface &ncint, int x1, int y1, int x2, int y2);
+void draw_line(interface &edited, int x1, int y1, int x2, int y2);
 void temp_line(Window &w, int x1, int y1, int x2, int y2);
-void draw_box (interface &ncint, int x1, int y1, int x2, int y2);
+void draw_box (interface &edited, int x1, int y1, int x2, int y2);
 void temp_box (Window &w, int x1, int y1, int x2, int y2);
-void paint(interface &ncint, int x, int y);
-void fix_lines(interface &ncint, std::string name);
+void paint(interface &edited, int x, int y);
+void fix_lines(interface &edited, std::string name);
 bool is_line(long ch);
 
 void help();
@@ -28,7 +29,9 @@ DM_DRAW,
 DM_TYPE,
 DM_LINE,
 DM_BOX,
-DM_OBJECT,
+DM_ELEMENT,
+DM_MOVE_ELE,
+DM_RESIZE_ELE,
 DM_MAX
 };
 
@@ -58,21 +61,30 @@ int main()
 
   edited.draw_prototype(&w);
   glyph gl_orig = w.glyphat(posx, posy);
+  element* sel = edited.selected();
+
   if (blink) {
-   if (gl_orig == pen) {
-    glyph tmp(pen.symbol, pen.fg, hilight(pen.bg));
-    w.putglyph(posx, posy, tmp);
-   } else
-    w.putglyph(posx, posy, pen);
+   if (dm == DM_MOVE_ELE)
+     w.putglyph(sel->posx, sel->posy, glyph(LINE_OXXO, c_pink, c_black));
+   else if (dm == DM_RESIZE_ELE)
+     w.putglyph(sel->posx + sel->sizex - 1, sel->posy + sel->sizey - 1,
+                glyph(LINE_XOOX, c_pink, c_black));
+   else {
+     if (gl_orig == pen) {
+       glyph tmp(pen.symbol, pen.fg, hilight(pen.bg));
+       w.putglyph(posx, posy, tmp);
+     } else
+       w.putglyph(posx, posy, pen);
+   }
   }
 
   if (dm == DM_LINE)
    temp_line(w, bufx, bufy, posx, posy);
-  if (dm == DM_BOX || dm == DM_OBJECT)
+  if (dm == DM_BOX || dm == DM_ELEMENT)
    temp_box(w, bufx, bufy, posx, posy);
 
   w.refresh();
-  timeout(200);
+  timeout((blink ? 300 : 150));
   long ch = getch();
   timeout(-1);
 
@@ -120,52 +132,111 @@ int main()
     if (ch == 'b' || ch == 'j' || ch == 'n' || ch == '1' || ch == '2' ||
         ch == '3' || ch == KEY_DOWN)
      movey = 1;
- 
+
     if (movex != 0 || movey != 0) {
-     posx += movex;
-     if (posx < 0) posx = 0;
-     if (posx >= sizex) posx = sizex - 1;
-     posy += movey;
-     if (posy < 0) posy = 0;
-     if (posy >= sizey) posy = sizey - 1;
+
+     if (dm == DM_MOVE_ELE && sel) {
+      sel->posx += movex;
+      if (sel->posx < 0)
+       sel->posx = 0;
+      if (sel->posx + sel->sizex - 1 >= sizex)
+       sel->posx = sizex - sel->sizex;
+      sel->posy += movey;
+      if (sel->posy < 0)
+       sel->posy = 0;
+      if (sel->posy + sel->sizey - 1 >= sizey)
+       sel->posy = sizey - sel->sizey;
+
+     } else if (dm == DM_RESIZE_ELE && sel) {
+      sel->sizex += movex;
+      if (sel->sizex < 1)
+       sel->sizex = 1;
+      if (sel->posx + sel->sizex - 1 >= sizex)
+       sel->sizex = sizex - sel->posx;
+      sel->sizey += movey;
+      if (sel->sizey < 1)
+       sel->sizey = 1;
+      if (sel->posy + sel->sizey - 1 >= sizey)
+       sel->sizey = sizey - sel->posy;
+
+     } else { // Normal cursor movement
+      posx += movex;
+      if (posx < 0) posx = 0;
+      if (posx >= sizex) posx = sizex - 1;
+      posy += movey;
+      if (posy < 0) posy = 0;
+      if (posy >= sizey) posy = sizey - 1;
+     }
+
     } else if (ch == '?') {
      help();
+
+    } else if (ch == '<') {
+     edited.select_last(true);
+     sel = edited.selected();
+
+    } else if (ch == '>') {
+     edited.select_next(true);
+     sel = edited.selected();
+
+    } else if (ch == 'm' && sel) {
+     dm = DM_MOVE_ELE;
+     bufx = sel->posx; bufy = sel->posy;
+
+    } else if (ch == 'r' && sel) {
+     dm = DM_RESIZE_ELE;
+     bufx = sel->sizex; bufy = sel->sizey;
+
     } else if (ch == 'c' || ch == 'C') {
      pen = gl_orig;
+
     } else if (ch == '\'') {
      set_pen_symbol();
+
     } else if (ch == '"') {
      pen.symbol = LINE_XXXX;
+
     } else if (ch == '[') {
      set_pen_fg();
+
     } else if (ch == ']') {
      set_pen_bg();
+
     } else if (ch == 'i' || ch == 'I') {
      dm = DM_TYPE;
      pen.symbol = '_';
+     bufx = posx; bufy = posy;
+
     } else if (ch == ';') {
      bufx = posx; bufy = posy;
      dm = DM_LINE;
+
     } else if (ch == ':') {
      bufx = posx; bufy = posy;
      dm = DM_BOX;
-    } else if (ch == '>') {
+
+    } else if (ch == ',') {
      dm = DM_DRAW;
+
     } else if (ch == '.') {
      paint(edited, posx, posy);
+
     } else if (ch == 'x') {
      edited.set_data("BG", glyph(-1, c_black, c_black), posx, posy);
+
     } else if (ch == '/') {
      fix_lines(edited, "BG");
+
     } else if (ch == 'S' || ch == 's') {
      char quitconf = popup_getkey("Quit & Save?");
      if (quitconf == 'y' || quitconf == 'Y' || quitconf == 's' ||
          quitconf == 'S')
       done = true;
+
     } else if (ch == '\n') {
      switch (dm) {
       case DM_NULL:
-       dm = DM_OBJECT;
+       dm = DM_ELEMENT;
        bufx = posx;
        bufy = posy;
        break;
@@ -191,7 +262,7 @@ int main()
        bufy = -1;
        break;
  
-      case DM_OBJECT: {
+      case DM_ELEMENT: {
        element_type type = ELE_NULL;
        dm = DM_NULL;
        switch (menu("Element type:", "Drawing", "Text", "List", "Text Entry",
@@ -204,21 +275,55 @@ int main()
        }
        int sizex = posx - bufx + 1;
        int sizey = posy - bufy + 1;
+       int x1, y1;
+       if (bufx < posx)
+        x1 = bufx;
+       else
+        x1 = posx;
+       if (bufy < posy)
+        y1 = bufy;
+       else
+        y1 = posy;
        std::string name = string_input_popup("Name element:");
        char sel = popup_getkey("Selectable?");
        bool selectable = (sel == 'y' || sel == 'Y');
-       edited.add_element(type, name, bufx, bufy, sizex, sizey, selectable);
+       edited.add_element(type, name, x1, y1, sizex, sizey, selectable);
        edited.draw(&w);
        bufx = -1;
        bufy = -1;
       } break;
+
+      case DM_MOVE_ELE:
+      case DM_RESIZE_ELE:
+       dm = DM_NULL;
+       break;
      } // switch (dm)
     } else if (ch == KEY_ESC) {
+     if (sel) {
+      if (dm == DM_MOVE_ELE && bufx != -1 && bufy != -1) {
+       sel->posx = bufx;
+       sel->posy = bufy;
+      }
+      if (dm == DM_RESIZE_ELE && bufx != -1 && bufy != -1) {
+       sel->sizex = bufx;
+       sel->sizey = bufy;
+      }
+      bufx = -1;
+      bufy = -1;
+      edited.select_none();
+      sel = edited.selected();
+     } else {
+      edited.select_none();
+      sel = edited.selected();
+     }
+
      if (dm != DM_NULL) {
       dm = DM_NULL;
       if (bufx != -1 && bufy != -1) {
        posx = bufx;
        posy = bufy;
+       bufx = -1;
+       bufy = -1;
       }
      }
     }
@@ -242,7 +347,7 @@ int main()
  return 0;
 }
 
-void starting_window(interface &ncint)
+void starting_window(interface &edited)
 {
  Window w_start(0, 0, 80, 24);
  cuss::interface i_start;
@@ -253,6 +358,7 @@ void starting_window(interface &ncint)
 
  i_start.set_data("list_interfaces", files_in("cuss", "cuss"));
  std::string selname = i_start.get_str("list_interfaces");
+
  if (selname != "") {
   std::stringstream filename;
   filename << "cuss/" << selname;
@@ -290,16 +396,38 @@ void starting_window(interface &ncint)
    done = true;
    std::stringstream filename;
    filename << "cuss/" << i_start.get_str("list_interfaces");
-   ncint.load_from_file(filename.str());
+   edited.load_from_file(filename.str());
   }
   if (ch == 'n' || ch == 'N') {
    std::string name = string_input_popup("Name: ");
    if (name != "") {
     done = true;
-    init_interface(ncint, name);
+    init_interface(edited, name);
    }
   }
  }
+}
+
+void elements_window(interface &edited)
+{
+ Window w_elements(0, 0, 80, 24);
+
+ cuss::interface i_ele;
+ if (!i_ele.load_from_file("cuss/i_elements.cuss")) }
+  debugmsg("Couldn't load cuss/i_elements.cuss!");
+  return;
+ }
+
+ i_ele.set_data("e_elelist", edited.element_names());
+ edited.select_by_name("BG");
+ element* selected = edited.selected();
+ do {
+  if (selected) {
+   i_ele.set_data("e_elename", selected->name);
+   i_ele.set_data("e_eletype", element_type_name(selected->type()) );
+   i_ele.set_data("e_editable", (selected->editable ? "Yes" : "No"));
+  }
+ } while (true);
 }
 
 void init_interface(interface &edited, std::string name)
@@ -319,7 +447,7 @@ void init_interface(interface &edited, std::string name)
  }
 }
 
-void draw_line(interface &ncint, int x1, int y1, int x2, int y2)
+void draw_line(interface &edited, int x1, int y1, int x2, int y2)
 {
  int xdir = 0, ydir = 0;
  long sym = '*';
@@ -348,11 +476,11 @@ void draw_line(interface &ncint, int x1, int y1, int x2, int y2)
  int x = x1, y = y1;
  glyph gl(sym, pen.fg, pen.bg);
  do {
-  ncint.set_data("BG", gl, x, y);
+  edited.set_data("BG", gl, x, y);
   x += xdir;
   y += ydir;
  } while (x != x2 || y != y2);
- ncint.set_data("BG", gl, x, y);
+ edited.set_data("BG", gl, x, y);
 }
 
 void temp_line(Window &w, int x1, int y1, int x2, int y2)
@@ -390,7 +518,7 @@ void temp_line(Window &w, int x1, int y1, int x2, int y2)
  w.putglyph(x, y, gl);
 }
 
-void draw_box (interface &ncint, int x1, int y1, int x2, int y2)
+void draw_box (interface &edited, int x1, int y1, int x2, int y2)
 {
  if (x1 == x2 && y1 == y2)
   return;
@@ -406,19 +534,27 @@ void draw_box (interface &ncint, int x1, int y1, int x2, int y2)
   y1 = buf;
  }
 
- if (x1 + 1 < x2) {
-  draw_line(ncint, x1, y1, x2, y1);
-  draw_line(ncint, x1, y2, x2, y2);
- }
- if (y1 + 1 < y2) {
-  draw_line(ncint, x1, y1, x1, y2);
-  draw_line(ncint, x2, y1, x2, y2);
- }
+ if (is_line(pen.symbol)) {
+  if (x1 + 1 < x2) {
+   draw_line(edited, x1, y1, x2, y1);
+   draw_line(edited, x1, y2, x2, y2);
+  }
+  if (y1 + 1 < y2) {
+   draw_line(edited, x1, y1, x1, y2);
+   draw_line(edited, x2, y1, x2, y2);
+  }
 
- ncint.set_data("BG", glyph(LINE_OXXO, pen.fg, pen.bg), x1, y1);
- ncint.set_data("BG", glyph(LINE_OOXX, pen.fg, pen.bg), x2, y1);
- ncint.set_data("BG", glyph(LINE_XXOO, pen.fg, pen.bg), x1, y2);
- ncint.set_data("BG", glyph(LINE_XOOX, pen.fg, pen.bg), x2, y2);
+  edited.set_data("BG", glyph(LINE_OXXO, pen.fg, pen.bg), x1, y1);
+  edited.set_data("BG", glyph(LINE_OOXX, pen.fg, pen.bg), x2, y1);
+  edited.set_data("BG", glyph(LINE_XXOO, pen.fg, pen.bg), x1, y2);
+  edited.set_data("BG", glyph(LINE_XOOX, pen.fg, pen.bg), x2, y2);
+
+ } else { // Not a line-drawing box; so draw & fill
+  for (int x = x1; x <= x2; x++) {
+   for (int y = y1; y <= y2; y++)
+     paint(edited, x, y);
+  }
+ }
 }
 
 void temp_box (Window &w, int x1, int y1, int x2, int y2)
@@ -452,16 +588,16 @@ void temp_box (Window &w, int x1, int y1, int x2, int y2)
  }
 }
 
-void paint(interface &ncint, int x, int y)
+void paint(interface &edited, int x, int y)
 {
- ncint.set_data("BG", pen, x, y);
+ edited.set_data("BG", pen, x, y);
  if (pen.symbol == LINE_XXXX)
-  fix_lines(ncint, "BG");
+  fix_lines(edited, "BG");
 }
 
-void fix_lines(interface &ncint, std::string name)
+void fix_lines(interface &edited, std::string name)
 {
- element* ele = ncint.find_by_name(name);
+ element* ele = edited.find_by_name(name);
  ele_drawing* bg = static_cast<ele_drawing*>(ele);
  if (!bg)
   return;
@@ -533,17 +669,20 @@ void help()
 S     Save & quit\n\
 -     Open element browser\n\
 Enter Create element\n\
-\"     Start freeform line drawing\n\
-i     enter type mode\n\
->     enter draw mode\n\
+<>    Select last / next element\n\
+m     Move element\n\
+r     Resize element\n\
+i     Enter typing mode\n\
+,     Enter drawing mode\n\
 ;     Draw line\n\
 :     Draw box\n\
-Esc   Exit type/draw mode or cancel object, box or line\n\
+Esc   Cancel drawing, unselect element, exist typing/drawing mode\n\
 .     place current symbol\n\
 x     delete drawing under cursor\n\
 /     Fix lines\n\
-c     Copy symbol under pen\n\
 '     Set pen symbol\n\
+\"     Set pen symbol to line drawings\n\
+c     Copy symbol & colors under pen\n\
 []    Set foreground / background color\n\
 ");
 }
@@ -559,14 +698,14 @@ void set_pen_fg()
 {
  nc_color tmp = pick_color();
  if (tmp != c_null)
-  pen.fg = pick_color();
+  pen.fg = tmp;
 }
 
 void set_pen_bg()
 {
  nc_color tmp = pick_color();
  if (tmp != c_null)
-  pen.bg = pick_color();
+  pen.bg = tmp;
 }
 
 nc_color pick_color()
