@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <istream>
 
 #define STD_DELIM "</>"
 

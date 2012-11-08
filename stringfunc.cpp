@@ -28,7 +28,7 @@ std::string load_to_delim(std::istream &datastream, std::string delim)
   datastream >> tmp;
   if (tmp != delim)
    ret += tmp + " ";
- } while (tmp != delim);
+ } while (tmp != delim && !(datastream.eof()));
 
  if (!ret.empty() && ret[ret.size() - 1] == ' ')
   ret = ret.substr(0, ret.size() - 1);

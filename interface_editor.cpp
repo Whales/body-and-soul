@@ -1,17 +1,19 @@
 #include <fstream>
 #include <sstream>
 #include "interface.h"
+#include "files.h"
 
 using namespace cuss;
 
-bool pick_point(Window &w, int &x, int &y);
-void init_interface(interface &edited);
+void starting_window(interface &ncint);
+
+void init_interface(interface &edited, std::string name);
 void draw_line(interface &ncint, int x1, int y1, int x2, int y2);
 void temp_line(Window &w, int x1, int y1, int x2, int y2);
 void draw_box (interface &ncint, int x1, int y1, int x2, int y2);
 void temp_box (Window &w, int x1, int y1, int x2, int y2);
 void paint(interface &ncint, int x, int y);
-void fix_lines(interface &ncint);
+void fix_lines(interface &ncint, std::string name);
 bool is_line(long ch);
 
 void help();
@@ -35,11 +37,14 @@ glyph pen;
 int main()
 { 
  init_display();
- int sizex = 80, sizey = 25;
  cuss::interface edited;
- Window w(0, 0, sizex, sizey);
 
- init_interface(edited);
+ starting_window(edited);
+
+ int sizex = 80, sizey = 24;
+ edited.sizex = sizex;
+ edited.sizey = sizey;
+ Window w(0, 0, sizex, sizey);
 
  draw_mode dm = DM_NULL;
 
@@ -151,7 +156,7 @@ int main()
     } else if (ch == 'x') {
      edited.set_data("BG", glyph(-1, c_black, c_black), posx, posy);
     } else if (ch == '/') {
-     fix_lines(edited);
+     fix_lines(edited, "BG");
     } else if (ch == 'S' || ch == 's') {
      char quitconf = popup_getkey("Quit & Save?");
      if (quitconf == 'y' || quitconf == 'Y' || quitconf == 's' ||
@@ -223,60 +228,93 @@ int main()
  } while (!done);
 
  std::ofstream fout;
- fout.open("editor.cuss");
+ std::stringstream foutname;
+ foutname << "cuss/" << edited.name << ".cuss";
+ std::string fname = foutname.str();
+ fout.open(fname.c_str());
  if (fout.is_open()) {
   fout << edited.save_data();
   fout.close();
- }
+ } else
+  popup("Couldn't open %s for saving", fname.c_str());
 
  endwin();
  return 0;
 }
 
-bool pick_point(Window &w, int &x, int &y)
+void starting_window(interface &ncint)
 {
- x = 0;
- y = 0;
- char ch;
- do {
-  glyph orig = w.glyphat(x, y);
-  w.putch(x, y, c_white, c_black, 'x');
-  do {
-   ch = input();
-  } while (ch != 'j' && ch != 'k' && ch != 'l' && ch != 'h' && ch != 'y' &&
-           ch != 'u' && ch != 'b' && ch != 'n' && ch != KEY_ESC && ch != '\n');
+ Window w_start(0, 0, 80, 24);
+ cuss::interface i_start;
+ cuss::interface selected;
 
-  if (ch == KEY_ESC)
-   return false;
+ if (!i_start.load_from_file("cuss/i_start.cuss"))
+  debugmsg("Couldn't load starting interface!");
 
-  int movex = 0, movey = 0;
-  if (ch == 'y' || ch == 'u' || ch == 'k')
-   movey = -1;
-  if (ch == 'j' || ch == 'b' || ch == 'n')
-   movey = 1;
-  if (ch == 'h' || ch == 'y' || ch == 'b')
-   movex = -1;
-  if (ch == 'l' || ch == 'u' || ch == 'n')
-   movex = 1;
+ i_start.set_data("list_interfaces", files_in("cuss", "cuss"));
+ std::string selname = i_start.get_str("list_interfaces");
+ if (selname != "") {
+  std::stringstream filename;
+  filename << "cuss/" << selname;
+  selected.load_from_file(filename.str());
+  i_start.set_data("list_elements", selected.element_names());
+ }
+ i_start.select("list_interfaces");
 
-  if (movex != 0 || movey != 0) {
-   w.putch(x, y, orig.fg, orig.bg, orig.symbol);
-   x += movex;
-   y += movey;
+ bool done = false;
+ while (!done) {
+  i_start.draw(&w_start);
+  w_start.refresh();
+  long ch = getch();
+  if (ch == 'j' || ch == '2' || ch == KEY_DOWN) {
+   i_start.add_data("list_interfaces",  1);
+   selname = i_start.get_str("list_interfaces");
+   if (selname != "") {
+    std::stringstream filename;
+    filename << "cuss/" << selname;
+    selected.load_from_file(filename.str());
+    i_start.set_data("list_elements", selected.element_names());
+   }
   }
- } while (ch != '\n');
- return true;
+  if (ch == 'k' || ch == '8' || ch == KEY_UP) {
+   i_start.add_data("list_interfaces", -1);
+   selname = i_start.get_str("list_interfaces");
+   if (selname != "") {
+    std::stringstream filename;
+    filename << "cuss/" << selname;
+    selected.load_from_file(filename.str());
+    i_start.set_data("list_elements", selected.element_names());
+   }
+  }
+  if (ch == 'l' || ch == 'L' || ch == '\n') {
+   done = true;
+   std::stringstream filename;
+   filename << "cuss/" << i_start.get_str("list_interfaces");
+   ncint.load_from_file(filename.str());
+  }
+  if (ch == 'n' || ch == 'N') {
+   std::string name = string_input_popup("Name: ");
+   if (name != "") {
+    done = true;
+    init_interface(ncint, name);
+   }
+  }
+ }
 }
 
-void init_interface(interface &edited)
+void init_interface(interface &edited, std::string name)
 {
+ std::stringstream filename;
+ filename << "cuss/" << name << ".cuss";
  std::ifstream fin;
- fin.open("editor.cuss");
+ fin.open(filename.str().c_str());
  if (fin.is_open()) {
   edited.load_data(fin);
   fin.close();
  } else {
-  edited.name = "cuss_editor";
+  edited.name = name;
+  edited.sizex = 80;
+  edited.sizey = 25;
   edited.add_element(ELE_DRAWING, "BG", 0, 0, 80, 25, false);
  }
 }
@@ -418,12 +456,12 @@ void paint(interface &ncint, int x, int y)
 {
  ncint.set_data("BG", pen, x, y);
  if (pen.symbol == LINE_XXXX)
-  fix_lines(ncint);
+  fix_lines(ncint, "BG");
 }
 
-void fix_lines(interface &ncint)
+void fix_lines(interface &ncint, std::string name)
 {
- element* ele = ncint.find_by_name("BG");
+ element* ele = ncint.find_by_name(name);
  ele_drawing* bg = static_cast<ele_drawing*>(ele);
  if (!bg)
   return;

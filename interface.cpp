@@ -14,8 +14,8 @@ using namespace cuss;
   (ele)->name = name;\
   (ele)->posx = posx;\
   (ele)->posy = posy;\
-  (ele)->sizex = sizex;\
-  (ele)->sizey = sizey;\
+  (ele)->sizex = szx;\
+  (ele)->sizey = szy;\
   (ele)->selected = false;\
   (ele)->selectable = selectable
 
@@ -208,6 +208,8 @@ bool ele_list::add_data(std::string data)
 bool ele_list::set_data(std::vector<std::string> data)
 {
  list = data;
+ selection = 0;
+ offset = 0;
  return true;
 }
 
@@ -218,6 +220,44 @@ bool ele_list::add_data(std::vector<std::string> data)
  return true;
 }
 
+bool ele_list::set_data(int data)
+{
+ selection = data;
+ if (selection < sizey)
+  offset = 0;
+ else if (selection >= list.size() - sizey)
+  offset = list.size() - sizey;
+ else
+  offset = selection;
+
+ return true;
+}
+
+bool ele_list::add_data(int data)
+{
+ selection += data;
+ if (selection < 0)
+  selection = 0;
+ if (selection >= list.size())
+  selection = list.size() - 1;
+
+ if (selection < offset)
+  selection--;
+ if (offset + sizey <= selection)
+  offset = selection - sizey + 1;
+
+ return true;
+}
+
+std::string ele_list::get_str()
+{
+ if (selection < 0 || selection >= list.size()) {
+  std::string ret;
+  return ret;
+ }
+
+ return list[selection];
+}
 
 // *** TEXT ENTRY ELEMENT ***
 void ele_textentry::draw(Window *win)
@@ -321,46 +361,54 @@ interface::interface()
 }
 
 void interface::add_element(element_type type, std::string name, int posx,
-                            int posy, int sizex, int sizey, bool selectable)
+                            int posy, int szx, int szy, bool selectable)
 {
- switch (type) {
-
- case ELE_NULL:
-  return; // We don't have any reason to actually add these, right?
-
- case ELE_DRAWING: {
-  ele_drawing *ele = new ele_drawing;
-  PREP_ELEMENT(ele);
-  elements.push_back(ele);
-  } break;
-
- case ELE_TEXTBOX: {
-  ele_textbox *ele = new ele_textbox;
-  PREP_ELEMENT(ele);
-  elements.push_back(ele);
-  } break;
-
- case ELE_LIST: {
-  ele_list *ele = new ele_list;
-  PREP_ELEMENT(ele);
-  elements.push_back(ele);
-  } break;
-
- case ELE_TEXTENTRY: {
-  ele_textentry *ele = new ele_textentry;
-  PREP_ELEMENT(ele);
-  elements.push_back(ele);
-  } break;
-
- case ELE_NUMBER: {
-  ele_number *ele = new ele_number;
-  PREP_ELEMENT(ele);
-  elements.push_back(ele);
-  } break;
-
- default:
-  debugmsg("Unknown element type %d", type);
+ if (posx < 0 || posx >= sizex || posy < 0 || posy >= sizey)
   return;
+
+ if (posx + szx >= sizex)
+  szx = sizex - posx;
+ if (posy + szy >= sizey)
+  szy = sizey - posy;
+
+ switch (type) {
+ 
+  case ELE_NULL:
+   return; // We don't have any reason to actually add these, right?
+ 
+  case ELE_DRAWING: {
+   ele_drawing *ele = new ele_drawing;
+   PREP_ELEMENT(ele);
+   elements.push_back(ele);
+  } break;
+ 
+  case ELE_TEXTBOX: {
+   ele_textbox *ele = new ele_textbox;
+   PREP_ELEMENT(ele);
+   elements.push_back(ele);
+  } break;
+ 
+  case ELE_LIST: {
+   ele_list *ele = new ele_list;
+   PREP_ELEMENT(ele);
+   elements.push_back(ele);
+  } break;
+ 
+  case ELE_TEXTENTRY: {
+   ele_textentry *ele = new ele_textentry;
+   PREP_ELEMENT(ele);
+   elements.push_back(ele);
+  } break;
+ 
+  case ELE_NUMBER: {
+   ele_number *ele = new ele_number;
+   PREP_ELEMENT(ele);
+   elements.push_back(ele);
+  } break;
+ 
+  default:
+   debugmsg("Unknown element type %d", type);
+   return;
  }
 
  if (active_element == -1)
@@ -420,6 +468,7 @@ std::string interface::save_data()
 void interface::load_data(std::istream &datastream)
 {
  name = load_to_delim(datastream, STD_DELIM);
+ elements.clear();
  int tmpcount;
  datastream >> tmpcount;
  for (int i = 0; i < tmpcount; i++) {
@@ -486,6 +535,15 @@ bool interface::load_from_file(std::string filename)
  load_data(fin);
  fin.close();
  return true;
+}
+
+std::vector<std::string> interface::element_names()
+{
+ std::vector<std::string> ret;
+ for (int i = 0; i < elements.size(); i++)
+  ret.push_back( elements[i]->name );
+
+ return ret;
 }
 
 element* interface::selected()
@@ -613,3 +671,24 @@ bool interface::set_data(std::string name, nc_color fg, nc_color bg)
 
  return ele->set_data(fg, bg);
 }
+
+std::string interface::get_str(std::string name)
+{
+ element* ele = find_by_name(name);
+ if (!ele) {
+  std::string ret;
+  return ret;
+ }
+
+ return ele->get_str();
+}
+
+int interface::get_int(std::string name)
+{
+ element* ele = find_by_name(name);
+ if (!ele)
+  return 0;
+
+ return ele->get_int();
+}
+

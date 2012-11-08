@@ -54,6 +54,9 @@ namespace cuss {
     virtual bool set_data(glyph gl, int posx, int posy) { return false; };
 
     virtual bool set_data(nc_color FG, nc_color BG = c_null);
+
+    virtual std::string get_str() { std::string ret; return ret; };
+    virtual int get_int() { return 0; };
   };
 
   struct ele_drawing : public element
@@ -121,6 +124,12 @@ namespace cuss {
 
     virtual bool set_data(std::vector<std::string> data);
     virtual bool add_data(std::vector<std::string> data);
+
+// These are used to set the selection
+    virtual bool set_data(int data);
+    virtual bool add_data(int data);
+
+    virtual std::string get_str();
   };
 
   struct ele_textentry : public element
@@ -139,6 +148,8 @@ namespace cuss {
 
     virtual bool set_data(std::string data);
     virtual bool add_data(std::string data);
+
+    virtual std::string get_str() { return text; };
   };
 
   struct ele_number : public element
@@ -156,6 +167,8 @@ namespace cuss {
 
     virtual bool set_data(int data);
     virtual bool add_data(int data);
+
+    virtual int get_int() { return value; };
   };
       
   class interface
@@ -174,6 +187,8 @@ namespace cuss {
 
     bool save_to_file(std::string filename);
     bool load_from_file(std::string filename);
+
+    std::vector<std::string> element_names();
 
     element* selected();
     element* find_by_name(std::string name);
@@ -197,6 +212,9 @@ namespace cuss {
     bool set_data(std::string name, glyph gl, int posx, int posy);
 
     bool set_data(std::string name, nc_color fg, nc_color bg = c_null);
+
+    std::string get_str(std::string name);
+    int get_int(std::string name);
 
     std::string name;
     int sizex, sizey;
