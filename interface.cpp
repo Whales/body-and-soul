@@ -19,6 +19,20 @@ using namespace cuss;
   (ele)->selected = false;\
   (ele)->selectable = selectable
 
+std::string cuss::element_type_name(cuss::element_type type)
+{
+  switch (type) {
+    case ELE_NULL:      return "NULL";
+    case ELE_DRAWING:   return "Drawing";
+    case ELE_TEXTBOX:   return "Text";
+    case ELE_LIST:      return "List selection";
+    case ELE_TEXTENTRY: return "Text Entry";
+    case ELE_NUMBER:    return "Number";
+    default:            return "Unknown";
+  }
+  return "What the heck";
+}
+
 // Base save/load functions.
 std::string element::save_data()
 {
@@ -82,7 +96,7 @@ bool ele_drawing::set_data(glyph gl, int posx, int posy)
  if (posx < 0 || posx >= sizex || posy < 0 || posy >= sizey)
   return false;
 
- if (gl.symbol == -1)
+ if (gl.symbol == -1 || gl.symbol == ' ')
   drawing.erase( point(posx, posy) );
  else
   drawing[ point(posx, posy) ] = gl;
@@ -362,6 +376,12 @@ interface::interface()
  active_element = -1;
 }
 
+interface::~interface()
+{
+ for (int i = 0; i < elements.size(); i++)
+  delete elements[i];
+}
+
 void interface::add_element(element_type type, std::string name, int posx,
                             int posy, int szx, int szy, bool selectable)
 {
@@ -415,6 +435,21 @@ void interface::add_element(element_type type, std::string name, int posx,
 
  if (active_element == -1)
   active_element = 0;
+}
+
+bool interface::erase_element(std::string name)
+{
+ for (int i = 0; i < elements.size(); i++) {
+  if (elements[i]->name == name) {
+   element *el = elements[i];
+   elements.erase(elements.begin() + i);
+   delete el;
+   if (active_element == i)
+    active_element = -1;
+   return true;
+  }
+ }
+ return false;
 }
 
 void interface::draw(Window *win)
@@ -565,11 +600,11 @@ element* interface::find_by_name(std::string name)
  return NULL;
 }
 
-void interface::select_next(bool force)
+element* interface::select_next(bool force)
 {
  if (elements.empty()) {
   active_element = -1;
-  return;
+  return NULL;
  }
 
  if (active_element >= 0 && active_element < elements.size())
@@ -586,17 +621,21 @@ void interface::select_next(bool force)
            !elements[active_element]->selectable) ||
           elements[active_element]->name == "BG");
 
- if (tried == elements.size() && !elements[active_element]->selectable)
+ if (tried == elements.size() && !elements[active_element]->selectable) {
   active_element = -1;
- else
+  return NULL;
+ } else {
   elements[active_element]->selected = true;
+  return elements[active_element];
+ }
+ return NULL;
 }
 
-void interface::select_last(bool force)
+element* interface::select_last(bool force)
 {
  if (elements.empty()) {
   active_element = -1;
-  return;
+  return NULL;
  }
 
  if (active_element >= 0 && active_element < elements.size())
@@ -613,10 +652,14 @@ void interface::select_last(bool force)
            !elements[active_element]->selectable) ||
           elements[active_element]->name == "BG");
 
- if (tried == elements.size() && !elements[active_element]->selectable)
+ if (tried == elements.size() && !elements[active_element]->selectable) {
   active_element = -1;
- else
+  return NULL;
+ } else {
   elements[active_element]->selected = true;
+  return elements[active_element];
+ }
+ return NULL;
 }
 
 void interface::select_none()
@@ -627,7 +670,7 @@ void interface::select_none()
  active_element = -1;
 }
 
-bool interface::select(std::string name)
+element* interface::select(std::string name)
 {
  for (int i = 0; i < elements.size(); i++) {
   if (elements[i]->name == name) {
@@ -635,10 +678,10 @@ bool interface::select(std::string name)
     elements[active_element]->selected = false;
    active_element = i;
    elements[active_element]->selected = true;
-   return true;
+   return elements[active_element];
   }
  }
- return false;
+ return NULL;
 }
 
 bool interface::set_data(std::string name, std::string data)

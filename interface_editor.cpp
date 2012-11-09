@@ -171,6 +171,9 @@ int main()
     } else if (ch == '?') {
      help();
 
+    } else if (ch == '-') {
+     elements_window(edited);
+
     } else if (ch == '<') {
      edited.select_last(true);
      sel = edited.selected();
@@ -222,7 +225,11 @@ int main()
      paint(edited, posx, posy);
 
     } else if (ch == 'x') {
-     edited.set_data("BG", glyph(-1, c_black, c_black), posx, posy);
+     if (sel) {
+      edited.erase_element(sel->name);
+      sel = NULL;
+     } else
+      edited.set_data("BG", glyph(-1, c_black, c_black), posx, posy);
 
     } else if (ch == '/') {
      fix_lines(edited, "BG");
@@ -285,8 +292,8 @@ int main()
        else
         y1 = posy;
        std::string name = string_input_popup("Name element:");
-       char sel = popup_getkey("Selectable?");
-       bool selectable = (sel == 'y' || sel == 'Y');
+       char selch = popup_getkey("Selectable?");
+       bool selectable = (selch == 'y' || selch == 'Y');
        edited.add_element(type, name, x1, y1, sizex, sizey, selectable);
        edited.draw(&w);
        bufx = -1;
@@ -413,21 +420,55 @@ void elements_window(interface &edited)
  Window w_elements(0, 0, 80, 24);
 
  cuss::interface i_ele;
- if (!i_ele.load_from_file("cuss/i_elements.cuss")) }
+ if (!i_ele.load_from_file("cuss/i_elements.cuss")) {
   debugmsg("Couldn't load cuss/i_elements.cuss!");
   return;
  }
 
  i_ele.set_data("e_elelist", edited.element_names());
- edited.select_by_name("BG");
+ i_ele.select("e_elelist");
+ edited.select("BG");
  element* selected = edited.selected();
+ element* cur = i_ele.selected();
+
+ bool done = false;
  do {
+  if (cur && cur->name == "e_elelist") {
+   ele_list* cur2 = static_cast<ele_list*>(cur);
+   i_ele.set_data("e_dbg_sel", cur2->selection);
+   i_ele.set_data("e_dbg_off", cur2->offset);
+  }
   if (selected) {
    i_ele.set_data("e_elename", selected->name);
    i_ele.set_data("e_eletype", element_type_name(selected->type()) );
-   i_ele.set_data("e_editable", (selected->editable ? "Yes" : "No"));
+   i_ele.set_data("e_editable", (selected->selectable ? "Yes" : "No"));
   }
- } while (true);
+  i_ele.draw(&w_elements);
+  long ch = getch();
+  if (ch == KEY_ESC)
+   done = true;
+  else if (cur->name == "e_elelist") {
+   if (ch == 'j' || ch == 'J' || ch == '2' || ch == KEY_DOWN) {
+    i_ele.add_data("e_elelist", 1);
+    selected = edited.select(cur->get_str());
+   }
+   if (ch == 'k' || ch == 'K' || ch == '8' || ch == KEY_UP) {
+    i_ele.add_data("e_elelist", -1);
+    selected = edited.select(cur->get_str());
+   }
+   if (ch == '\t')
+    cur = i_ele.select_next();
+  } else {
+   if (ch == '\t')
+    cur = i_ele.select_next();
+   else if ((ch == KEY_BACKSPACE || ch == 127) &&
+            selected && !selected->name.empty()  )
+    selected->name = selected->name.substr(0, selected->name.size() - 1);
+   else if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') ||
+            (ch >= '0' && ch <= '9') || ch == '_')
+    selected->name += ch;
+  }
+ } while (!done);
 }
 
 void init_interface(interface &edited, std::string name)
@@ -678,7 +719,7 @@ i     Enter typing mode\n\
 :     Draw box\n\
 Esc   Cancel drawing, unselect element, exist typing/drawing mode\n\
 .     place current symbol\n\
-x     delete drawing under cursor\n\
+x     delete drawing under cursor OR delete selected element\n\
 /     Fix lines\n\
 '     Set pen symbol\n\
 \"     Set pen symbol to line drawings\n\

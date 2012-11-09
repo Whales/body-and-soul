@@ -1,5 +1,5 @@
-#ifndef _cuss_H_
-#define _cuss_H_
+#ifndef _INTERFACE_H_
+#define _INTERFACE_H_
 
 #include <string>
 #include <vector>
@@ -20,6 +20,8 @@ namespace cuss {
     ELE_NUMBER,   // Number to select
     ELE_MAX
   };
+
+  std::string element_type_name(element_type type);
 
   struct element
   {
@@ -176,8 +178,11 @@ namespace cuss {
    public:
     interface();
     interface(std::string N, int X, int Y) : name (N), sizex (X), sizey (Y) {}
+    ~interface();
+
     void add_element(element_type type, std::string name, int posx, int posy,
                      int sizex, int sizey, bool selectable = true);
+    bool erase_element(std::string name);
 
     void draw(Window *win);
     void draw_prototype(Window *win); // For the editor
@@ -193,10 +198,10 @@ namespace cuss {
     element* selected();
     element* find_by_name(std::string name);
 
-    void select_next(bool force = false);
-    void select_last(bool force = false);
+    element* select_next(bool force = false);
+    element* select_last(bool force = false);
     void select_none();
-    bool select(std::string name);
+    element* select(std::string name);
 // set_data replaces the element's data with whatever is passed
 // add_data appends whatever is passed to the element's data
 // These are all defined for each element type; if they're invalid, the type

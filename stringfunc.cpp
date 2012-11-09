@@ -8,15 +8,17 @@ std::vector<std::string> break_into_lines(std::string text, int linesize)
 
   size_t linebreak = text.find_last_of(" ", linesize);
   std::string tmp;
-   if (linebreak == std::string::npos) {
-    linebreak = linesize - 1;
-    tmp = text.substr(0, linebreak) + "-";
-   } else
-    tmp = text.substr(0, linebreak);
+  if (linebreak == std::string::npos) {
+   linebreak = linesize - 1;
+   tmp = text.substr(0, linebreak) + "-";
+  } else
+   tmp = text.substr(0, linebreak);
 
   ret.push_back(tmp);
   text = text.substr(linebreak + 1);
  }
+
+ ret.push_back(text);
 
  return ret;
 }
