@@ -29,6 +29,7 @@ DM_DRAW,
 DM_TYPE,
 DM_LINE,
 DM_BOX,
+DM_DELETE,
 DM_ELEMENT,
 DM_MOVE_ELE,
 DM_RESIZE_ELE,
@@ -80,7 +81,7 @@ int main()
 
   if (dm == DM_LINE)
    temp_line(w, bufx, bufy, posx, posy);
-  if (dm == DM_BOX || dm == DM_ELEMENT)
+  if (dm == DM_BOX || dm == DM_ELEMENT || dm == DM_DELETE)
    temp_box(w, bufx, bufy, posx, posy);
 
   w.refresh();
@@ -175,12 +176,10 @@ int main()
      elements_window(edited);
 
     } else if (ch == '<') {
-     edited.select_last(true);
-     sel = edited.selected();
+     sel = edited.select_last(true);
 
     } else if (ch == '>') {
-     edited.select_next(true);
-     sel = edited.selected();
+     sel = edited.select_next(true);
 
     } else if (ch == 'm' && sel) {
      dm = DM_MOVE_ELE;
@@ -218,6 +217,10 @@ int main()
      bufx = posx; bufy = posy;
      dm = DM_BOX;
 
+    } else if (ch == 'd' || ch == 'D') {
+     bufx = posx; bufy = posy;
+     dm = DM_DELETE;
+
     } else if (ch == ',') {
      dm = DM_DRAW;
 
@@ -225,7 +228,7 @@ int main()
      paint(edited, posx, posy);
 
     } else if (ch == 'x') {
-     if (sel) {
+     if (sel && (popup_getkey("Really delete %s?", sel->name.c_str()) == 'Y')) {
       edited.erase_element(sel->name);
       sel = NULL;
      } else
@@ -268,17 +271,28 @@ int main()
        bufx = -1;
        bufy = -1;
        break;
+
+      case DM_DELETE:
+       for (int x = bufx; x <= posx; x++) {
+        for (int y = bufy; y <= posy; y++)
+         edited.set_data("BG", glyph(-1, c_black, c_black), x, y);
+       }
+       dm = DM_NULL;
+       bufx = -1;
+       bufy = -1;
+       break;
  
       case DM_ELEMENT: {
        element_type type = ELE_NULL;
        dm = DM_NULL;
        switch (menu("Element type:", "Drawing", "Text", "List", "Text Entry",
-                                     "Number", NULL)) {
+                                     "Number", "Drop-down Menu", NULL)) {
         case 1: type = ELE_DRAWING;   break;
         case 2: type = ELE_TEXTBOX;   break;
         case 3: type = ELE_LIST;      break;
         case 4: type = ELE_TEXTENTRY; break;
         case 5: type = ELE_NUMBER;    break;
+        case 6: type = ELE_MENU;      break;
        }
        int sizex = posx - bufx + 1;
        int sizey = posy - bufy + 1;
@@ -426,22 +440,69 @@ void elements_window(interface &edited)
  }
 
  i_ele.set_data("e_elelist", edited.element_names());
- i_ele.select("e_elelist");
- edited.select("BG");
- element* selected = edited.selected();
- element* cur = i_ele.selected();
+ element* cur = i_ele.select("e_elelist");
+ element* selected = edited.select("BG");
 
  bool done = false;
  do {
-  if (cur && cur->name == "e_elelist") {
-   ele_list* cur2 = static_cast<ele_list*>(cur);
-   i_ele.set_data("e_dbg_sel", cur2->selection);
-   i_ele.set_data("e_dbg_off", cur2->offset);
-  }
   if (selected) {
    i_ele.set_data("e_elename", selected->name);
    i_ele.set_data("e_eletype", element_type_name(selected->type()) );
    i_ele.set_data("e_editable", (selected->selectable ? "Yes" : "No"));
+// Set up the "basic value" area
+   switch (selected->type()) {
+    case ELE_TEXTENTRY:
+     i_ele.set_data("e_value_name", "Default:");
+     i_ele.set_data("e_value_setting", selected->get_str());
+     i_ele.set_selectable("e_value_setting", true);
+     break;
+    case ELE_NUMBER: {
+     std::stringstream value;
+     value << selected->get_int();
+     i_ele.set_data("e_value_name", "Default:");
+     i_ele.set_data("e_value_setting", value.str());
+     i_ele.set_selectable("e_value_setting", true);
+    } break;
+    case ELE_MENU: {
+     ele_menu* e_men = static_cast<ele_menu*>(selected);
+     i_ele.set_data("e_value_name", "Title:");
+     i_ele.set_data("e_value_setting", e_men->title);
+     i_ele.set_selectable("e_value_setting", true);
+    } break;
+    default:
+     i_ele.set_data("e_value_name", "");
+     i_ele.set_data("e_value_setting", "");
+     i_ele.set_selectable("e_value_setting", false);
+   }
+// Set up the list area
+   switch (selected->type()) {
+    case ELE_TEXTBOX:
+     i_ele.set_data("e_list_name", "Contents:");
+     i_ele.set_data("e_list_instructions", "(Just type to add)");
+     i_ele.set_data("e_list_values", selected->get_str_list());
+     i_ele.set_selectable("e_list_values", true);
+     break;
+    case ELE_LIST:
+     i_ele.set_data("e_list_name", "Options:");
+     i_ele.set_data("e_list_instructions",
+               "<c=blue>A<c=/>dd <c=blue>D<c=/>elete <c=blue>E<c=/>dit");
+     i_ele.set_data("e_list_values", selected->get_str_list());
+     i_ele.set_selectable("e_list_values", true);
+     break;
+    case ELE_MENU:
+     i_ele.set_data("e_list_name", "Options:");
+     i_ele.set_data("e_list_instructions",
+               "<c=blue>A<c=/>dd <c=blue>D<c=/>elete <c=blue>E<c=/>dit");
+     i_ele.set_data("e_list_values", selected->get_str_list());
+     i_ele.set_selectable("e_list_values", true);
+     break;
+    default:
+     i_ele.clear_data("e_list_name");
+     i_ele.clear_data("e_list_instructions");
+     i_ele.clear_data("e_list_values");
+     i_ele.set_selectable("e_list_values", false);
+     break;
+   }
   }
   i_ele.draw(&w_elements);
   long ch = getch();
@@ -458,15 +519,41 @@ void elements_window(interface &edited)
    }
    if (ch == '\t')
     cur = i_ele.select_next();
+   if (ch == ']')
+    cur = i_ele.select_next();
+   if (ch == '[')
+    cur = i_ele.select_last();
   } else {
    if (ch == '\t')
     cur = i_ele.select_next();
-   else if ((ch == KEY_BACKSPACE || ch == 127) &&
+   if (ch == ']')
+    cur = i_ele.select_next();
+   if (ch == '[')
+    cur = i_ele.select_last();
+   if (cur && cur->name == "e_elename") {
+    if ((ch == KEY_BACKSPACE || ch == 127) &&
             selected && !selected->name.empty()  )
-    selected->name = selected->name.substr(0, selected->name.size() - 1);
-   else if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') ||
-            (ch >= '0' && ch <= '9') || ch == '_')
-    selected->name += ch;
+     selected->name = selected->name.substr(0, selected->name.size() - 1);
+    else if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') ||
+             (ch >= '0' && ch <= '9') || ch == '_')
+     selected->name += ch;
+   } else if (cur && cur->name == "e_value_setting"
+   } else if (cur && cur->name == e_list_values) {
+    if (selected && selected->type() == ELE_TEXTBOX) {
+     std::string alltext = selected->get_str();
+     if (ch == KEY_BACKSPACE || ch == 127) {
+      alltext = alltext.substr(0, alltext.size() - 1);
+      selected->set_data(alltext);
+      i_ele.set_data("e_list_values", selected->get_str_list());
+     } else if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') ||
+                (ch >= '0' && ch <= '9') || ch == '_' || ch == ' ') {
+      alltext += ch;
+      selected->set_data(alltext);
+      i_ele.set_data("e_list_values", selected->get_str_list());
+     }
+    } else if (selected &&
+               (selected->type == ELE_LIST || selected->type == ELE_MENU)) {
+     
   }
  } while (!done);
 }
@@ -720,6 +807,7 @@ i     Enter typing mode\n\
 Esc   Cancel drawing, unselect element, exist typing/drawing mode\n\
 .     place current symbol\n\
 x     delete drawing under cursor OR delete selected element\n\
+d     delete a range (by drawing a square)\n\
 /     Fix lines\n\
 '     Set pen symbol\n\
 \"     Set pen symbol to line drawings\n\

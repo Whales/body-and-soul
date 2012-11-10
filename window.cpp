@@ -5,6 +5,10 @@
 #include "window.h"
 #include "globals.h"
 
+bool parse_color_tags(std::string text, std::vector<std::string> &segments,
+                      std::vector<long> &color_pairs, nc_color fg = c_white,
+                      nc_color bg = c_black);
+
 Window::Window()
 {
  w = newwin(0, 0, 0, 0);
@@ -89,12 +93,6 @@ void Window::putglyph(int x, int y, glyph gl)
 void Window::putstr(int x, int y, nc_color fg, nc_color bg, std::string str,
                     ...)
 {
-/*
- if (outlined) {
-  x++;
-  y++;
- }
-*/
  va_list ap;
  va_start(ap, str);
  char buff[8192];
@@ -111,67 +109,51 @@ void Window::putstr(int x, int y, nc_color fg, nc_color bg, std::string str,
   wattroff(w, col);
  } else { // We need to do color segments!
   wmove(w, y, x);
-  size_t tag;
   std::vector<std::string> segments;
   std::vector<long> color_pairs;
-  nc_color cur_fg = fg, cur_bg = bg;
-
-  while ( (tag = prepped.find("<c=")) != std::string::npos ) {
-// Everything before the tag is a segment, with the current colors
-   segments.push_back( prepped.substr(0, tag) );
-   color_pairs.push_back( get_color_pair(cur_fg, cur_bg) );
-// Strip off everything up to and including "<c="
-   prepped = prepped.substr(tag + 3);
-// Find the end of the tag
-   size_t tagend = prepped.find(">");
-   if (tagend == std::string::npos) {
-    debugmsg("Unterminated color tag! %d:%s:",
-             int(tag), str.c_str());
-    return;
-   }
-   std::string tag = prepped.substr(0, tagend);
-// Strip out the tag
-   prepped = prepped.substr(tagend + 1);
-
-   if (tag == "reset" || tag == "/") { // Reset the colors
-    cur_fg = fg;
-    cur_bg = bg;
-   } else { // We're looking for the color!
-    size_t comma = tag.find(",");
-    if (comma == std::string::npos) { // No comma - just setting fg
-     cur_fg = color_string(tag);
-     if (cur_fg == c_null) {
-      debugmsg("Malformed color tag: %s", tag.c_str());
-      return;
-     }
-    } else {
-     nc_color new_fg = color_string( tag.substr(0, comma) ),
-              new_bg = color_string( tag.substr(comma + 1) );
-     if (new_fg == c_null && new_bg == c_null) {
-      debugmsg("Malformed color tag: %s", tag.c_str());
-      return;
-     }
-     if (new_fg != c_null)
-      cur_fg = new_fg;
-     if (new_bg != c_null)
-      cur_bg = new_bg;
-    } // if comma was found
-   } // color needed to be found
-  } // while (tag != std::string::npos)
-// There's a little string left over; push it into our vectors!
-  segments.push_back(prepped);
-  color_pairs.push_back( get_color_pair(cur_fg, cur_bg) );
-
-  if (segments.size() != color_pairs.size()) {
-   debugmsg("Segments.size() = %d, color_pairs.size() = %d",
-            segments.size(), color_pairs.size());
-   return;
-  }
-
+  parse_color_tags(prepped, segments, color_pairs, fg, bg);
   for (int i = 0; i < segments.size(); i++) {
    wattron( w, color_pairs[i] );
    wprintw(w, segments[i].c_str());
    wattroff( w, color_pairs[i] );
+  }
+ }        // We need to do color segments!
+
+}
+ 
+void Window::putstr_n(int x, int y, nc_color fg, nc_color bg, int maxlength,
+                      std::string str, ...)
+{
+ va_list ap;
+ va_start(ap, str);
+ char buff[8192];
+ vsprintf(buff, str.c_str(), ap);
+ va_end(ap);
+
+ std::string prepped = buff;
+ long col = get_color_pair(fg, bg);
+
+ if (prepped.find("<c=") == std::string::npos) {
+// No need to do color segments, so just print!
+  wattron(w, col);
+  mvwprintw(w, y, x, prepped.substr(0, maxlength).c_str());
+  wattroff(w, col);
+ } else { // We need to do color segments!
+  wmove(w, y, x);
+  std::vector<std::string> segments;
+  std::vector<long> color_pairs;
+  parse_color_tags(prepped, segments, color_pairs, fg, bg);
+  for (int i = 0; i < segments.size(); i++) {
+   wattron( w, color_pairs[i] );
+   if (segments[i].length() > maxlength) {
+    wprintw(w, segments[i].substr(0, maxlength).c_str());
+    wattroff( w, color_pairs[i] );
+    return; // Stop; we've run out of space.
+   } else {
+    wprintw(w, segments[i].c_str());
+    maxlength -= segments[i].length();
+    wattroff( w, color_pairs[i] );
+   }
   }
  } // We need to do color segments!
 
@@ -442,4 +424,65 @@ void popup(const char *mes, ...)
  do
   ch = getch();
  while(ch != ' ' && ch != '\n' && ch != KEY_ESC);
+}
+
+bool parse_color_tags(std::string text, std::vector<std::string> &segments,
+                      std::vector<long> &color_pairs, nc_color fg, nc_color bg)
+{
+ size_t tag;
+ nc_color cur_fg = fg, cur_bg = bg;
+
+ while ( (tag = text.find("<c=")) != std::string::npos ) {
+// Everything before the tag is a segment, with the current colors
+  segments.push_back( text.substr(0, tag) );
+  color_pairs.push_back( get_color_pair(cur_fg, cur_bg) );
+// Strip off everything up to and including "<c="
+  text = text.substr(tag + 3);
+// Find the end of the tag
+  size_t tagend = text.find(">");
+  if (tagend == std::string::npos) {
+   debugmsg("Unterminated color tag! %d:%s:",
+            int(tag), text.c_str());
+   return false;
+  }
+  std::string tag = text.substr(0, tagend);
+// Strip out the tag
+  text = text.substr(tagend + 1);
+
+  if (tag == "reset" || tag == "/") { // Reset the colors
+   cur_fg = fg;
+   cur_bg = bg;
+  } else { // We're looking for the color!
+   size_t comma = tag.find(",");
+   if (comma == std::string::npos) { // No comma - just setting fg
+    cur_fg = color_string(tag);
+    if (cur_fg == c_null) {
+     debugmsg("Malformed color tag: %s", tag.c_str());
+     return false;
+    }
+   } else {
+    nc_color new_fg = color_string( tag.substr(0, comma) ),
+             new_bg = color_string( tag.substr(comma + 1) );
+    if (new_fg == c_null && new_bg == c_null) {
+     debugmsg("Malformed color tag: %s", tag.c_str());
+     return false;
+    }
+    if (new_fg != c_null)
+     cur_fg = new_fg;
+    if (new_bg != c_null)
+     cur_bg = new_bg;
+   } // if comma was found
+  } // color needed to be found
+ } // while (tag != std::string::npos)
+// There's a little string left over; push it into our vectors!
+ segments.push_back(text);
+ color_pairs.push_back( get_color_pair(cur_fg, cur_bg) );
+
+ if (segments.size() != color_pairs.size()) {
+  debugmsg("Segments.size() = %d, color_pairs.size() = %d",
+           segments.size(), color_pairs.size());
+  return false;
+ }
+
+ return true;
 }

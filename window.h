@@ -51,6 +51,8 @@ class Window
   void putch(int x, int y, nc_color fg, nc_color, long sym);
   void putglyph(int x, int y, glyph gl);
   void putstr(int x, int y, nc_color fg, nc_color bg, std::string str, ...);
+  void putstr_n(int x, int y, nc_color fg, nc_color bg, int maxlength,
+                std::string str, ...);
 // Special helper drawing functions
   void clear_area(int x1, int y1, int x2, int y2);
   void line_v(int x, nc_color fg = c_white, nc_color bg = c_black);

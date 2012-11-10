@@ -122,7 +122,7 @@ void ele_textbox::draw(Window *win)
  win->clear_area(posx, posy, posx + sizex - 1, posy + sizey - 1);
 
  for (int i = 0; i + offset < text.size() && i < sizey; i++)
-  win->putstr(posx, posy + i, fg, bg, text[i + offset]);
+  win->putstr_n(posx, posy + i, fg, bg, sizex, text[i + offset]);
 
  if (selectable)
   print_scrollbar(win, posx + sizex - 1, posy, sizey, offset, text.size(),
@@ -177,6 +177,32 @@ bool ele_textbox::add_data(std::vector<std::string> data)
  return true;
 }
 
+bool ele_textbox::set_data(int data)
+{
+ if (data <= 0)
+  offset = 0;
+ else if (data > sizey - text.size())
+  offset = sizey - text.size();
+ else
+  offset = data;
+}
+
+bool ele_textbox::add_data(int data)
+{
+ set_data(offset + data);
+}
+
+std::string ele_textbox::get_str()
+{
+ std::string ret;
+ for (int i = 0; i < text.size(); i++)
+  ret += text[i] + " ";
+
+ if (!ret.empty())
+  ret = ret.substr(ret.size() - 1); // Trim trailing " "
+ return ret;
+}
+
 // *** LIST ELEMENT ***
 void ele_list::draw(Window *win)
 {
@@ -186,7 +212,7 @@ void ele_list::draw(Window *win)
   nc_color hilite = (selection == i + offset ? SELECTCOLOR : bg);
   if (!selected)
    hilite = bg;
-  win->putstr(posx, posy + i, fg, hilite, list[i + offset]);
+  win->putstr_n(posx, posy + i, fg, hilite, sizex, list[i + offset]);
  }
 
  if (selectable)
@@ -239,6 +265,12 @@ bool ele_list::add_data(std::vector<std::string> data)
 bool ele_list::set_data(int data)
 {
  selection = data;
+
+ if (selection < 0)
+  selection = 0;
+ if (selection >= list.size())
+  selection = list.size() - 1;
+
  if (selection < sizey)
   offset = 0;
  else if (selection >= list.size() - sizey)
@@ -257,9 +289,11 @@ bool ele_list::add_data(int data)
  if (selection >= list.size())
   selection = list.size() - 1;
 
- if (selection < offset)
-  selection--;
- if (offset + sizey <= selection)
+ if (selection < sizey)
+  offset = 0;
+ else if (selection < offset)
+  offset = selection;
+ else if (offset + sizey <= selection)
   offset = selection - sizey + 1;
 
  return true;
@@ -319,11 +353,10 @@ bool ele_textentry::add_data(std::string data)
 
 
 // *** NUMBER ELEMENT ***
-// This function assumes that the number won't ever be too big for the field.
 void ele_number::draw(Window *win)
 {
  nc_color hilite = (selected ? SELECTCOLOR : bg);
- win->putstr(posx, posy, fg, hilite, "%d", value);
+ win->putstr_n(posx, posy, fg, hilite, sizex, "%d", value);
 }
 
 std::string ele_number::save_data()
@@ -349,6 +382,126 @@ bool ele_number::add_data(int data)
 {
  value += data;
  return true;
+}
+
+
+// *** MENU ELEMENT ***
+void ele_menu::draw(Window *win)
+{
+ win->putstr_n(posx + 1, posy, fg, bg, sizex - 2, title);
+ if (!selected)
+  return; // Just print the title if we're not selected/open
+// The rest is for when it's selected, i.e. open
+// Draw outline first
+ for (int y = posy + 1; y < posy + sizey - 1; y++) {
+  win->putch(posx, y, fg, bg, LINE_XOXO);
+  win->putch(posx + sizex - 1, y, fg, bg, LINE_XOXO);
+ }
+ for (int x = posx + 1; x < posx + sizex - 1; x++)
+  win->putch(x, posy + sizey - 1, fg, bg, LINE_OXOX);
+ win->putch(posx, posy + sizey - 1, fg, bg, LINE_XXOO);
+ win->putch(posx + sizex - 2, posy + sizey - 1, fg, bg, LINE_XOOX);
+// Then draw menu items
+ for (int i = 0; i < sizey && i + offset < list.size(); i++) {
+  int n = i + offset, line = i + posy + 1;
+  if (list[n] == "-") { // Single dash indicates a horizontal line
+   win->putch(posx, line, fg, bg, LINE_XXXO);
+   win->putch(posx + sizex - 1, line, fg, bg, LINE_XOXX);
+   for (int x = posx + 1; x < posx + sizex - 1; x++)
+    win->putch(x, line, fg, bg, LINE_OXOX);
+  } else {
+   nc_color back = (n == selection ? SELECTCOLOR : bg);
+   win->putstr_n(posx + 1, posy, fg, back, sizex - 2, list[n]);
+  }
+ }
+}
+
+std::string ele_menu::save_data()
+{
+ std::stringstream ret;
+ ret << element::save_data() << " " << title << " " << STD_DELIM << " " <<
+        list.size();
+ for (int i = 0; i < list.size(); i++)
+  ret << list[i] << " " << STD_DELIM << " ";
+
+ return ret.str();
+}
+
+void ele_menu::load_data(std::istream &datastream)
+{
+ element::load_data(datastream);
+ title = load_to_delim(datastream, STD_DELIM);
+ int tmpsize;
+ datastream >> tmpsize;
+ for (int i = 0; i < tmpsize; i++) {
+  std::string tmp = load_to_delim(datastream, STD_DELIM);
+  list.push_back(tmp);
+ }
+}
+
+bool ele_menu::set_data(std::string data)
+{
+ title = data;
+ return true;
+}
+
+bool ele_menu::add_data(std::string data)
+{
+ list.push_back(data);
+ return true;
+}
+
+bool ele_menu::set_data(std::vector<std::string> data)
+{
+ list = data;
+ selection = 0;
+ offset = 0;
+ return true;
+}
+
+bool ele_menu::add_data(std::vector<std::string> data)
+{
+ for (int i = 0; i < data.size(); i++)
+  list.push_back(data[i]);
+ return true;
+}
+
+bool ele_menu::set_data(int data)
+{
+ selection = data;
+
+ if (selection < 0)
+  selection = 0;
+ if (selection >= list.size())
+  selection = list.size() - 1;
+
+ if (selection < sizey)
+  offset = 0;
+ else if (selection >= list.size() - sizey)
+  offset = list.size() - sizey;
+ else
+  offset = selection;
+
+ return true;
+}
+
+bool ele_menu::add_data(int data)
+{
+ set_data(selection + data);
+}
+
+std::string ele_menu::get_str()
+{
+ if (selection < 0 || selection >= list.size()) {
+  std::string ret;
+  return ret;
+ }
+ return list[selection];
+}
+
+int ele_menu::get_int()
+{
+ return selection;
 }
 
 void print_scrollbar(Window *win, int posx, int posy, int length, int offset,
@@ -455,8 +608,17 @@ bool interface::erase_element(std::string name)
 void interface::draw(Window *win)
 {
  win->clear();
- for (int i = 0; i < elements.size(); i++)
-  elements[i]->draw(win);
+ std::vector<element*> draw_last; // Menus need to be layered at the top
+ for (int i = 0; i < elements.size(); i++) {
+  if (elements[i]->type() == ELE_MENU)
+   draw_last.push_back(elements[i]);
+  else
+   elements[i]->draw(win);
+ }
+
+ for (int i = 0; i < draw_last.size(); i++)
+  draw_last[i]->draw(win);
+
  win->refresh();
 }
 
@@ -484,8 +646,8 @@ void interface::draw_prototype(Window *win)
     win->putch(x1, y1, c_white, c_black, LINE_OXXO);
     win->putch(x2, y2, c_white, c_black, LINE_XOOX);
    }
-   win->putstr(x1 + 1, y1, (elements[i]->selected ? c_magenta : c_yellow),
-               c_black, elements[i]->name.substr(0, elements[i]->sizex - 2));
+   win->putstr_n(x1 + 1, y1, (elements[i]->selected ? c_magenta : c_yellow),
+                 c_black, elements[i]->sizex - 2, elements[i]->name);
   }
   if (elements[i]->type() == ELE_DRAWING)
    elements[i]->draw(win);
@@ -613,7 +775,7 @@ element* interface::select_next(bool force)
  int tried = 0;
  do {
   tried++;
-  if (active_element == elements.size() - 1)
+  if (active_element >= elements.size() - 1)
    active_element = 0;
   else
    active_element++;
@@ -644,7 +806,7 @@ element* interface::select_last(bool force)
  int tried = 0;
  do {
   tried++;
-  if (active_element == 0)
+  if (active_element <= 0)
    active_element = elements.size() - 1;
   else
    active_element--;
@@ -662,14 +824,6 @@ element* interface::select_last(bool force)
  return NULL;
 }
 
-void interface::select_none()
-{
- if (active_element >= 0 && active_element < elements.size())
-  elements[active_element]->selected = false;
-
- active_element = -1;
-}
-
 element* interface::select(std::string name)
 {
  for (int i = 0; i < elements.size(); i++) {
@@ -682,6 +836,24 @@ element* interface::select(std::string name)
   }
  }
  return NULL;
+}
+
+void interface::select_none()
+{
+ if (active_element >= 0 && active_element < elements.size())
+  elements[active_element]->selected = false;
+
+ active_element = -1;
+}
+
+bool interface::set_selectable(std::string name, bool setting)
+{
+ element* el = find_by_name(name);
+ if (!el)
+  return false;
+
+ el->selectable = setting;
+ return true;
 }
 
 bool interface::set_data(std::string name, std::string data)
@@ -755,6 +927,16 @@ bool interface::set_data(std::string name, nc_color fg, nc_color bg)
   return false;
 
  return ele->set_data(fg, bg);
+}
+
+bool interface::clear_data(std::string name)
+{
+ element* ele = find_by_name(name);
+ if (!ele)
+  return false;
+
+ ele->clear_data();
+ return true;
 }
 
 std::string interface::get_str(std::string name)
