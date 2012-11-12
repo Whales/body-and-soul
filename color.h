@@ -30,6 +30,7 @@ c_null
 long get_color_pair(nc_color fg, nc_color bg);
 void extract_colors(long color, long attributes, nc_color &fg, nc_color &bg);
 nc_color color_string(std::string id);
+std::string color_name(nc_color color);
 
 nc_color hilight(nc_color orig);
 

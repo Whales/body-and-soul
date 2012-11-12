@@ -155,6 +155,32 @@ nc_color color_string(std::string id)
  return c_null;
 }
 
+std::string color_name(nc_color color)
+{
+ switch (color) {
+  case c_black:   return "Black";
+  case c_ltgray:  return "Light Gray";
+  case c_red:     return "Red";
+  case c_green:   return "Green";
+  case c_blue:    return "Blue";
+  case c_cyan:    return "Cyan";
+  case c_magenta: return "Magenta";
+  case c_brown:   return "Brown";
+  case c_dkgray:  return "Dark Gray";
+  case c_white:   return "White";
+  case c_ltred:   return "Light Red";
+  case c_ltgreen: return "Light Green";
+  case c_ltblue:  return "Light Blue";
+  case c_ltcyan:  return "Light Cyan";
+  case c_pink:    return "Pink";
+  case c_yellow:  return "Yellow";
+  case c_null:    return "Unchanged";
+  default:        return "???";
+ }
+ return "???";
+}
+
+
 nc_color hilight(nc_color orig)
 {
  if (orig < c_dkgray)

@@ -2,6 +2,7 @@
 #include <string>
 #include <list>
 #include <cstring>
+#include <sstream>
 #include "window.h"
 #include "globals.h"
 
@@ -240,6 +241,31 @@ void refresh_all(bool erase) // erase defaults to false
   (*it)->refresh();
 }
 
+std::string key_name(long ch)
+{
+ switch (ch) {
+
+  case KEY_UP:        return "UP";
+  case KEY_RIGHT:     return "RIGHT";
+  case KEY_LEFT:      return "LEFT";
+  case KEY_DOWN:      return "DOWN";
+  case '\n':          return "ENTER";
+  case '\t':          return "TAB";
+  case KEY_ESC:       return "ESC";
+  case KEY_BACKSPACE:
+  case 127:
+  case 8:             return "BACKSPACE";
+  default:
+   if (ch < 256) {
+    std::stringstream ret;
+    ret << char(ch);
+    return ret.str();
+   } else
+    return "???";
+ }
+ return "???";
+}
+
 /*
 std::string file_selector(std::string start)
 {
@@ -257,7 +283,17 @@ std::string file_selector(std::string start)
 
 std::string string_input_popup(const char *mes, ...)
 {
- std::string ret;
+ va_list ap;
+ va_start(ap, mes);
+ char buff[1024];
+ vsprintf(buff, mes, ap);
+ va_end(ap);
+ return string_edit_popup("", buff);
+}
+
+std::string string_edit_popup(std::string orig, const char *mes, ...)
+{
+ std::string ret = orig;
  va_list ap;
  va_start(ap, mes);
  char buff[1024];
@@ -267,15 +303,16 @@ std::string string_input_popup(const char *mes, ...)
  Window w(0, 11, 80, 3);
  w.outline();
  w.putstr(1, 1, c_ltred, c_black, buff);
- for (int i = startx + 1; i < 79; i++)
+ w.putstr(startx, 1, c_magenta, c_black, ret);
+ for (int i = startx + ret.length() + 1; i < 79; i++)
   w.putch(i, 1, c_ltgray, c_black, '_');
- int posx = startx;
+ int posx = startx + ret.length();
  w.putch(posx, 1, c_ltgray, c_blue, '_');
  do {
   w.refresh();
   long ch = getch();
   if (ch == 27) {	// Escape
-   return "";
+   return orig;
   } else if (ch == '\n') {
    return ret;
   } else if ((ch == KEY_BACKSPACE || ch == 127) && posx > startx) {

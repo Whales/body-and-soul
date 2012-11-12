@@ -3,10 +3,13 @@
 #include <sstream>
 #include <fstream>
 
+using namespace cuss;
+
 void print_scrollbar(Window *win, int posx, int posy, int length, int offset,
                      int size, bool selected);
+bool action_needs_element(action_id act);
+std::string action_name(action_id act);
 
-using namespace cuss;
 
 #define SELECTCOLOR c_blue
 
@@ -51,7 +54,8 @@ void element::load_data(std::istream &datastream)
 
 bool element::set_data(nc_color FG, nc_color BG)
 {
- fg = FG;
+ if (fg != c_null)
+  fg = FG;
  if (BG != c_null) // bg defaults to c_null
   bg = BG;
 
@@ -116,6 +120,19 @@ bool ele_drawing::set_data(nc_color FG, nc_color BG)
  return true;
 }
 
+bool ele_drawing::translate(long from, long to)
+{
+ std::map<point, glyph>::iterator it;
+ bool found = false;
+ for (it = drawing.begin(); it != drawing.end(); it++) {
+  if (it->second.symbol == from) {
+   it->second.symbol = to;
+   found = true;
+  }
+ }
+ return found;
+}
+
 // *** TEXTBOX ELEMENT ***
 void ele_textbox::draw(Window *win)
 {
@@ -159,8 +176,12 @@ bool ele_textbox::set_data(std::string data)
 
 bool ele_textbox::add_data(std::string data)
 {
+ std::string newtext = get_str() + data;
+ set_data(newtext);
+/*
  std::vector<std::string> broken = break_into_lines(data, sizex);
  add_data(broken);
+*/
  return true;
 }
 
@@ -199,7 +220,7 @@ std::string ele_textbox::get_str()
   ret += text[i] + " ";
 
  if (!ret.empty())
-  ret = ret.substr(ret.size() - 1); // Trim trailing " "
+  ret = ret.substr(0, ret.size() - 1); // Trim trailing " "
  return ret;
 }
 
@@ -297,6 +318,11 @@ bool ele_list::add_data(int data)
   offset = selection - sizey + 1;
 
  return true;
+}
+
+int ele_list::get_int()
+{
+ return selection;
 }
 
 std::string ele_list::get_str()
@@ -515,8 +541,9 @@ void print_scrollbar(Window *win, int posx, int posy, int length, int offset,
   for (int y = posy; y < posy + length; y++)
    win->putch(posx, y, barcol, c_black, LINE_XOXO);
  } else {
-  int barpos = (offset + length >= size ? length - barsize :
-                (offset * length) / size);
+  int barpos = (offset * length) / size;
+  if (barpos + barsize > length)
+   barpos = length - barsize;
   for (int y = posy; y < posy + length; y++) {
    long ch = ((y >= barpos && y < barpos + barsize) ? '#' : LINE_XOXO);
    win->putch(posx, y, barcol, c_black, ch);
@@ -524,9 +551,29 @@ void print_scrollbar(Window *win, int posx, int posy, int length, int offset,
  }
 }
 
-interface::interface()
+std::string binding::save_data()
+{
+ std::stringstream ret;
+ ret << int(act) << " " << target << " " << STD_DELIM << " " << a << " " << b;
+ return ret.str();
+}
+
+void binding::load_data(std::istream &datastream)
+{
+ int tmpact;
+ datastream >> tmpact;
+ act = action_id(tmpact);
+ target = load_to_delim(datastream, STD_DELIM);
+ datastream >> a >> b;
+}
+
+interface::interface(std::string N, int X, int Y)
 {
  active_element = -1;
+ use_bindings = false;
+ name = N;
+ sizex = X;
+ sizey = Y;
 }
 
 interface::~interface()
@@ -661,6 +708,11 @@ std::string interface::save_data()
  for (int i = 0; i < elements.size(); i++)
   ret << elements[i]->type() << " " << elements[i]->save_data() << " ";
 
+ ret << bindings.size() << " ";
+ std::map<long, binding>::iterator it;
+ for (it = bindings.begin(); it != bindings.end(); it++)
+  ret << it->first << " " << it->second.save_data();
+
  return ret.str();
 }
 
@@ -668,7 +720,7 @@ void interface::load_data(std::istream &datastream)
 {
  name = load_to_delim(datastream, STD_DELIM);
  elements.clear();
- int tmpcount;
+ int tmpcount, tmpbind;
  datastream >> tmpcount;
  for (int i = 0; i < tmpcount; i++) {
   int tmptype;
@@ -710,6 +762,15 @@ void interface::load_data(std::istream &datastream)
    } break;
   }
  } // for (int i = 0; i < tmpcount; i++)
+
+ datastream >> tmpbind;
+ for (int i = 0; i < tmpbind; i++) {
+  long tmpch;
+  binding bind;
+  datastream >> tmpch;
+  bind.load_data(datastream);
+  bindings[tmpch] = bind;
+ }
 }
 
 bool interface::save_to_file(std::string filename)
@@ -959,3 +1020,211 @@ int interface::get_int(std::string name)
  return ele->get_int();
 }
 
+std::vector<std::string> interface::get_str_list(std::string name)
+{
+ element* ele = find_by_name(name);
+ if (!ele) {
+  std::vector<std::string> ret;
+  return ret;
+ }
+ return ele->get_str_list();
+}
+
+std::vector<std::string> interface::binding_list()
+{
+ std::vector<std::string> ret;
+ std::map<long, binding>::iterator it;
+
+ for (it = bindings.begin(); it != bindings.end(); it++) {
+  std::stringstream info;
+  info << key_name(it->first) << ": " << action_name(it->second.act);
+  if (it->second.act == ACT_SELECT_STR)
+   info << " " << it->second.target;
+  else if (it->second.act == ACT_SCROLL)
+   info << "(" << it->second.target << (it->second.a >= 0 ? " +" : " ") <<
+           it->second.a << ")";
+  else if (it->second.act == ACT_SET_COLORS)
+   info << "(" << it->second.target << " " <<
+           color_name( nc_color(it->second.a) ) << ", " <<
+           color_name( nc_color(it->second.a) ) << ")";
+  else if (it->second.act == ACT_TRANSLATE)
+   info << "(" << it->second.target << "; " << char(it->second.a) << " to " <<
+           char(it->second.b) << ")";
+ }
+}
+
+bool interface::add_binding(long ch, action_id act, std::string target)
+{
+ if (bindings.count(ch))
+  return false;
+ if (action_needs_element(act) && !find_by_name(target))
+  return false;
+
+ binding newbind(act, target);
+ bindings[ch] = newbind;
+ return true;
+}
+
+bool interface::add_binding(long ch, action_id act, std::string target,
+                            int a, int b)
+{
+ if (bindings.count(ch))
+  return false;
+
+ binding newbind(act, target, a, b);
+ bindings[ch] = newbind;
+ return true;
+}
+
+binding* interface::bound_to(long ch)
+{
+ if (!bindings.count(ch))
+  return NULL;
+
+ return &(bindings[ch]);
+}
+
+bool interface::rem_binding(long ch)
+{
+ if (!bindings.count(ch))
+  return false;
+
+ bindings.erase(ch);
+ return true;
+}
+
+bool interface::rem_all_bindings(action_id act)
+{
+ if (bindings.empty())
+  return false;
+
+ if (act == ACT_NULL) {
+  bindings.clear();
+  return true;
+ }
+ std::vector<long> to_delete;
+ std::map<long, binding>::iterator it;
+ for (it = bindings.begin(); it != bindings.end(); it++) {
+  if (it->second.act == act)
+   to_delete.push_back(it->first);
+ }
+ if (to_delete.empty())
+  return false;
+
+ for (int i = 0; i < to_delete.size(); i++)
+  bindings.erase( to_delete[i] );
+
+ return true;
+}
+
+bool interface::rem_all_bindings(std::string target)
+{
+ if (bindings.empty())
+  return false;
+
+ std::vector<long> to_delete;
+ std::map<long, binding>::iterator it;
+ for (it = bindings.begin(); it != bindings.end(); it++) {
+  if (it->second.target == target)
+   to_delete.push_back(it->first);
+ }
+ if (to_delete.empty())
+  return false;
+
+ for (int i = 0; i < to_delete.size(); i++)
+  bindings.erase( to_delete[i] );
+
+ return true;
+}
+
+bool interface::toggle_bindings()
+{
+ use_bindings = !use_bindings;
+}
+
+bool interface::handle_action(long ch)
+{
+ if (!bindings.count(ch))
+  return false;
+
+ binding* used = &(bindings[ch]);
+ element* found = (used->target == "" ? selected() : find_by_name(used->target));
+
+ switch (used->act) {
+
+  case ACT_NULL:
+   return true;
+
+  case ACT_SELECT_NEXT:
+   select_next();
+   return true;
+
+  case ACT_SELECT_LAST:
+   select_last();
+   return true;
+
+  case ACT_SELECT_NONE:
+   select_none();
+   return true;
+
+  case ACT_SELECT_STR:
+   if (select(used->target))
+    return true;
+   return false;
+
+  case ACT_SCROLL:
+   if (!found)
+    return false;
+   if (found->type() != ELE_TEXTBOX && found->type() != ELE_LIST &&
+       found->type() != ELE_NUMBER  && found->type() != ELE_MENU)
+    return false;
+   found->add_data(used->a);
+   return true;
+
+  case ACT_SET_COLORS:
+   if (!found)
+    return false;
+   found->set_data( nc_color(used->a), nc_color(used->b) );
+   return true;
+
+  case ACT_TRANSLATE:
+   if (found->type() == ELE_DRAWING) {
+    ele_drawing* draw = static_cast<ele_drawing*>(found);
+    draw->translate(used->a, used->b);
+    return true;
+   } else
+    return false;
+   
+   default:
+    return false;
+ }
+
+ return false;
+}
+
+bool action_needs_element(action_id act)
+{
+ return (act == ACT_SCROLL || act == ACT_SET_COLORS || act == ACT_TRANSLATE);
+}
+
+std::string action_name(action_id act)
+{
+ switch (act) {
+
+  case ACT_NULL:        return "Nothing";
+
+  case ACT_SELECT_NEXT: return "Select Next";
+  case ACT_SELECT_LAST: return "Select Last";
+  case ACT_SELECT_NONE: return "Select None";
+  case ACT_SELECT_STR:  return "Select Element";
+
+  case ACT_SCROLL:      return "Scroll";
+
+  case ACT_SET_COLORS:  return "Set Colors";
+  case ACT_TRANSLATE:   return "Translate";
+
+  default:              return "Oops we forgot to name this";
+
+ }
+ return "What the heck?!";
+}

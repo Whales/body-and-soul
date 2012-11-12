@@ -25,8 +25,11 @@ long input();
 void debugmsg(const char *mes, ...);
 void refresh_all(bool erase = false);
 
+std::string key_name(long ch);
+
 std::string file_selector(std::string start = ".");
 
+std::string string_edit_popup(std::string orig, const char *mes, ...);
 std::string string_input_popup(const char *mes, ...);
 char popup_getkey(const char *mes, ...);
 int  menu_vec(const char *mes, std::vector<std::string> options);

@@ -87,6 +87,14 @@ namespace cuss {
     virtual bool set_data(nc_color FG, nc_color BG = c_null);
 
     virtual void clear_data() { drawing.clear();};
+
+/* Translate is breaking a rule here; it's a function that isn't inherited from
+ * element.  I'm not sure I'm okay with this, but for now I think that translate
+ * is really drawing-specific; it looks for all instances of "from", and moves
+ * them to "to".  While things like textbox could probably use this, I'm holding
+ * off for now.
+ */
+    bool translate(long from, long to);
   };
 
   struct ele_textbox : public element
@@ -151,6 +159,7 @@ namespace cuss {
 
     virtual void clear_data() { list.clear(); offset = 0; selection = 0;};
 
+    virtual int get_int();
     virtual std::string get_str();
     virtual std::vector<std::string> get_str_list() { return list; };
   };
@@ -233,12 +242,42 @@ namespace cuss {
     virtual int get_int();
     virtual std::vector<std::string> get_str_list() { return list; };
   };
+
+
+  enum action_id
+  {
+    ACT_NULL = 0,    // Do nothing
+
+    ACT_SELECT_NEXT, // Select next
+    ACT_SELECT_LAST, // Select last
+    ACT_SELECT_NONE, // Select nothing
+    ACT_SELECT_STR,  // Select something specific
+
+    ACT_SCROLL,      // Scroll or adjust int field
+
+    ACT_SET_COLORS,  // Set foreground color
+    ACT_TRANSLATE,   // Change char A to char B
+
+    ACT_MAX
+  };
+
+  struct binding
+  {
+    action_id act;
+    std::string target;
+    int a, b;
+    binding(action_id ACT = ACT_NULL, std::string T = "", int A = 0, int B = 0):
+           act (ACT), target (T), a (A), b (B) { };
+
+    std::string save_data();
+    void load_data(std::istream &datastream);
+  };
+
       
   class interface
   {
    public:
-    interface();
-    interface(std::string N, int X, int Y) : name (N), sizex (X), sizey (Y) {}
+    interface(std::string N = "", int X = 80, int Y = 24);
     ~interface();
 
     void add_element(element_type type, std::string name, int posx, int posy,
@@ -271,15 +310,11 @@ namespace cuss {
 //  just returns false.
     bool set_data(std::string name, std::string data);
     bool add_data(std::string name, std::string data);
-
     bool set_data(std::string name, std::vector<std::string> data);
     bool add_data(std::string name, std::vector<std::string> data);
-
     bool set_data(std::string name, int data);
     bool add_data(std::string name, int data);
-
     bool set_data(std::string name, glyph gl, int posx, int posy);
-
     bool set_data(std::string name, nc_color fg, nc_color bg = c_null);
 
     bool clear_data(std::string name);
@@ -288,12 +323,26 @@ namespace cuss {
     int get_int(std::string name);
     std::vector<std::string> get_str_list(std::string name);
 
+    std::vector<std::string> binding_list();
+    bool add_binding(long ch, action_id act, std::string target = "");
+    bool add_binding(long ch, action_id act, std::string target,
+                     int a, int b = 0);
+    binding* bound_to(long ch);
+    bool rem_binding(long ch);
+    bool rem_all_bindings(action_id act = ACT_NULL);
+    bool rem_all_bindings(std::string target);
+    bool toggle_bindings();
+
+    bool handle_action(long ch);
+
     std::string name;
     int sizex, sizey;
 
    private:
     int active_element;
     std::vector<element*> elements;
+    std::map<long, binding> bindings;
+    bool use_bindings;
   };
 
 }; // namespace cuss
