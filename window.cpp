@@ -331,7 +331,7 @@ std::string string_edit_popup(std::string orig, const char *mes, ...)
 }
 
 
-char popup_getkey(const char *mes, ...)
+long popup_getkey(const char *mes, ...)
 {
  va_list ap;
  va_start(ap, mes);
@@ -370,7 +370,7 @@ char popup_getkey(const char *mes, ...)
  w.putstr(1, line_num, c_white, c_black, std::string(tmp));
  
  w.refresh();
- char ch = getch();
+ long ch = getch();
  return ch;
 }
 

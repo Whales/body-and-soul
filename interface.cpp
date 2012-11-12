@@ -7,8 +7,6 @@ using namespace cuss;
 
 void print_scrollbar(Window *win, int posx, int posy, int length, int offset,
                      int size, bool selected);
-bool action_needs_element(action_id act);
-std::string action_name(action_id act);
 
 
 #define SELECTCOLOR c_blue
@@ -138,20 +136,20 @@ void ele_textbox::draw(Window *win)
 {
  win->clear_area(posx, posy, posx + sizex - 1, posy + sizey - 1);
 
- for (int i = 0; i + offset < text.size() && i < sizey; i++)
-  win->putstr_n(posx, posy + i, fg, bg, sizex, text[i + offset]);
+ for (int i = 0; i + offset < text->size() && i < sizey; i++)
+  win->putstr_n(posx, posy + i, fg, bg, sizex, (*text)[i + offset]);
 
  if (selectable)
-  print_scrollbar(win, posx + sizex - 1, posy, sizey, offset, text.size(),
+  print_scrollbar(win, posx + sizex - 1, posy, sizey, offset, text->size(),
                   selected);
 }
 
 std::string ele_textbox::save_data()
 {
  std::stringstream ret;
- ret << element::save_data() << " " << text.size();
- for (int i = 0; i < text.size(); i++)
-  ret << text[i] << " " << STD_DELIM << " ";
+ ret << element::save_data() << " " << text->size();
+ for (int i = 0; i < text->size(); i++)
+  ret << (*text)[i] << " " << STD_DELIM << " ";
 
  return ret.str();
 }
@@ -163,8 +161,18 @@ void ele_textbox::load_data(std::istream &datastream)
  datastream >> tmpsize;
  for (int i = 0; i < tmpsize; i++) {
   std::string tmp = load_to_delim(datastream, STD_DELIM);
-  text.push_back(tmp);
+  text->push_back(tmp);
  }
+}
+
+bool ele_textbox::self_reference()
+{
+ if (owns_data)
+  return false;
+
+ text = new std::vector<std::string>;
+ owns_data = true;
+ return true;
 }
 
 bool ele_textbox::set_data(std::string data)
@@ -178,23 +186,29 @@ bool ele_textbox::add_data(std::string data)
 {
  std::string newtext = get_str() + data;
  set_data(newtext);
-/*
- std::vector<std::string> broken = break_into_lines(data, sizex);
- add_data(broken);
-*/
  return true;
 }
 
 bool ele_textbox::set_data(std::vector<std::string> data)
 {
- text = data;
+ (*text) = data;
  return true;
 }
 
 bool ele_textbox::add_data(std::vector<std::string> data)
 {
  for (int i = 0; i < data.size(); i++)
-  text.push_back(data[i]);
+  text->push_back(data[i]);
+ return true;
+}
+
+bool ele_textbox::ref_data(std::vector<std::string> *data)
+{
+ if (owns_data)
+  delete text;
+
+ text = data;
+ owns_data = false;
  return true;
 }
 
@@ -202,8 +216,8 @@ bool ele_textbox::set_data(int data)
 {
  if (data <= 0)
   offset = 0;
- else if (data > sizey - text.size())
-  offset = sizey - text.size();
+ else if (data > sizey - text->size())
+  offset = sizey - text->size();
  else
   offset = data;
 }
@@ -216,8 +230,8 @@ bool ele_textbox::add_data(int data)
 std::string ele_textbox::get_str()
 {
  std::string ret;
- for (int i = 0; i < text.size(); i++)
-  ret += text[i] + " ";
+ for (int i = 0; i < text->size(); i++)
+  ret += (*text)[i] + " ";
 
  if (!ret.empty())
   ret = ret.substr(0, ret.size() - 1); // Trim trailing " "
@@ -229,24 +243,24 @@ void ele_list::draw(Window *win)
 {
  win->clear_area(posx, posy, posx + sizex - 1, posy + sizey - 1);
 
- for (int i = 0; i + offset < list.size() && i < sizey; i++) {
+ for (int i = 0; i + offset < list->size() && i < sizey; i++) {
   nc_color hilite = (selection == i + offset ? SELECTCOLOR : bg);
   if (!selected)
    hilite = bg;
-  win->putstr_n(posx, posy + i, fg, hilite, sizex, list[i + offset]);
+  win->putstr_n(posx, posy + i, fg, hilite, sizex, (*list)[i + offset]);
  }
 
  if (selectable)
-  print_scrollbar(win, posx + sizex - 1, posy, sizey, offset, list.size(),
+  print_scrollbar(win, posx + sizex - 1, posy, sizey, offset, list->size(),
                   selected);
 }
 
 std::string ele_list::save_data()
 {
  std::stringstream ret;
- ret << element::save_data() << " " << list.size();
- for (int i = 0; i < list.size(); i++)
-  ret << list[i] << " " << STD_DELIM << " ";
+ ret << element::save_data() << " " << list->size();
+ for (int i = 0; i < list->size(); i++)
+  ret << (*list)[i] << " " << STD_DELIM << " ";
 
  return ret.str();
 }
@@ -258,19 +272,29 @@ void ele_list::load_data(std::istream &datastream)
  datastream >> tmpsize;
  for (int i = 0; i < tmpsize; i++) {
   std::string tmp = load_to_delim(datastream, STD_DELIM);
-  list.push_back(tmp);
+  list->push_back(tmp);
  }
+}
+
+bool ele_list::self_reference()
+{
+ if (owns_data)
+  return false;
+
+ list = new std::vector<std::string>;
+ owns_data = true;
+ return true;
 }
 
 bool ele_list::add_data(std::string data)
 {
- list.push_back(data);
+ list->push_back(data);
  return true;
 }
 
 bool ele_list::set_data(std::vector<std::string> data)
 {
- list = data;
+ (*list) = data;
  selection = 0;
  offset = 0;
  return true;
@@ -279,7 +303,17 @@ bool ele_list::set_data(std::vector<std::string> data)
 bool ele_list::add_data(std::vector<std::string> data)
 {
  for (int i = 0; i < data.size(); i++)
-  list.push_back(data[i]);
+  list->push_back(data[i]);
+ return true;
+}
+
+bool ele_list::ref_data(std::vector<std::string> *data)
+{
+ if (owns_data)
+  delete list;
+
+ list = data;
+ owns_data = false;
  return true;
 }
 
@@ -289,13 +323,13 @@ bool ele_list::set_data(int data)
 
  if (selection < 0)
   selection = 0;
- if (selection >= list.size())
-  selection = list.size() - 1;
+ if (selection >= list->size())
+  selection = list->size() - 1;
 
  if (selection < sizey)
   offset = 0;
- else if (selection >= list.size() - sizey)
-  offset = list.size() - sizey;
+ else if (selection >= list->size() - sizey)
+  offset = list->size() - sizey;
  else
   offset = selection;
 
@@ -307,8 +341,8 @@ bool ele_list::add_data(int data)
  selection += data;
  if (selection < 0)
   selection = 0;
- if (selection >= list.size())
-  selection = list.size() - 1;
+ if (selection >= list->size())
+  selection = list->size() - 1;
 
  if (selection < sizey)
   offset = 0;
@@ -327,12 +361,12 @@ int ele_list::get_int()
 
 std::string ele_list::get_str()
 {
- if (selection < 0 || selection >= list.size()) {
+ if (selection < 0 || selection >= list->size()) {
   std::string ret;
   return ret;
  }
 
- return list[selection];
+ return (*list)[selection];
 }
 
 // *** TEXT ENTRY ELEMENT ***
@@ -340,12 +374,12 @@ void ele_textentry::draw(Window *win)
 {
  nc_color hilite = (selected ? SELECTCOLOR : bg);
 // Ensure we see the end of the word--and a blank space
- int start = (selected ? text.size() + 1 - sizex : 0);
+ int start = (selected ? text->size() + 1 - sizex : 0);
  if (start < 0)
   start = 0;
  int length = (selected ? sizex - 1 : sizex);
 
- std::string print = text.substr(start, length);
+ std::string print = text->substr(start, length);
 
  win->putstr(posx, posy, fg, hilite, print);
  for (int x = posx + print.length(); x < posx + sizex; x++)
@@ -355,25 +389,45 @@ void ele_textentry::draw(Window *win)
 std::string ele_textentry::save_data()
 {
  std::stringstream ret;
- ret << element::save_data() << " " << text << " " << STD_DELIM;
+ ret << element::save_data() << " " << (*text) << " " << STD_DELIM;
  return ret.str();
 }
 
 void ele_textentry::load_data(std::istream &datastream)
 {
  element::load_data(datastream);
- text = load_to_delim(datastream, STD_DELIM);
+ (*text) = load_to_delim(datastream, STD_DELIM);
+}
+
+bool ele_textentry::self_reference()
+{
+ if (owns_data)
+  return false;
+
+ text = new std::string;
+ owns_data = true;
+ return true;
 }
 
 bool ele_textentry::set_data(std::string data)
 {
- text = data;
+ (*text) = data;
  return true;
 }
 
 bool ele_textentry::add_data(std::string data)
 {
- text += data;
+ (*text) += data;
+ return true;
+}
+
+bool ele_textentry::ref_data(std::string *data)
+{
+ if (owns_data)
+  delete text;
+
+ text = data;
+ owns_data = false;
  return true;
 }
 
@@ -382,31 +436,52 @@ bool ele_textentry::add_data(std::string data)
 void ele_number::draw(Window *win)
 {
  nc_color hilite = (selected ? SELECTCOLOR : bg);
- win->putstr_n(posx, posy, fg, hilite, sizex, "%d", value);
+ win->putstr_n(posx, posy, fg, hilite, sizex, "%d", (*value));
 }
 
 std::string ele_number::save_data()
 {
  std::stringstream ret;
- ret << element::save_data() << " " << value;
+ ret << element::save_data() << " " << (*value);
  return ret.str();
 }
 
 void ele_number::load_data(std::istream &datastream)
 {
  element::load_data(datastream);
- datastream >> value;
+ datastream >> (*value);
+}
+
+bool ele_number::self_reference()
+{
+ if (owns_data)
+  return false;
+
+ value = new int;
+ (*value) = 0;
+ owns_data = true;
+ return true;
 }
 
 bool ele_number::set_data(int data)
 {
- value = data;
+ (*value) = data;
  return true;
 }
 
 bool ele_number::add_data(int data)
 {
- value += data;
+ (*value) += data;
+ return true;
+}
+
+bool ele_number::ref_data(int *data)
+{
+ if (owns_data)
+  delete value;
+
+ value = data;
+ owns_data = false;
  return true;
 }
 
@@ -428,16 +503,16 @@ void ele_menu::draw(Window *win)
  win->putch(posx, posy + sizey - 1, fg, bg, LINE_XXOO);
  win->putch(posx + sizex - 2, posy + sizey - 1, fg, bg, LINE_XOOX);
 // Then draw menu items
- for (int i = 0; i < sizey && i + offset < list.size(); i++) {
+ for (int i = 0; i < sizey && i + offset < list->size(); i++) {
   int n = i + offset, line = i + posy + 1;
-  if (list[n] == "-") { // Single dash indicates a horizontal line
+  if ((*list)[n] == "-") { // Single dash indicates a horizontal line
    win->putch(posx, line, fg, bg, LINE_XXXO);
    win->putch(posx + sizex - 1, line, fg, bg, LINE_XOXX);
    for (int x = posx + 1; x < posx + sizex - 1; x++)
     win->putch(x, line, fg, bg, LINE_OXOX);
   } else {
    nc_color back = (n == selection ? SELECTCOLOR : bg);
-   win->putstr_n(posx + 1, posy, fg, back, sizex - 2, list[n]);
+   win->putstr_n(posx + 1, posy, fg, back, sizex - 2, (*list)[n]);
   }
  }
 }
@@ -446,9 +521,9 @@ std::string ele_menu::save_data()
 {
  std::stringstream ret;
  ret << element::save_data() << " " << title << " " << STD_DELIM << " " <<
-        list.size();
- for (int i = 0; i < list.size(); i++)
-  ret << list[i] << " " << STD_DELIM << " ";
+        list->size();
+ for (int i = 0; i < list->size(); i++)
+  ret << (*list)[i] << " " << STD_DELIM << " ";
 
  return ret.str();
 }
@@ -461,8 +536,18 @@ void ele_menu::load_data(std::istream &datastream)
  datastream >> tmpsize;
  for (int i = 0; i < tmpsize; i++) {
   std::string tmp = load_to_delim(datastream, STD_DELIM);
-  list.push_back(tmp);
+  list->push_back(tmp);
  }
+}
+
+bool ele_menu::self_reference()
+{
+ if (owns_data)
+  return false;
+
+ list = new std::vector<std::string>;
+ owns_data = true;
+ return true;
 }
 
 bool ele_menu::set_data(std::string data)
@@ -473,13 +558,13 @@ bool ele_menu::set_data(std::string data)
 
 bool ele_menu::add_data(std::string data)
 {
- list.push_back(data);
+ list->push_back(data);
  return true;
 }
 
 bool ele_menu::set_data(std::vector<std::string> data)
 {
- list = data;
+ (*list) = data;
  selection = 0;
  offset = 0;
  return true;
@@ -488,7 +573,17 @@ bool ele_menu::set_data(std::vector<std::string> data)
 bool ele_menu::add_data(std::vector<std::string> data)
 {
  for (int i = 0; i < data.size(); i++)
-  list.push_back(data[i]);
+  list->push_back(data[i]);
+ return true;
+}
+
+bool ele_menu::ref_data(std::vector<std::string> *data)
+{
+ if (owns_data)
+  delete list;
+
+ list = data;
+ owns_data = false;
  return true;
 }
 
@@ -498,13 +593,13 @@ bool ele_menu::set_data(int data)
 
  if (selection < 0)
   selection = 0;
- if (selection >= list.size())
-  selection = list.size() - 1;
+ if (selection >= list->size())
+  selection = list->size() - 1;
 
  if (selection < sizey)
   offset = 0;
- else if (selection >= list.size() - sizey)
-  offset = list.size() - sizey;
+ else if (selection >= list->size() - sizey)
+  offset = list->size() - sizey;
  else
   offset = selection;
 
@@ -518,11 +613,11 @@ bool ele_menu::add_data(int data)
 
 std::string ele_menu::get_str()
 {
- if (selection < 0 || selection >= list.size()) {
+ if (selection < 0 || selection >= list->size()) {
   std::string ret;
   return ret;
  }
- return list[selection];
+ return (*list)[selection];
 }
 
 int ele_menu::get_int()
@@ -990,6 +1085,42 @@ bool interface::set_data(std::string name, nc_color fg, nc_color bg)
  return ele->set_data(fg, bg);
 }
 
+bool interface::self_reference(std::string name)
+{
+ element* ele = find_by_name(name);
+ if (!ele)
+  return false;
+
+ return ele->self_reference();
+}
+
+bool interface::ref_data(std::string name, std::string *data)
+{
+ element* ele = find_by_name(name);
+ if (!ele)
+  return false;
+
+ return ele->ref_data(data);
+}
+
+bool interface::ref_data(std::string name, std::vector<std::string> *data)
+{
+ element* ele = find_by_name(name);
+ if (!ele)
+  return false;
+
+ return ele->ref_data(data);
+}
+
+bool interface::ref_data(std::string name, int *data)
+{
+ element* ele = find_by_name(name);
+ if (!ele)
+  return false;
+
+ return ele->ref_data(data);
+}
+
 bool interface::clear_data(std::string name)
 {
  element* ele = find_by_name(name);
@@ -1202,12 +1333,12 @@ bool interface::handle_action(long ch)
  return false;
 }
 
-bool action_needs_element(action_id act)
+bool cuss::action_needs_element(cuss::action_id act)
 {
  return (act == ACT_SCROLL || act == ACT_SET_COLORS || act == ACT_TRANSLATE);
 }
 
-std::string action_name(action_id act)
+std::string cuss::action_name(cuss::action_id act)
 {
  switch (act) {
 

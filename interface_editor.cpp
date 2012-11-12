@@ -6,7 +6,7 @@
 
 using namespace cuss;
 
-void starting_window(interface &edited);
+bool starting_window(interface &edited);
 void bindings_window(interface &edited);
 void elements_window(interface &edited);
 void update_elements_window(interface &editor, interface &edited,
@@ -47,17 +47,14 @@ int main()
 { 
  init_display();
  cuss::interface edited;
-
- starting_window(edited);
+ bool done = starting_window(edited);
 
  int sizex = 80, sizey = 24;
- edited.sizex = sizex;
- edited.sizey = sizey;
  Window w(0, 0, sizex, sizey);
 
  draw_mode dm = DM_NULL;
 
- bool done = false, blink = true;
+ bool blink = true;
  int posx = 0, posy = 0, bufx = -1, bufy = -1;
  pen = glyph('x', c_white, c_black);
 
@@ -191,6 +188,9 @@ int main()
 
     } else if (ch == '-') {
      elements_window(edited);
+
+    } else if (ch == '_') {
+     bindings_window(edited);
 
     } else if (ch == '<') {
      sel = edited.select_last(true);
@@ -388,7 +388,7 @@ int main()
  return 0;
 }
 
-void starting_window(interface &edited)
+bool starting_window(interface &edited)
 {
  Window w_start(0, 0, 80, 24);
  cuss::interface i_start;
@@ -446,7 +446,10 @@ void starting_window(interface &edited)
     init_interface(edited, name);
    }
   }
+  if (ch == 'q' || ch == 'Q')
+   return true;
  }
+ return false;
 }
 
 void bindings_window(interface &edited)
@@ -480,9 +483,16 @@ void bindings_window(interface &edited)
     break;
 
    case 'a':
-   case 'A':
+   case 'A': {
 // TODO: Insert add binding code
-    break;
+    long key = popup_getkey("Key to bind:");
+    binding *used = edited.bound_to(key);
+    if (used) {
+     std::stringstream errormes;
+     errormes << "<c=red>ERROR: " << key_name(key) << " is already bound to " <<
+                 action_name(used->act) << (
+     e_text_error.set_data("ERROR: That key is already
+   } break;
 
    case 'd':
    case 'D':
@@ -685,7 +695,7 @@ void update_elements_window(interface &editor, interface &edited,
 
    case ELE_TEXTENTRY: {
     ele_textentry* e_te = static_cast<ele_textentry*>(selected);
-    value_str = &(e_te->text);
+    value_str = e_te->text;
     editor.set_data("e_value_name", "Default:");
     editor.set_selectable("e_value_setting", true);
    } break;
@@ -717,7 +727,7 @@ void update_elements_window(interface &editor, interface &edited,
 
    case ELE_TEXTBOX: {
     ele_textbox* e_tb = static_cast<ele_textbox*>(selected);
-    list_array = &(e_tb->text);
+    list_array = e_tb->text;
     editor.set_data("e_list_name", "Contents:");
     editor.set_data("e_list_instructions", "(Just type to add)");
     editor.set_selectable("e_list_values", true);
@@ -725,7 +735,7 @@ void update_elements_window(interface &editor, interface &edited,
 
    case ELE_LIST:{
     ele_list* e_list = static_cast<ele_list*>(selected);
-    list_array = &(e_list->list);
+    list_array = e_list->list;
     editor.set_data("e_list_name", "Options:");
     editor.set_data("e_list_instructions",
               "<c=blue>A<c=/>dd <c=blue>D<c=/>elete <c=blue>E<c=/>dit");
@@ -734,7 +744,7 @@ void update_elements_window(interface &editor, interface &edited,
 
    case ELE_MENU: {
     ele_menu* e_menu = static_cast<ele_menu*>(selected);
-    list_array = &(e_menu->list);
+    list_array = e_menu->list;
     editor.set_data("e_list_name", "Options:");
     editor.set_data("e_list_instructions",
               "<c=blue>A<c=/>dd <c=blue>D<c=/>elete <c=blue>E<c=/>dit");

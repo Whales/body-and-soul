@@ -33,12 +33,13 @@ namespace cuss {
     int sizey;
     bool selected;
     bool selectable;
+    bool owns_data;
     nc_color fg;
     nc_color bg;
 
     element() { name = ""; posx = 0; posy = 0; sizex = 0; sizey = 0;
                 selected = false; selectable = false;
-                fg = c_white; bg = c_black;}
+                fg = c_white; bg = c_black; owns_data = true; }
 
     virtual element_type type() { return ELE_NULL; };
     virtual void draw(Window *win) {};
@@ -46,14 +47,19 @@ namespace cuss {
     virtual std::string save_data();
     virtual void load_data(std::istream &datastream);
 
-    virtual bool set_data(std::string data) { return false; };
-    virtual bool add_data(std::string data) { return false; };
+    virtual bool self_reference() { return false; };
 
-    virtual bool set_data(std::vector<std::string> data) { return false; };
-    virtual bool add_data(std::vector<std::string> data) { return false; };
+    virtual bool set_data(std::string  data) { return false; };
+    virtual bool add_data(std::string  data) { return false; };
+    virtual bool ref_data(std::string *data) { return false; };
 
-    virtual bool set_data(int data) { return false; };
-    virtual bool add_data(int data) { return false; };
+    virtual bool set_data(std::vector<std::string>  data) { return false; };
+    virtual bool add_data(std::vector<std::string>  data) { return false; };
+    virtual bool ref_data(std::vector<std::string> *data) { return false; };
+
+    virtual bool set_data(int  data) { return false; };
+    virtual bool add_data(int  data) { return false; };
+    virtual bool ref_data(int *data) { return false; };
 
     virtual bool set_data(glyph gl, int posx, int posy) { return false; };
 
@@ -74,7 +80,7 @@ namespace cuss {
 
     ele_drawing() { name = ""; posx = 0; posy = 0; sizex = 0; sizey = 0;
                     selected = false; selectable = false;
-                    fg = c_white; bg = c_black; }
+                    fg = c_white; bg = c_black; owns_data = true; }
 
     virtual element_type type() { return ELE_DRAWING; };
     virtual void draw(Window *win);
@@ -99,12 +105,14 @@ namespace cuss {
 
   struct ele_textbox : public element
   {
-    std::vector<std::string> text;
+    std::vector<std::string> *text;
     int offset;
 
     ele_textbox() { name = ""; posx = 0; posy = 0; sizex = 0; sizey = 0;
                     selected = false; selectable = false; offset = 0;
-                    fg = c_white; bg = c_black; }
+                    fg = c_white; bg = c_black; owns_data = false;
+                    self_reference(); }
+    ~ele_textbox() { if (owns_data) delete text; };
 
     virtual element_type type() { return ELE_TEXTBOX; };
     virtual void draw(Window *win);
@@ -116,31 +124,35 @@ namespace cuss {
  * lines.  It's more efficient to do this once, when the text is stored, than
  * every time we print.
  */
+    virtual bool self_reference();
+
     virtual bool set_data(std::string data);
     virtual bool add_data(std::string data);
 
     virtual bool set_data(std::vector<std::string> data);
     virtual bool add_data(std::vector<std::string> data);
+    virtual bool ref_data(std::vector<std::string> *data);
 
 // These adjust the offset
     virtual bool set_data(int data);
     virtual bool add_data(int data);
 
-    virtual void clear_data() { text.clear(); offset = 0;};
+    virtual void clear_data() { text->clear(); offset = 0;};
 
     virtual std::string get_str();
-    virtual std::vector<std::string> get_str_list() { return text; };
+    virtual std::vector<std::string> get_str_list() { return (*text); };
   };
 
   struct ele_list : public element
   {
-    std::vector<std::string> list;
+    std::vector<std::string> *list;
     int offset;
     int selection;
 
     ele_list() { name = ""; posx = 0; posy = 0; sizex = 0; sizey = 0;
                  selected = false; selectable = false; offset = 0;
-                 selection = 0; fg = c_white; bg = c_black; }
+                 selection = 0; fg = c_white; bg = c_black; owns_data = false;
+                 self_reference(); }
 
     virtual element_type type() { return ELE_LIST; };
     virtual void draw(Window *win);
@@ -148,29 +160,33 @@ namespace cuss {
     virtual std::string save_data();
     virtual void load_data(std::istream &datastream);
 
+    virtual bool self_reference();
+
     virtual bool add_data(std::string data);
 
     virtual bool set_data(std::vector<std::string> data);
     virtual bool add_data(std::vector<std::string> data);
+    virtual bool ref_data(std::vector<std::string> *data);
 
 // These are used to set the selection
     virtual bool set_data(int data);
     virtual bool add_data(int data);
 
-    virtual void clear_data() { list.clear(); offset = 0; selection = 0;};
+    virtual void clear_data() { list->clear(); offset = 0; selection = 0;};
 
     virtual int get_int();
     virtual std::string get_str();
-    virtual std::vector<std::string> get_str_list() { return list; };
+    virtual std::vector<std::string> get_str_list() { return (*list); };
   };
 
   struct ele_textentry : public element
   {
-    std::string text;
+    std::string *text;
 
     ele_textentry() { name = ""; posx = 0; posy = 0; sizex = 0; sizey = 0;
-                      selected = false; selectable = false; text = "";
-                      fg = c_white; bg = c_black; }
+                      selected = false; selectable = false;
+                      fg = c_white; bg = c_black; owns_data = false;
+                      self_reference(); }
 
     virtual element_type type() { return ELE_TEXTENTRY; };
     virtual void draw(Window *win);
@@ -178,50 +194,60 @@ namespace cuss {
     virtual std::string save_data();
     virtual void load_data(std::istream &datastream);
 
+    virtual bool self_reference();
+
     virtual bool set_data(std::string data);
     virtual bool add_data(std::string data);
+    virtual bool ref_data(std::string *data);
 
-    virtual void clear_data() { text.clear(); };
+    virtual void clear_data() { text->clear(); };
 
-    virtual std::string get_str() { return text; };
+    virtual std::string get_str() { return (*text); };
   };
 
   struct ele_number : public element
   {
-    int value;
+    int *value;
 
     ele_number() { name = ""; posx = 0; posy = 0; sizex = 0; sizey = 0;
                    selected = false; selectable = false; value = 0;
-                   fg = c_white; bg = c_black; }
+                   fg = c_white; bg = c_black; owns_data = false;
+                   self_reference(); }
     virtual element_type type() { return ELE_NUMBER; };
     virtual void draw(Window *win);
 
     virtual std::string save_data();
     virtual void load_data(std::istream &datastream);
 
+    virtual bool self_reference();
+
     virtual bool set_data(int data);
     virtual bool add_data(int data);
+    virtual bool ref_data(int *data);
 
     virtual void clear_data() { value = 0; };
 
-    virtual int get_int() { return value; };
+    virtual int get_int() { return (*value); };
   };
 
   struct ele_menu : public element
   {
     std::string title;
-    std::vector<std::string> list;
+    std::vector<std::string> *list;
     int selection, offset;
 
     ele_menu() { name = ""; posx = 0; posy = 0; sizex = 0; sizey = 0;
                  selected = false; selectable = false; selection = 0;
-                 offset = 0; fg = c_white; bg = c_black; title = ""; }
+                 offset = 0; fg = c_white; bg = c_black; title = ""; 
+                 owns_data = false; self_reference(); }
 
     virtual element_type type() { return ELE_MENU; };
     virtual void draw(Window *win);
 
     virtual std::string save_data();
     virtual void load_data(std::istream &datastream);
+
+    virtual bool self_reference();
 
 // set_data sets the title--the only string unique identified w/o an index
     virtual bool set_data(std::string data);
@@ -230,17 +256,18 @@ namespace cuss {
 
     virtual bool set_data(std::vector<std::string> data);
     virtual bool add_data(std::vector<std::string> data);
+    virtual bool ref_data(std::vector<std::string> *data);
 
 // Change the selection
     virtual bool set_data(int data);
     virtual bool add_data(int data);
 
-    virtual void clear_data() { title.clear(); list.clear(); offset = 0;
+    virtual void clear_data() { title.clear(); list->clear(); offset = 0;
                                 selection = 0; };
 
     virtual std::string get_str();
     virtual int get_int();
-    virtual std::vector<std::string> get_str_list() { return list; };
+    virtual std::vector<std::string> get_str_list() { return (*list); };
   };
 
 
@@ -260,6 +287,9 @@ namespace cuss {
 
     ACT_MAX
   };
+
+  bool action_needs_element(action_id act);
+  std::string action_name(action_id act);
 
   struct binding
   {
@@ -316,6 +346,11 @@ namespace cuss {
     bool add_data(std::string name, int data);
     bool set_data(std::string name, glyph gl, int posx, int posy);
     bool set_data(std::string name, nc_color fg, nc_color bg = c_null);
+
+    bool self_reference(std::string name);
+    bool ref_data(std::string name, std::string *data);
+    bool ref_data(std::string name, std::vector<std::string> *data);
+    bool ref_data(std::string name, int *data);
 
     bool clear_data(std::string name);
 
