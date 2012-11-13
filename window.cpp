@@ -330,15 +330,16 @@ std::string string_edit_popup(std::string orig, const char *mes, ...)
  } while (true);
 }
 
-int int_input_popup(std::string orig, const char *mes, ...)
+int int_input_popup(const char *mes, ...)
 {
- std::string ret = orig;
+ std::string ret;
+ bool negative = false;
  va_list ap;
  va_start(ap, mes);
  char buff[1024];
  vsprintf(buff, mes, ap);
  va_end(ap);
- int startx = strlen(buff) + 2;
+ int startx = strlen(buff) + 3;
  Window w(0, 11, 80, 3);
  w.outline();
  w.putstr(1, 1, c_ltred, c_black, buff);
@@ -352,7 +353,7 @@ int int_input_popup(std::string orig, const char *mes, ...)
   w.refresh();
   long ch = getch();
   if (ch == 27) {	// Escape
-   return orig;
+   return 0;
   } else if (ch == '\n') {
    done = true;
   } else if ((ch == KEY_BACKSPACE || ch == 127) && posx > startx) {
@@ -366,6 +367,12 @@ int int_input_popup(std::string orig, const char *mes, ...)
    w.putch(posx, 1, c_magenta, c_black, ch);
    posx++;
    w.putch(posx, 1, c_ltgray, c_blue, '_');
+  } else if (ch == '-') {
+   negative = !negative;
+   if (negative)
+    w.putch(startx - 1, 1, c_magenta, c_black, '-');
+   else
+    w.putch(startx - 1, 1, c_black, c_black, 'x');
   }
  }
 
@@ -376,6 +383,8 @@ int int_input_popup(std::string orig, const char *mes, ...)
    val *= 10;
   retnum += val;
  }
+ if (negative)
+  retnum *= -1;
  return retnum;
 }
 
@@ -445,7 +454,7 @@ int menu_vec(const char *mes, std::vector<std::string> options)
  do
   ch = getch();
  while (ch < '1' || ch >= '1' + options.size());
- return (ch - '1' + 1);
+ return (ch - '1');
 }
 
 int menu(const char *mes, ...)

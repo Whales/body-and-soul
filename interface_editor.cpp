@@ -462,9 +462,11 @@ void bindings_window(interface &edited)
   return;
  }
  i_bindings.set_data("e_list_bindings", edited.binding_list());
+ i_bindings.select("e_list_bindings");
 
  bool done = false;
  while (!done) {
+  i_bindings.draw(&w_bindings);
   long ch = getch();
 
   switch (ch) {
@@ -491,36 +493,37 @@ void bindings_window(interface &edited)
      std::stringstream errormes;
      errormes << "<c=red>ERROR: " << key_name(key) << " is already bound to " <<
                  action_name(used->act) << "!";
-     e_text_error.set_data(errormes.str());
+     i_bindings.set_data("e_text_error", errormes.str());
     } else {
      int a = 0, b = 0;
      std::vector<std::string> action_options;
      for (int i = 0; i < ACT_MAX; i++)
       action_options.push_back( action_name( action_id(i) ) );
      action_options.push_back("Cancel");
-     action_id act_sel = menu_vec("Action:", action_options);
+     action_id act_sel = action_id( menu_vec("Action:", action_options) );
      std::string ele_sel;
      if (action_needs_element(act_sel)) {
       std::vector<std::string> ele_options = edited.element_names();
       ele_options.push_back("Cancel");
-      ele_sel = ele_options[ menu_vec("Element:", ele_options) ]
+      ele_sel = ele_options[ menu_vec("Element:", ele_options) ];
      }
      if (act_sel != ACT_MAX && ele_sel != "Cancel") {
       switch (act_sel) {
        case ACT_SET_COLORS: {
-        i_bindings.add_data("e_list_fg", "Unchanged");
-        i_bindings.add_data("e_list_bg", "Unchanged");
+        i_bindings.add_data("e_color_fg", "Unchanged");
+        i_bindings.add_data("e_color_bg", "Unchanged");
         for (int i = c_black; i < c_null; i++) {
-         i_bindings.add_data("e_list_fg", color_name( nc_color(i) ));
-         i_bindings.add_data("e_list_bg", color_name( nc_color(i) ));
+         i_bindings.add_data("e_color_fg", color_name( nc_color(i) ));
+         i_bindings.add_data("e_color_bg", color_name( nc_color(i) ));
         }
-        i_bindings.set_selectable("e_list_fg", true);
-        i_bindings.set_selectable("e_list_bg", true);
+        i_bindings.set_selectable("e_color_fg", true);
+        i_bindings.set_selectable("e_color_bg", true);
         i_bindings.set_selectable("e_list_bindings", false);
-        i_bindings.select("e_list_fg");
+        i_bindings.select("e_color_fg");
          
         bool done = false;
         while (!done) {
+         i_bindings.draw(&w_bindings);
          long ch = getch();
          if (ch == 'j' || ch == 'J' || ch == '2' || ch == KEY_DOWN)
           i_bindings.selected()->add_data(1);
@@ -531,10 +534,12 @@ void bindings_window(interface &edited)
          if (ch == '\n')
           done = true;
         }
-        a = i_bindings.get_int("e_list_fg");
-        b = i_bindings.get_int("e_list_bg");
-        i_bindings.set_selectable("e_list_fg", false);
-        i_bindings.set_selectable("e_list_bg", false);
+        a = i_bindings.get_int("e_color_fg");
+        b = i_bindings.get_int("e_color_bg");
+        i_bindings.set_selectable("e_color_fg", false);
+        i_bindings.set_selectable("e_color_bg", false);
+        i_bindings.clear_data("e_color_fg");
+        i_bindings.clear_data("e_color_bg");
         i_bindings.set_selectable("e_list_bindings", true);
         i_bindings.select("e_list_bindings");
        } break;
@@ -548,6 +553,7 @@ void bindings_window(interface &edited)
         a = int_input_popup("Amount:");
       }
       edited.add_binding(key, act_sel, ele_sel, a, b);
+      i_bindings.set_data("e_list_bindings", edited.binding_list());
      } // !Canceled
     } // !used
 
@@ -560,11 +566,33 @@ void bindings_window(interface &edited)
      char key = selname[0];
      edited.rem_binding(key);
     }
+    i_bindings.set_data("e_list_bindings", edited.binding_list());
    } break;
 
    case 'c':
    case 'C': {
-    std::vector<std::string> options
+    std::vector<std::string> eles = edited.element_names();
+    std::vector<std::string> options;
+    for (int i = 0; i < ACT_MAX; i++) {
+     if (edited.has_bindings_for( action_id(i) ))
+      options.push_back( action_name( action_id(i) ) );
+    }
+    for (int i = 0; i < eles.size(); i++) {
+     if (edited.has_bindings_for( eles[i] ))
+      options.push_back(eles[i]);
+    }
+    options.push_back("All");
+    int sel = menu_vec("Group to delete:", options);
+    if (sel == options.size() - 1) {
+     char confirm = popup_getkey("Really delete all?");
+     if (confirm == 'y' || confirm == 'Y')
+      edited.rem_all_bindings();
+    } else if (sel < ACT_MAX)
+     edited.rem_all_bindings( action_id(sel) );
+    else
+     edited.rem_all_bindings(options[sel]);
+
+    i_bindings.set_data("e_list_bindings", edited.binding_list());
    } break;
 
    case KEY_ESC:

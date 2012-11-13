@@ -649,17 +649,14 @@ void print_scrollbar(Window *win, int posx, int posy, int length, int offset,
 std::string binding::save_data()
 {
  std::stringstream ret;
- ret << int(act) << " " << target << " " << STD_DELIM << " " << a << " " << b;
+ ret << int(act) << " " << target << " " << a << " " << b;
  return ret.str();
 }
 
 void binding::load_data(std::istream &datastream)
 {
  int tmpact;
- datastream >> tmpact;
- act = action_id(tmpact);
- target = load_to_delim(datastream, STD_DELIM);
- datastream >> a >> b;
+ datastream >> tmpact >> target >> a >> b;
 }
 
 interface::interface(std::string N, int X, int Y)
@@ -687,6 +684,9 @@ void interface::add_element(element_type type, std::string name, int posx,
   szx = sizex - posx;
  if (posy + szy >= sizey)
   szy = sizey - posy;
+
+ if (name.find(' ') != std::string::npos)
+  return;
 
  switch (type) {
  
@@ -1164,8 +1164,8 @@ std::vector<std::string> interface::get_str_list(std::string name)
 std::vector<std::string> interface::binding_list()
 {
  std::vector<std::string> ret;
- std::map<long, binding>::iterator it;
 
+ std::map<long, binding>::iterator it;
  for (it = bindings.begin(); it != bindings.end(); it++) {
   std::stringstream info;
   info << key_name(it->first) << ": " << action_name(it->second.act);
@@ -1181,7 +1181,10 @@ std::vector<std::string> interface::binding_list()
   else if (it->second.act == ACT_TRANSLATE)
    info << "(" << it->second.target << "; " << char(it->second.a) << " to " <<
            char(it->second.b) << ")";
+
+  ret.push_back(info.str());
  }
+ return ret;
 }
 
 bool interface::add_binding(long ch, action_id act, std::string target)
@@ -1215,6 +1218,26 @@ binding* interface::bound_to(long ch)
   return NULL;
 
  return &(bindings[ch]);
+}
+
+bool interface::has_bindings_for(action_id act)
+{
+ std::map<long, binding>::iterator it;
+ for (it = bindings.begin(); it != bindings.end(); it++) {
+  if (it->second.act == act)
+   return true;
+ }
+ return false;
+}
+
+bool interface::has_bindings_for(std::string target)
+{
+ std::map<long, binding>::iterator it;
+ for (it = bindings.begin(); it != bindings.end(); it++) {
+  if (it->second.target == target)
+   return true;
+ }
+ return false;
 }
 
 bool interface::rem_binding(long ch)
@@ -1270,9 +1293,9 @@ bool interface::rem_all_bindings(std::string target)
  return true;
 }
 
-bool interface::toggle_bindings()
+bool interface::set_use_bindings(bool set)
 {
- use_bindings = !use_bindings;
+ use_bindings = set;
 }
 
 bool interface::handle_action(long ch)

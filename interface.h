@@ -362,11 +362,15 @@ namespace cuss {
     bool add_binding(long ch, action_id act, std::string target = "");
     bool add_binding(long ch, action_id act, std::string target,
                      int a, int b = 0);
+
     binding* bound_to(long ch);
+    bool has_bindings_for(action_id act);
+    bool has_bindings_for(std::string target);
+
     bool rem_binding(long ch);
     bool rem_all_bindings(action_id act = ACT_NULL);
     bool rem_all_bindings(std::string target);
-    bool toggle_bindings();
+    bool set_use_bindings(bool set = true);
 
     bool handle_action(long ch);
 
