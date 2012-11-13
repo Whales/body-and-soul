@@ -1201,6 +1201,8 @@ bool interface::add_binding(long ch, action_id act, std::string target,
 {
  if (bindings.count(ch))
   return false;
+ if (!find_by_name(target))
+  return false;
 
  binding newbind(act, target, a, b);
  bindings[ch] = newbind;

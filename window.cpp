@@ -330,6 +330,54 @@ std::string string_edit_popup(std::string orig, const char *mes, ...)
  } while (true);
 }
 
+int int_input_popup(std::string orig, const char *mes, ...)
+{
+ std::string ret = orig;
+ va_list ap;
+ va_start(ap, mes);
+ char buff[1024];
+ vsprintf(buff, mes, ap);
+ va_end(ap);
+ int startx = strlen(buff) + 2;
+ Window w(0, 11, 80, 3);
+ w.outline();
+ w.putstr(1, 1, c_ltred, c_black, buff);
+ w.putstr(startx, 1, c_magenta, c_black, ret);
+ for (int i = startx + ret.length() + 1; i < 79; i++)
+  w.putch(i, 1, c_ltgray, c_black, '_');
+ int posx = startx + ret.length();
+ w.putch(posx, 1, c_ltgray, c_blue, '_');
+ bool done = false;
+ while (!done) {
+  w.refresh();
+  long ch = getch();
+  if (ch == 27) {	// Escape
+   return orig;
+  } else if (ch == '\n') {
+   done = true;
+  } else if ((ch == KEY_BACKSPACE || ch == 127) && posx > startx) {
+// Move the cursor back and re-draw it
+   ret = ret.substr(0, ret.size() - 1);
+   w.putch(posx, 1, c_ltgray, c_black, '_');
+   posx--;
+   w.putch(posx, 1, c_ltgray, c_blue, '_');
+  } else if (ch >= '0' && ch <= '9') {
+   ret += ch;
+   w.putch(posx, 1, c_magenta, c_black, ch);
+   posx++;
+   w.putch(posx, 1, c_ltgray, c_blue, '_');
+  }
+ }
+
+ int retnum = 0;
+ for (int i = 0; i < ret.length(); i++) {
+  int val = ret[i] - '0';
+  for (int n = 0; n < (ret.length() - 1 - i); n++)
+   val *= 10;
+  retnum += val;
+ }
+ return retnum;
+}
 
 long popup_getkey(const char *mes, ...)
 {
