@@ -148,7 +148,7 @@ void ele_textbox::draw(Window *win)
 std::string ele_textbox::save_data()
 {
  std::stringstream ret;
- ret << element::save_data() << " " << (*text) << STD_DELIM;
+ ret << element::save_data() << " " << (*text) << " " << STD_DELIM;
 
  return ret.str();
 }
@@ -246,7 +246,7 @@ void ele_list::draw(Window *win)
 std::string ele_list::save_data()
 {
  std::stringstream ret;
- ret << element::save_data() << " " << list->size();
+ ret << element::save_data() << " " << list->size() << " ";
  for (int i = 0; i < list->size(); i++)
   ret << (*list)[i] << " " << STD_DELIM << " ";
 
@@ -507,7 +507,7 @@ std::string ele_menu::save_data()
 {
  std::stringstream ret;
  ret << element::save_data() << " " << title << " " << STD_DELIM << " " <<
-        list->size();
+        list->size() << " ";
  for (int i = 0; i < list->size(); i++)
   ret << (*list)[i] << " " << STD_DELIM << " ";
 
@@ -709,6 +709,12 @@ void interface::add_element(element_type type, std::string name, int posx,
    PREP_ELEMENT(ele);
    elements.push_back(ele);
   } break;
+
+  case ELE_MENU: {
+   ele_menu *ele = new ele_menu;
+   PREP_ELEMENT(ele);
+   elements.push_back(ele);
+  } break;
  
   default:
    debugmsg("Unknown element type %d", type);
@@ -789,12 +795,12 @@ std::string interface::save_data()
 
  ret << name << " " << STD_DELIM << " " << elements.size() << " ";
  for (int i = 0; i < elements.size(); i++)
-  ret << elements[i]->type() << " " << elements[i]->save_data() << " ";
+  ret << elements[i]->type() << " " << elements[i]->save_data() << std::endl;
 
  ret << bindings.size() << " ";
  std::map<long, binding>::iterator it;
  for (it = bindings.begin(); it != bindings.end(); it++)
-  ret << it->first << " " << it->second.save_data() << " ";
+  ret << it->first << " " << it->second.save_data() << std::endl;
 
  return ret.str();
 }
@@ -840,6 +846,12 @@ void interface::load_data(std::istream &datastream)
 
    case ELE_NUMBER: {
     ele_number *tmp = new ele_number;
+    tmp->load_data(datastream);
+    elements.push_back(tmp);
+   } break;
+
+   case ELE_MENU: {
+    ele_menu *tmp = new ele_menu;
     tmp->load_data(datastream);
     elements.push_back(tmp);
    } break;

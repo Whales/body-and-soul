@@ -9,9 +9,7 @@ using namespace cuss;
 bool starting_window(interface &edited);
 void bindings_window(interface &edited);
 void elements_window(interface &edited);
-void update_elements_window(interface &editor, interface &edited,
-                            std::string** value_str,
-                            std::vector<std::string>** list_array);
+void update_elements_window(interface &editor, interface &edited);
 
 void init_interface(interface &edited, std::string name);
 void draw_line(interface &edited, int x1, int y1, int x2, int y2);
@@ -304,12 +302,12 @@ int main()
        dm = DM_NULL;
        switch (menu("Element type:", "Drawing", "Text", "List", "Text Entry",
                     "Number", "Drop-down Menu", "Cancel", NULL)) {
-        case 1: type = ELE_DRAWING;   break;
-        case 2: type = ELE_TEXTBOX;   break;
-        case 3: type = ELE_LIST;      break;
-        case 4: type = ELE_TEXTENTRY; break;
-        case 5: type = ELE_NUMBER;    break;
-        case 6: type = ELE_MENU;      break;
+        case 0: type = ELE_DRAWING;   break;
+        case 1: type = ELE_TEXTBOX;   break;
+        case 2: type = ELE_LIST;      break;
+        case 3: type = ELE_TEXTENTRY; break;
+        case 4: type = ELE_NUMBER;    break;
+        case 5: type = ELE_MENU;      break;
         case 7: type = ELE_NULL;      break;
        }
        if (type != ELE_NULL) {
@@ -631,9 +629,13 @@ void elements_window(interface &edited)
  element* selected = edited.select("BG");
 
  bool done = false;
- std::string* value_str = NULL;
- std::vector<std::string> *list_array = NULL;
- update_elements_window(i_ele, edited, &value_str, &list_array);
+/*
+ std::string value_str;
+ std::vector<std::string> list_array;
+ i_ele.ref_data("e_list_values",   &list_array);
+ i_ele.ref_data("e_value_setting", &value_str);
+*/
+ update_elements_window(i_ele, edited);
 
  do {
 
@@ -647,12 +649,12 @@ void elements_window(interface &edited)
    if (ch == 'j' || ch == 'J' || ch == '2' || ch == KEY_DOWN) {
     i_ele.add_data("e_elelist", 1);
     selected = edited.select(cur->get_str());
-    update_elements_window(i_ele, edited, &value_str, &list_array);
+    update_elements_window(i_ele, edited);
    }
    if (ch == 'k' || ch == 'K' || ch == '8' || ch == KEY_UP) {
     i_ele.add_data("e_elelist", -1);
     selected = edited.select(cur->get_str());
-    update_elements_window(i_ele, edited, &value_str, &list_array);
+    update_elements_window(i_ele, edited);
    }
    if (ch == '\t')
     cur = i_ele.select_next();
@@ -666,29 +668,25 @@ void elements_window(interface &edited)
     cur = i_ele.select_next();
     if (cur && cur->name == "e_list_values")
      cur->set_data(99999); // Scroll to bottom
-   }
-   else if (cur && selected && cur->name == "e_elename") {
+   } else if (cur && selected && cur->name == "e_elename") {
     if (ch == ']')
      cur = i_ele.select_next();
     else if (ch == '[')
      cur = i_ele.select_last();
     else if ((ch == KEY_BACKSPACE || ch == 127 || ch == 8) &&
-             selected && !selected->name.empty()  ) {
-     selected->name = selected->name.substr(0, selected->name.size() - 1);
-     i_ele.set_data("e_elename", selected->name);
+             selected) {
+     if (!selected->name.empty()) {
+      selected->name = selected->name.substr(0, selected->name.size() - 1);
+      i_ele.set_data("e_elelist", edited.element_names());
+     }
     } else if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') ||
               (ch >= '0' && ch <= '9') || ch == '_') {
      selected->name += ch;
-     i_ele.set_data("e_elename", selected->name);
+     i_ele.set_data("e_elelist", edited.element_names());
     }
 
    } else if (cur && cur->name == "e_value_setting") {
-    if (value_str) { // We're editing something with a string value
-     if ((ch == KEY_BACKSPACE || ch == 127 || ch == 8) && !value_str->empty())
-      *value_str = value_str->substr(0, value_str->size() - 1);
-     else
-      *value_str += ch;
-    } else if (selected && selected->type() == ELE_NUMBER) { // Editing a number
+    if (selected && selected->type() == ELE_NUMBER) { // Editing a number
      if (ch == 'k' || ch == 'K' || ch == KEY_UP)
       selected->add_data(1);
      if (ch == 'j' || ch == 'J' || ch == KEY_DOWN)
@@ -699,6 +697,19 @@ void elements_window(interface &edited)
       selected->set_data( selected->get_int() / 10 );
      if (ch >= '0' && ch <= '9')
       selected->set_data( (ch - '0') + selected->get_int() * 10);
+    } else { // Editing a string
+     std::string strtmp;
+     if (selected->type() == ELE_MENU) {
+      ele_menu* e_m = static_cast<ele_menu*>(selected);
+      strtmp = e_m->title;
+     } else
+      strtmp = selected->get_str();
+     if ((ch == KEY_BACKSPACE || ch == 127 || ch == 8)) {
+      if (!strtmp.empty())
+       strtmp = strtmp.substr(0, strtmp.size() - 1);
+     } else
+      strtmp += ch;
+     selected->set_data(strtmp);
     }
 
    } else if (cur && cur->name == "e_list_values") {
@@ -711,15 +722,16 @@ void elements_window(interface &edited)
      else if (ch == KEY_DOWN)
       i_ele.add_data("e_list_values", 1);
 
-     else if (!alltext.empty() &&
-              (ch == KEY_BACKSPACE || ch == 127 || ch == 8)) {
-      alltext = alltext.substr(0, alltext.size() - 1);
-      selected->set_data(alltext);
-      if (cur->sizex >= selected->sizex)
-       i_ele.set_data("e_list_values", selected->get_str_list());
-      else
-       i_ele.set_data("e_list_values", break_into_lines(alltext, cur->sizex));
-      i_ele.set_data("e_list_values", 99999); // Scroll to the bottom
+     else if  (ch == KEY_BACKSPACE || ch == 127 || ch == 8) {
+      if (!alltext.empty()) {
+       alltext = alltext.substr(0, alltext.size() - 1);
+       selected->set_data(alltext);
+       if (cur->sizex >= selected->sizex)
+        i_ele.set_data("e_list_values", selected->get_str_list());
+       else
+        i_ele.set_data("e_list_values", break_into_lines(alltext, cur->sizex));
+       i_ele.set_data("e_list_values", 99999); // Scroll to the bottom
+      }
 
      } else {
       alltext += ch;
@@ -734,6 +746,14 @@ void elements_window(interface &edited)
     } else if (selected &&
                (selected->type() == ELE_LIST || selected->type() == ELE_MENU)) {
      int pos = i_ele.get_int("e_list_values");
+     std::vector<std::string> *list_array;
+     if (selected->type() == ELE_LIST) {
+      ele_list* e_l = static_cast<ele_list*>(selected);
+      list_array = e_l->list;
+     } else if (selected->type() == ELE_MENU) {
+      ele_menu* e_m = static_cast<ele_menu*>(selected);
+      list_array = e_m->list;
+     }
 
      if (ch == 'j' || ch == 'J' || ch == '2' || ch == KEY_DOWN)
       i_ele.add_data("e_list_values", 1);
@@ -743,20 +763,16 @@ void elements_window(interface &edited)
 
      if (ch == 'a' || ch == 'A') {
       selected->add_data( string_input_popup("New item:") );
-      i_ele.set_data("e_list_values", selected->get_str_list());
       i_ele.set_data("e_list_values", 99999); // move to end of list
      }
 
      if (list_array && pos >= 0 && pos < list_array->size() &&
-         ch == 'e' || ch == 'E') {
+         ch == 'e' || ch == 'E')
       (*list_array)[pos] = string_edit_popup((*list_array)[pos], "");
-      i_ele.set_data("e_list_values", selected->get_str_list());
-     }
 
      if (list_array && pos >= 0 && pos < list_array->size() &&
          (ch == 'd' || ch == 'D')) {
       list_array->erase( list_array->begin() + pos );
-      i_ele.set_data("e_list_values", selected->get_str_list());
       i_ele.set_data("e_list_values", pos);
      }
 
@@ -764,7 +780,6 @@ void elements_window(interface &edited)
       std::string buff = (*list_array)[pos];
       (*list_array)[pos] = (*list_array)[pos + 1];
       (*list_array)[pos + 1] = buff;
-      i_ele.set_data("e_list_values", selected->get_str_list());
       i_ele.set_data("e_list_values", pos + 1);
      }
 
@@ -772,7 +787,6 @@ void elements_window(interface &edited)
       std::string buff = (*list_array)[pos];
       (*list_array)[pos] = (*list_array)[pos - 1];
       (*list_array)[pos - 1] = buff;
-      i_ele.set_data("e_list_values", selected->get_str_list());
       i_ele.set_data("e_list_values", pos - 1);
      }
     }
@@ -782,13 +796,8 @@ void elements_window(interface &edited)
 }
 
 
-void update_elements_window(interface &editor, interface &edited,
-                            std::string** value_str_ptr,
-                            std::vector<std::string>** list_array_ptr)
+void update_elements_window(interface &editor, interface &edited)
 {
- std::string* value_str = NULL;
- std::vector<std::string> *list_array = NULL;
-
  element* selected = edited.selected();
 
  if (selected) {
@@ -800,78 +809,71 @@ void update_elements_window(interface &editor, interface &edited,
 
    case ELE_TEXTENTRY: {
     ele_textentry* e_te = static_cast<ele_textentry*>(selected);
-    value_str = e_te->text;
     editor.set_data("e_value_name", "Default:");
     editor.set_selectable("e_value_setting", true);
+    editor.ref_data("e_value_setting", e_te->text);
    } break;
 
-   case ELE_NUMBER: {
-    std::stringstream value;
-    value << selected->get_int();
+   case ELE_NUMBER:
     editor.set_data("e_value_name", "Default:");
-    editor.set_data("e_value_setting", value.str());
+    editor.self_reference("e_value_setting");
     editor.set_selectable("e_value_setting", true);
-   } break;
+   break;
 
    case ELE_MENU: {
     ele_menu* e_men = static_cast<ele_menu*>(selected);
-    value_str = &(e_men->title);
     editor.set_data("e_value_name", "Title:");
-    editor.set_data("e_value_setting", e_men->title);
+    editor.ref_data("e_value_setting", &(e_men->title));
     editor.set_selectable("e_value_setting", true);
    } break;
 
    default:
-    value_str = NULL;
     editor.set_data("e_value_name", "");
     editor.set_data("e_value_setting", "");
     editor.set_selectable("e_value_setting", false);
+    editor.self_reference("e_value_setting");
+    editor.clear_data("e_value_setting");
   }
 // Set up the list area
   switch (selected->type()) {
 
    case ELE_TEXTBOX: {
     ele_textbox* e_tb = static_cast<ele_textbox*>(selected);
-    editor.set_data("e_list_values", e_tb->get_str_list());
     editor.set_data("e_list_name", "Contents:");
     editor.set_data("e_list_instructions", "(Just type to add)");
+    editor.self_reference("e_list_values");
+    editor.set_data("e_list_values", e_tb->get_str_list());
     editor.set_selectable("e_list_values", true);
    } break;
 
    case ELE_LIST:{
     ele_list* e_list = static_cast<ele_list*>(selected);
-    list_array = e_list->list;
     editor.set_data("e_list_name", "Options:");
     editor.set_data("e_list_instructions",
               "<c=blue>A<c=/>dd <c=blue>D<c=/>elete <c=blue>E<c=/>dit");
+    editor.ref_data("e_list_values", e_list->list);
     editor.set_selectable("e_list_values", true);
    } break;
 
    case ELE_MENU: {
     ele_menu* e_menu = static_cast<ele_menu*>(selected);
-    list_array = e_menu->list;
     editor.set_data("e_list_name", "Options:");
     editor.set_data("e_list_instructions",
               "<c=blue>A<c=/>dd <c=blue>D<c=/>elete <c=blue>E<c=/>dit");
+    editor.ref_data("e_list_values", e_menu->list);
     editor.set_selectable("e_list_values", true);
    } break;
 
    default:
-    list_array = NULL;
     editor.clear_data("e_list_name");
     editor.clear_data("e_list_instructions");
+    editor.clear_data("e_list_values");
+    editor.self_reference("e_list_values");
     editor.clear_data("e_list_values");
     editor.set_selectable("e_list_values", false);
     break;
   }
  }
- if (value_str)
-  editor.set_data("e_value_setting", *value_str);
- if (list_array)
-  editor.set_data("e_list_values", *list_array);
-
- (*value_str_ptr)  = value_str;
- (*list_array_ptr) = list_array;
 }
 
 

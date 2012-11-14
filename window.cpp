@@ -315,12 +315,14 @@ std::string string_edit_popup(std::string orig, const char *mes, ...)
    return orig;
   } else if (ch == '\n') {
    return ret;
-  } else if ((ch == KEY_BACKSPACE || ch == 127) && posx > startx) {
+  } else if (ch == KEY_BACKSPACE || ch == 127) {
+   if (posx > startx) {
 // Move the cursor back and re-draw it
-   ret = ret.substr(0, ret.size() - 1);
-   w.putch(posx, 1, c_ltgray, c_black, '_');
-   posx--;
-   w.putch(posx, 1, c_ltgray, c_blue, '_');
+    ret = ret.substr(0, ret.size() - 1);
+    w.putch(posx, 1, c_ltgray, c_black, '_');
+    posx--;
+    w.putch(posx, 1, c_ltgray, c_blue, '_');
+   }
   } else {
    ret += ch;
    w.putch(posx, 1, c_magenta, c_black, ch);
@@ -356,12 +358,14 @@ int int_input_popup(const char *mes, ...)
    return 0;
   } else if (ch == '\n') {
    done = true;
-  } else if ((ch == KEY_BACKSPACE || ch == 127) && posx > startx) {
+  } else if (ch == KEY_BACKSPACE || ch == 127) {
+   if (posx > startx) {
 // Move the cursor back and re-draw it
-   ret = ret.substr(0, ret.size() - 1);
-   w.putch(posx, 1, c_ltgray, c_black, '_');
-   posx--;
-   w.putch(posx, 1, c_ltgray, c_blue, '_');
+    ret = ret.substr(0, ret.size() - 1);
+    w.putch(posx, 1, c_ltgray, c_black, '_');
+    posx--;
+    w.putch(posx, 1, c_ltgray, c_blue, '_');
+   }
   } else if (ch >= '0' && ch <= '9') {
    ret += ch;
    w.putch(posx, 1, c_magenta, c_black, ch);
