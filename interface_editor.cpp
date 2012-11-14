@@ -15,9 +15,9 @@ void update_elements_window(interface &editor, interface &edited,
 
 void init_interface(interface &edited, std::string name);
 void draw_line(interface &edited, int x1, int y1, int x2, int y2);
-void temp_line(Window &w, int x1, int y1, int x2, int y2);
 void draw_box (interface &edited, int x1, int y1, int x2, int y2);
-void temp_box (Window &w, int x1, int y1, int x2, int y2);
+void temp_line(Window &w,         int x1, int y1, int x2, int y2);
+void temp_box (Window &w,         int x1, int y1, int x2, int y2);
 void paint(interface &edited, int x, int y);
 void fix_lines(interface &edited, std::string name);
 bool is_line(long ch);
@@ -457,6 +457,7 @@ void bindings_window(interface &edited)
  Window w_bindings(0, 0, 80, 24);
 
  cuss::interface i_bindings;
+ std::vector<long> bind_keys; // For temp use only
  if (!i_bindings.load_from_file("cuss/i_bindings.cuss")) {
   debugmsg("Couldn't load cuss/i_bindings.cuss!");
   return;
@@ -496,17 +497,20 @@ void bindings_window(interface &edited)
      i_bindings.set_data("e_text_error", errormes.str());
     } else {
      int a = 0, b = 0;
+
      std::vector<std::string> action_options;
      for (int i = 0; i < ACT_MAX; i++)
       action_options.push_back( action_name( action_id(i) ) );
      action_options.push_back("Cancel");
      action_id act_sel = action_id( menu_vec("Action:", action_options) );
+
      std::string ele_sel;
      if (action_needs_element(act_sel)) {
       std::vector<std::string> ele_options = edited.element_names();
       ele_options.push_back("Cancel");
       ele_sel = ele_options[ menu_vec("Element:", ele_options) ];
      }
+
      if (act_sel != ACT_MAX && ele_sel != "Cancel") {
       switch (act_sel) {
        case ACT_SET_COLORS: {
@@ -536,6 +540,14 @@ void bindings_window(interface &edited)
         }
         a = i_bindings.get_int("e_color_fg");
         b = i_bindings.get_int("e_color_bg");
+        if (a == 0)
+         a = c_null;
+        else
+         a--;
+        if (b == 0)
+         b = c_null;
+        else
+         b--;
         i_bindings.set_selectable("e_color_fg", false);
         i_bindings.set_selectable("e_color_bg", false);
         i_bindings.clear_data("e_color_fg");
@@ -553,6 +565,7 @@ void bindings_window(interface &edited)
         a = int_input_popup("Amount:");
       }
       edited.add_binding(key, act_sel, ele_sel, a, b);
+      bind_keys.push_back(key);
       i_bindings.set_data("e_list_bindings", edited.binding_list());
      } // !Canceled
     } // !used
@@ -561,10 +574,11 @@ void bindings_window(interface &edited)
 
    case 'd':
    case 'D': {
-    std::string selname = i_bindings.get_str("e_list_bindings");
-    if (!selname.empty()) {
-     char key = selname[0];
+    int selindex = i_bindings.get_int("e_list_bindings");
+    if (selindex > 0 && selindex < bind_keys.size()) {
+     long key = bind_keys[selindex];
      edited.rem_binding(key);
+     bind_keys.erase( bind_keys.begin() + selindex );
     }
     i_bindings.set_data("e_list_bindings", edited.binding_list());
    } break;
@@ -818,7 +832,7 @@ void update_elements_window(interface &editor, interface &edited,
 
    case ELE_TEXTBOX: {
     ele_textbox* e_tb = static_cast<ele_textbox*>(selected);
-    list_array = e_tb->text;
+    editor.set_data("e_list_values", e_tb->get_str_list());
     editor.set_data("e_list_name", "Contents:");
     editor.set_data("e_list_instructions", "(Just type to add)");
     editor.set_selectable("e_list_values", true);

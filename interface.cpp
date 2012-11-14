@@ -134,22 +134,21 @@ bool ele_drawing::translate(long from, long to)
 // *** TEXTBOX ELEMENT ***
 void ele_textbox::draw(Window *win)
 {
+ std::vector<std::string> broken = break_into_lines(*text, sizex);
  win->clear_area(posx, posy, posx + sizex - 1, posy + sizey - 1);
 
- for (int i = 0; i + offset < text->size() && i < sizey; i++)
-  win->putstr_n(posx, posy + i, fg, bg, sizex, (*text)[i + offset]);
+ for (int i = 0; i + offset < broken.size() && i < sizey; i++)
+  win->putstr_n(posx, posy + i, fg, bg, sizex, broken[i + offset]);
 
  if (selectable)
-  print_scrollbar(win, posx + sizex - 1, posy, sizey, offset, text->size(),
+  print_scrollbar(win, posx + sizex - 1, posy, sizey, offset, broken.size(),
                   selected);
 }
 
 std::string ele_textbox::save_data()
 {
  std::stringstream ret;
- ret << element::save_data() << " " << text->size();
- for (int i = 0; i < text->size(); i++)
-  ret << (*text)[i] << " " << STD_DELIM << " ";
+ ret << element::save_data() << " " << (*text) << STD_DELIM;
 
  return ret.str();
 }
@@ -157,12 +156,7 @@ std::string ele_textbox::save_data()
 void ele_textbox::load_data(std::istream &datastream)
 {
  element::load_data(datastream);
- int tmpsize;
- datastream >> tmpsize;
- for (int i = 0; i < tmpsize; i++) {
-  std::string tmp = load_to_delim(datastream, STD_DELIM);
-  text->push_back(tmp);
- }
+ (*text) = load_to_delim(datastream, STD_DELIM);
 }
 
 bool ele_textbox::self_reference()
@@ -170,39 +164,38 @@ bool ele_textbox::self_reference()
  if (owns_data)
   return false;
 
- text = new std::vector<std::string>;
+ text = new std::string;
  owns_data = true;
  return true;
 }
 
 bool ele_textbox::set_data(std::string data)
 {
- std::vector<std::string> broken = break_into_lines(data, sizex);
- set_data(broken);
+ (*text) = data;
  return true;
 }
 
 bool ele_textbox::add_data(std::string data)
 {
- std::string newtext = get_str() + data;
- set_data(newtext);
+ (*text) += data;
  return true;
 }
 
 bool ele_textbox::set_data(std::vector<std::string> data)
 {
- (*text) = data;
+ (*text) = "";
+ add_data(data);
  return true;
 }
 
 bool ele_textbox::add_data(std::vector<std::string> data)
 {
  for (int i = 0; i < data.size(); i++)
-  text->push_back(data[i]);
+  (*text) += data[i] + '\n';
  return true;
 }
 
-bool ele_textbox::ref_data(std::vector<std::string> *data)
+bool ele_textbox::ref_data(std::string *data)
 {
  if (owns_data)
   delete text;
@@ -214,10 +207,11 @@ bool ele_textbox::ref_data(std::vector<std::string> *data)
 
 bool ele_textbox::set_data(int data)
 {
+ std::vector<std::string> broken = break_into_lines(*text, sizex);
  if (data <= 0)
   offset = 0;
- else if (data > sizey - text->size())
-  offset = sizey - text->size();
+ else if (data > sizey - broken.size())
+  offset = sizey - broken.size();
  else
   offset = data;
 }
@@ -227,15 +221,9 @@ bool ele_textbox::add_data(int data)
  set_data(offset + data);
 }
 
-std::string ele_textbox::get_str()
+std::vector<std::string> ele_textbox::get_str_list()
 {
- std::string ret;
- for (int i = 0; i < text->size(); i++)
-  ret += (*text)[i] + " ";
-
- if (!ret.empty())
-  ret = ret.substr(0, ret.size() - 1); // Trim trailing " "
- return ret;
+ return break_into_lines(*text, sizex);
 }
 
 // *** LIST ELEMENT ***
@@ -344,11 +332,9 @@ bool ele_list::add_data(int data)
  if (selection >= list->size())
   selection = list->size() - 1;
 
- if (selection < sizey)
-  offset = 0;
- else if (selection < offset)
-  offset = selection;
- else if (offset + sizey <= selection)
+ while (selection < offset)
+  offset--;
+ if (offset + sizey <= selection)
   offset = selection - sizey + 1;
 
  return true;
@@ -629,7 +615,7 @@ void print_scrollbar(Window *win, int posx, int posy, int length, int offset,
                      int size, bool selected)
 {
  nc_color barcol = (selected ? SELECTCOLOR : c_ltgray);
- int barsize = (length >= size ? -1 : (length * length) / size);
+ int barsize = (length >= size ? -1 : 1 + ((length * length) / size));
 
  if (barsize == -1) {
 // Don't print a scroll bar
@@ -639,9 +625,9 @@ void print_scrollbar(Window *win, int posx, int posy, int length, int offset,
   int barpos = (offset * length) / size;
   if (barpos + barsize > length)
    barpos = length - barsize;
-  for (int y = posy; y < posy + length; y++) {
+  for (int y = 0; y < length; y++) {
    long ch = ((y >= barpos && y < barpos + barsize) ? '#' : LINE_XOXO);
-   win->putch(posx, y, barcol, c_black, ch);
+   win->putch(posx, posy + y, barcol, c_black, ch);
   }
  }
 }
@@ -657,6 +643,7 @@ void binding::load_data(std::istream &datastream)
 {
  int tmpact;
  datastream >> tmpact >> target >> a >> b;
+ act = action_id(tmpact);
 }
 
 interface::interface(std::string N, int X, int Y)
@@ -799,6 +786,7 @@ void interface::draw_prototype(Window *win)
 std::string interface::save_data()
 {
  std::stringstream ret;
+
  ret << name << " " << STD_DELIM << " " << elements.size() << " ";
  for (int i = 0; i < elements.size(); i++)
   ret << elements[i]->type() << " " << elements[i]->save_data() << " ";
@@ -806,7 +794,7 @@ std::string interface::save_data()
  ret << bindings.size() << " ";
  std::map<long, binding>::iterator it;
  for (it = bindings.begin(); it != bindings.end(); it++)
-  ret << it->first << " " << it->second.save_data();
+  ret << it->first << " " << it->second.save_data() << " ";
 
  return ret.str();
 }
@@ -1172,14 +1160,14 @@ std::vector<std::string> interface::binding_list()
   if (it->second.act == ACT_SELECT_STR)
    info << " " << it->second.target;
   else if (it->second.act == ACT_SCROLL)
-   info << "(" << it->second.target << (it->second.a >= 0 ? " +" : " ") <<
+   info << " (" << it->second.target << (it->second.a >= 0 ? " +" : " ") <<
            it->second.a << ")";
   else if (it->second.act == ACT_SET_COLORS)
-   info << "(" << it->second.target << " " <<
+   info <<  "(" << it->second.target << ", " <<
            color_name( nc_color(it->second.a) ) << ", " <<
-           color_name( nc_color(it->second.a) ) << ")";
+           color_name( nc_color(it->second.b) ) << ")";
   else if (it->second.act == ACT_TRANSLATE)
-   info << "(" << it->second.target << "; " << char(it->second.a) << " to " <<
+   info << " (" << it->second.target << "; " << char(it->second.a) << " to " <<
            char(it->second.b) << ")";
 
   ret.push_back(info.str());
@@ -1189,10 +1177,14 @@ std::vector<std::string> interface::binding_list()
 
 bool interface::add_binding(long ch, action_id act, std::string target)
 {
- if (bindings.count(ch))
+ if (bindings.count(ch)) {
+  debugmsg("Binding exists for %d!", ch);
   return false;
- if (action_needs_element(act) && !find_by_name(target))
+ }
+ if (action_needs_element(act) && !find_by_name(target)) {
+  debugmsg("Couldn't find element \"%s\"!", target.c_str());
   return false;
+ }
 
  binding newbind(act, target);
  bindings[ch] = newbind;
@@ -1202,10 +1194,14 @@ bool interface::add_binding(long ch, action_id act, std::string target)
 bool interface::add_binding(long ch, action_id act, std::string target,
                             int a, int b)
 {
- if (bindings.count(ch))
+ if (bindings.count(ch)) {
+  debugmsg("Binding exists for %d!", ch);
   return false;
- if (!find_by_name(target))
+ }
+ if (action_needs_element(act) && !find_by_name(target)) {
+  debugmsg("Couldn't find element \"%s\"!", target.c_str());
   return false;
+ }
 
  binding newbind(act, target, a, b);
  bindings[ch] = newbind;
@@ -1360,7 +1356,8 @@ bool interface::handle_action(long ch)
 
 bool cuss::action_needs_element(cuss::action_id act)
 {
- return (act == ACT_SCROLL || act == ACT_SET_COLORS || act == ACT_TRANSLATE);
+ return (act == ACT_SELECT_STR || act == ACT_SCROLL || act == ACT_SET_COLORS ||
+         act == ACT_TRANSLATE);
 }
 
 std::string cuss::action_name(cuss::action_id act)

@@ -105,7 +105,7 @@ namespace cuss {
 
   struct ele_textbox : public element
   {
-    std::vector<std::string> *text;
+    std::string *text;
     int offset;
 
     ele_textbox() { name = ""; posx = 0; posy = 0; sizex = 0; sizey = 0;
@@ -126,21 +126,21 @@ namespace cuss {
  */
     virtual bool self_reference();
 
-    virtual bool set_data(std::string data);
-    virtual bool add_data(std::string data);
+    virtual bool set_data(std::string  data);
+    virtual bool add_data(std::string  data);
+    virtual bool ref_data(std::string *data);
 
     virtual bool set_data(std::vector<std::string> data);
     virtual bool add_data(std::vector<std::string> data);
-    virtual bool ref_data(std::vector<std::string> *data);
 
 // These adjust the offset
     virtual bool set_data(int data);
     virtual bool add_data(int data);
 
-    virtual void clear_data() { text->clear(); offset = 0;};
+    virtual void clear_data() { (*text) = ""; offset = 0;};
 
-    virtual std::string get_str();
-    virtual std::vector<std::string> get_str_list() { return (*text); };
+    virtual std::string get_str() { return (*text); }
+    virtual std::vector<std::string> get_str_list();
   };
 
   struct ele_list : public element
