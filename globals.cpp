@@ -6,17 +6,22 @@
 #include "window.h"
 
 std::string DATADIR;
+std::string CUSSDIR;
+
 std::list<body_stat> BODY_STATS_POOL;
 std::list<body_part> BODY_PARTS_POOL;
 std::list<body> BODIES_POOL;
+
 std::list<Window*> WINDOWLIST;
 
 void init_environment()
 {
  #if (defined _WIN32 || defined WINDOWS || defined __WIN32__)
   DATADIR = std::string(getenv("APPDATA")) + "\\bas";
+  CUSSDIR = std::string(getenv("APPDATA")) + "\\cuss";
  #else
   DATADIR = std::string(getenv("HOME")) + "/.bas";
+  CUSSDIR = std::string(getenv("HOME")) + "/.cuss";
  #endif
 
  DIR *dir = opendir(DATADIR.c_str());
@@ -26,7 +31,18 @@ void init_environment()
  #else
   mkdir(DATADIR.c_str(), 0777);
  #endif
- }
+ } else
+  closedir(dir);
+
+ dir = opendir(CUSSDIR.c_str());
+ if (!dir) {
+ #if (defined _WIN32 || defined WINDOWS || defined __WIN32__)
+  mkdir(CUSSDIR.c_str());
+ #else
+  mkdir(CUSSDIR.c_str(), 0777);
+ #endif
+ } else
+  closedir(dir);
 }
 
 void init_data()
@@ -77,7 +93,6 @@ void init_data()
   }
   fin.close();
  }
-
 }
 
 void save_data()
@@ -121,4 +136,3 @@ void save_data()
  }
 
 }
- 

@@ -333,6 +333,9 @@ namespace cuss {
     element* select(std::string name);
     void select_none();
 
+    bool move_element_up  (std::string name);
+    bool move_element_down(std::string name);
+
     bool set_selectable(std::string name, bool setting);
 // set_data replaces the element's data with whatever is passed
 // add_data appends whatever is passed to the element's data

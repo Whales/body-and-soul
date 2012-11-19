@@ -1139,8 +1139,8 @@ c     Copy symbol & colors under pen\n\
 void set_pen_symbol()
 {
  long ch = getch();
- if (ch != ' ')
-  pen.symbol = ch;
+ //if (ch != ' ')
+ pen.symbol = ch;
 }
 
 void set_pen_fg()

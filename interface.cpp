@@ -367,7 +367,7 @@ void ele_textentry::draw(Window *win)
 
  std::string print = text->substr(start, length);
 
- win->putstr(posx, posy, fg, hilite, print);
+ win->putstr_raw(posx, posy, fg, hilite, print);
  for (int x = posx + print.length(); x < posx + sizex; x++)
   win->putch(x, posy, bg, hilite, '_');
 }
@@ -1001,6 +1001,35 @@ void interface::select_none()
 
  active_element = -1;
 }
+
+bool interface::move_element_up(std::string name)
+{
+// Check all except the last element
+ for (int i = 0; i < elements.size() - 1; i++) {
+  if (elements[i]->name == name) {
+   element* tmp = elements[i + 1];
+   elements[i + 1] = elements[i];
+   elements[i] = tmp;
+   return true;
+  }
+ }
+ return false;
+}
+
+bool interface::move_element_down(std::string name)
+{
+// Check all except the first element
+ for (int i = 1; i < elements.size(); i++) {
+  if (elements[i]->name == name) {
+   element* tmp = elements[i - 1];
+   elements[i - 1] = elements[i];
+   elements[i] = tmp;
+   return true;
+  }
+ }
+ return false;
+}
+
 
 bool interface::set_selectable(std::string name, bool setting)
 {

@@ -121,6 +121,23 @@ void Window::putstr(int x, int y, nc_color fg, nc_color bg, std::string str,
  }        // We need to do color segments!
 
 }
+
+void Window::putstr(int x, int y, nc_color fg, nc_color bg, std::string str,
+                    ...)
+{
+ va_list ap;
+ va_start(ap, str);
+ char buff[8192];
+ vsprintf(buff, str.c_str(), ap);
+ va_end(ap);
+
+ std::string prepped = buff;
+ long col = get_color_pair(fg, bg);
+
+ wattron(w, col);
+ mvwprintw(w, y, x, buff);
+ wattroff(w, col);
+}
  
 void Window::putstr_n(int x, int y, nc_color fg, nc_color bg, int maxlength,
                       std::string str, ...)
