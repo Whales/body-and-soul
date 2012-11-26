@@ -1,0 +1,31 @@
+Flight
+  Flight type = limb-with-flight strength * limb-with-flight level - body wgt
+    Unlimited flight
+    Limited flight (ranging from 2 turns to 10)
+    Slow your fall
+
+Armor
+  Max damage reduction
+
+Encumbrance
+  Reduction to speed/dexterity; often paired with armor
+
+Evasion
+  Bonus to dodge
+
+Auto attack
+  What type of damage? fire, ice, impale, etc
+  How much damage?
+  Chance to hit?
+
+.       _
+.      / \
+.     /___\
+.    /\   /\
+.   /__\_/__\
+.  /\       /\
+. /__\  @  /__\
+./\  /\   /\  /\
+/__\/__\_/__\/__\
+ 
+ 
