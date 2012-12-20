@@ -1,0 +1,11 @@
+Key: <> = Free entry, [] = list of valid entries {} = logical
+
+NAME <string>
+TYPE [instant,enchantment]
+CLASS [telekinesis,conjuration,polymorph,telergonics]
+LEVEL <int>
+ELEMENT <list any of the magical elements>
+COST [auto,=] <int PP> <int SP>
+{if instant:}
+TARGET [caster,random,monster,tile] <int range {if TARGET != caster}>
+

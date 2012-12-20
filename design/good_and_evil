@@ -1,0 +1,24 @@
+Axiom of Good: Correcting your mistakes is worthwhile.
+  -Good: You receive 1/2 of the initial SP cost of learning a spell when forget
+  -Neutral: Forgetting spells is free
+  -Evil: Expend soul points to forget spells
+ 
+Axiom of Neutral: Self-reliance
+  -Neutral: Morale limits increased
+  -Good: Morale limits normal
+  -Evil: Morale limits decreased
+
+Axiom of Evil: Take what's yours.
+  -Evil: Soul reaping is evil, no morale penalty for selfishness
+  -Neutral: Soul reaping is evil, morale penalty for selfishness
+  -Good: Soul reaping is very evil, high morale penalt for selfishness
+
+Axiom of Good: Share what's yours.
+  -Good: High morale bonus for sharing
+  -Neutral: Morale bonus for sharing
+  -Evil: No morale bonus for sharing
+
+Axiom of Good: Open-mindedness
+  -Good: Have up to four schools
+  -Neutral: Have up to three schools
+  -Evil: Have up to two schools

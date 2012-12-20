@@ -1,0 +1,124 @@
+Types of spells:
+  Instant:     An effect that takes place immediately.
+  Enchantment: A spell that "toggles;" when on, it constantly drains PP
+  Morph:       Changes your form
+
+Classes of spells:
+  Telekinesis:     Moving entities
+    Sister class: Ergonics
+  Ergonics:     Soul into energy
+    Sister class: Telekinesis
+  Conjuration:     Creating entities
+  Transfiguration: Altering entities
+  Maledictionisms: Placing effects on entities
+
+Schools:
+  Air
+  Water
+  Earth
+  Fire
+  Winter
+  Summer
+
+Basic inputs:
+  Select tile
+  Set radius of effect
+  Target entity
+    Only items, only mobs
+
+Basic data generated off input (and passed to action):
+  Beam to tile
+  Area surrounding tile, with given radius
+  Targeted entity data
+  Random tile in given range
+
+Basic actions: These could be exposed to lua or a homebrew scripting language
+  Move entity
+    Push, Teleport
+  Alter entity
+  Create entity
+    Perhaps temporary (e.g. summoned monster)
+  Alter terrain
+  Create field
+    Distortion, Anti-Distortion
+  Deal damage
+    May also alter terrain!
+  Change lighting
+  Place effect on entity
+    Flight, True Sight, Speed +/-, Armor +/-, Confusion, Morale +/-,
+    Immunity to instant or lasting effect
+  Cause special instant effect on entity
+    Heal, Ensoul
+  Retrieve info on entity
+
+
+Instant:
+  >Telekinesis: Move entities
+    -Push: on target tile, push from (caster.pos)
+    -Pull
+    -Fling: Throw a conjured or held item as a projectile
+    -Scatter: on all caster-adjacent tiles, push from (caster.pos) 
+      Perhaps with a scalable radius?
+    -Blink: On caster, on targeted entity
+    -Whirlwind: push from (random) on all tiles within radius
+    -Shuffle: random teleport on all tiles within radius
+  >Conjuration: Create entities
+    -Conjure item: Create a temporary item (maybe??)
+    -Summon: Create a temporary mob
+      Lots of options here! Flavors, etc.
+  >Polymorph: Alter entities
+    -Beastify: turn target mob into a weakened beast
+    -Animate:  turn an item into a mob
+    -Deform:   change one of target mob's limbs
+    -Water to Acid: Change fluids in target into acid
+  >Ergonics: Direct release of energy
+    -Heat Beam: Beam of heat b/w caster and target
+    -Flare: Heat on all adjacent tiles
+    -Drain Heat: Cold on all adjacent tiles.  Player heats up by an appropriate
+                 amount.
+    -Cold Beam: Beam of cold b/w caster and target
+    -Acid Rain: Acid damage to all tiles within radius of target
+    -Lightning: Beam of electricity b/w caster and target
+  > Tele + Conj:
+    -Missile: Conjure a random (or location-appropriate?) missile and fire it
+              @ target
+  > Tele + Poly:
+  > Tele + Ergo
+  > Conj + Poly:
+  > Conj + Ergo:
+  > Poly + Ergo:
+
+
+Enchantments:
+  >Ergonics:
+    -Cold Aura: Cold on all adjacent tiles.
+    -Heat Aura: Heat on all adjacent tiles.
+    -Electric Aura: Random electricity on adjacent tiles.
+    -Acidic Flesh: Attacks deal acid damage.
+    -Haste: Movement speed increases.
+    -Extrinsate: Any "environment-specific" effects now us:
+      Mists: Ocean
+      Forest: Wastes
+      Heights: Caverns
+      City: Sewers
+  >Polymorph:
+    -Blade Hands: Hands turn to blades.
+    -Attune: Form shifts to the environment:
+      Mists: gain wings
+      Forest: gain horns
+      Wastes: gain scales
+      Ocean: gain flippers (gills?)
+      City: 2 extra arms
+      Heights: Antennae
+      Sewers: gain tail
+      Caverns: gain monstrosity:
+        Fangs, venom, spines, tentacles
+    -Season Shift: Season change around the player
+    -Permanence: Terrain shifting ceases around the player
+  >Conjuration:
+    -Blade Sphere: blades form around you, damaging adjacent creatures
+    -Familiar: Creature summoned matching best school; it's replaced when dies
+  >Telekinesis:
+    -Flight: player flies.
+    -Levitation: more inventory slots.
+    -

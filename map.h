@@ -19,6 +19,11 @@ enum map_type
  MAP_MAX
 };
 
+enum transform_type
+{
+  TRANS_NULL,
+  TRANS_
+
 #define SUBMAP_SIZE 100
 
 struct tile
@@ -31,6 +36,13 @@ struct submap
  tile tiles[SUBMAP_SIZE][SUBMAP_SIZE];
 };
 
+struct transformer
+{
+  transform_type type;
+  int posx;
+  int posy;
+  
+
 class map
 {
  public:
@@ -39,8 +51,6 @@ class map
   terrain ter(int x, int y);
   void generate(map_type type);
   void update();
-  void add_chunk(map_type type, direction side);
-  void clear_old_chunks();
   void resize(int x, int y);
 
  private:

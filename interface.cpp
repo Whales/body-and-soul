@@ -29,6 +29,7 @@ std::string cuss::element_type_name(cuss::element_type type)
     case ELE_LIST:      return "List selection";
     case ELE_TEXTENTRY: return "Text Entry";
     case ELE_NUMBER:    return "Number";
+    case ELE_MENU:      return "Menu";
     default:            return "Unknown";
   }
   return "What the heck";
@@ -484,10 +485,13 @@ void ele_menu::draw(Window *win)
   win->putch(posx, y, fg, bg, LINE_XOXO);
   win->putch(posx + sizex - 1, y, fg, bg, LINE_XOXO);
  }
+
  for (int x = posx + 1; x < posx + sizex - 1; x++)
   win->putch(x, posy + sizey - 1, fg, bg, LINE_OXOX);
+
  win->putch(posx, posy + sizey - 1, fg, bg, LINE_XXOO);
  win->putch(posx + sizex - 2, posy + sizey - 1, fg, bg, LINE_XOOX);
+
 // Then draw menu items
  for (int i = 0; i < sizey && i + offset < list->size(); i++) {
   int n = i + offset, line = i + posy + 1;
@@ -1222,7 +1226,7 @@ bool interface::add_binding(long ch, action_id act, std::string target)
   debugmsg("Binding exists for %d!", ch);
   return false;
  }
- if (action_needs_element(act) && !find_by_name(target)) {
+ if (action_needs_element(act) && target != "<S>" && !find_by_name(target)) {
   debugmsg("Couldn't find element \"%s\"!", target.c_str());
   return false;
  }
@@ -1239,7 +1243,7 @@ bool interface::add_binding(long ch, action_id act, std::string target,
   debugmsg("Binding exists for %d!", ch);
   return false;
  }
- if (action_needs_element(act) && !find_by_name(target)) {
+ if (action_needs_element(act) && target != "<S>" && !find_by_name(target)) {
   debugmsg("Couldn't find element \"%s\"!", target.c_str());
   return false;
  }
@@ -1341,7 +1345,8 @@ bool interface::handle_action(long ch)
   return false;
 
  binding* used = &(bindings[ch]);
- element* found = (used->target == "" ? selected() : find_by_name(used->target));
+ element* found = (used->target == "" ||used->target == "<S>" ? selected() :
+                   find_by_name(used->target));
 
  switch (used->act) {
 
@@ -1381,6 +1386,8 @@ bool interface::handle_action(long ch)
    return true;
 
   case ACT_TRANSLATE:
+   if (!found)
+    return false;
    if (found->type() == ELE_DRAWING) {
     ele_drawing* draw = static_cast<ele_drawing*>(found);
     draw->translate(used->a, used->b);

@@ -505,6 +505,7 @@ void bindings_window(interface &edited)
      std::string ele_sel;
      if (action_needs_element(act_sel)) {
       std::vector<std::string> ele_options = edited.element_names();
+      ele_options[0] = "<S>"; // Replace BG with <S>
       ele_options.push_back("Cancel");
       ele_sel = ele_options[ menu_vec("Element:", ele_options) ];
      }
@@ -655,6 +656,14 @@ void elements_window(interface &edited)
     i_ele.add_data("e_elelist", -1);
     selected = edited.select(cur->get_str());
     update_elements_window(i_ele, edited);
+   }
+   if (ch == '>') {
+    if (edited.move_element_up(cur->get_str()))
+     i_ele.set_data("e_elelist", edited.element_names());
+   }
+   if (ch == '<') {
+    if (edited.move_element_down(cur->get_str()))
+     i_ele.set_data("e_elelist", edited.element_names());
    }
    if (ch == '\t')
     cur = i_ele.select_next();
@@ -1139,8 +1148,8 @@ c     Copy symbol & colors under pen\n\
 void set_pen_symbol()
 {
  long ch = getch();
- //if (ch != ' ')
- pen.symbol = ch;
+ if (ch != ' ')
+  pen.symbol = ch;
 }
 
 void set_pen_fg()

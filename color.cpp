@@ -188,3 +188,53 @@ nc_color hilight(nc_color orig)
  else
   return nc_color(int(orig) - 8);
 }
+
+nc_color opposite(nc_color orig)
+{
+ switch (orig) {
+  case c_black:   return c_white;
+  case c_ltgray:  return c_dkgray;
+  case c_red:     return c_ltcyan;
+  case c_green:   return c_pink;
+  case c_blue:    return c_yellow;
+  case c_cyan:    return c_ltred;
+  case c_magenta: return c_ltgreen;
+  case c_brown:   return c_ltblue;
+  case c_dkgray:  return c_ltgray;
+  case c_white:   return c_dkgray; // Don't want to use black
+  case c_ltred:   return c_cyan;
+  case c_ltgreen: return c_magenta;
+  case c_ltblue:  return c_brown;
+  case c_ltcyan:  return c_red;
+  case c_pink:    return c_green;
+  case c_yellow:  return c_blue;
+  case c_null:
+  default:        return c_null;
+ }
+ return c_null;
+}
+
+nc_color contract(nc_color orig)
+{
+ switch (orig) {
+  case c_black:   return c_white;
+  case c_ltgray:  return c_red;
+  case c_red:     return c_ltblue;
+  case c_green:   return c_ltred;
+  case c_blue:    return c_green;
+  case c_cyan:    return c_yellow;
+  case c_magenta: return c_ltcyan;
+  case c_brown:   return c_ltblue;
+  case c_dkgray:  return c_red;
+  case c_white:   return c_blue;
+  case c_ltred:   return c_blue;
+  case c_ltgreen: return c_brown;
+  case c_ltblue:  return c_brown;
+  case c_ltcyan:  return c_magenta;
+  case c_pink:    return c_blue;
+  case c_yellow:  return c_blue;
+  case c_null:  
+  default:        return c_null;
+ }
+ return c_null;
+}

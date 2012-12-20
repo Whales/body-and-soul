@@ -1,0 +1,119 @@
+Soul skills:
+  Souls don't really have skills persay; they have abilities and a couple values
+  which may be improved by directly spending soul points.  They also have
+  aspects, which require quest completion & such to improve.  And of course,
+  souls have levels.
+
+  Level:
+    The type of soul it is; broken, normal, sensitive, mage.
+    -Your level caps your abilities, restricts some entirely,
+    -Upgrading requires a large expenditure of SP and a ritual, which itself
+     may require special items, a particular location, and/or help from a third
+     party.
+
+  Values:
+    Power Pool: The maximum PP you can have
+      -The cost of increasing your power pool grows exponentially, to prevent
+       absurdly high levels.  e.g. start with 30; 1 SP gains 10, then 9, 8, 7,
+       etc.; after 1 SP = 1 PP we can start charging more than 1 SP per PP
+    Shell: Your resistance to soul abilities; at high levels, this decreases
+           the power of your abilities, too.  Each level of Shell makes training
+           Empathy much harder.
+      -This can be increased or decreased.  Neutral characters get the decrease
+       for half price, Good characters get it for free (though it takes a couple
+       turns, and they'll have to pay to increase it again).
+    Empathy: Your ability to connect to other people.  This skill will help you
+             understand their needs, detect lies and tell lies.  It will also
+             make some spells more effective (???)  Each level of Empathy makes
+             training Shell much harder.
+      -Like Shell, this can be increased or decreased, with the same alignment-
+       based costs.
+
+  Abilities:
+    Any of your "spells" go here.  Their power level can be increased via direct
+    expenditure of SP.  Once increased, their power level cannot be decreased.
+    The level they can be increased to is limited by your Aspects and Level.
+
+  Aspects:
+    "Schools" of "magic."  Initially you start with none of these.  As you
+    complete quests, receive teaching, etc., you increase a "max level" in
+    certain aspects.  You can spend SP to increase an aspect, but never beyond
+    its max level.  You can also decrease aspects; Evil characters must spend SP
+    to do so, Neutral characters do so for free, and Good characters receive 1/2
+    the SP cost of increasing it.
+    -The cost in SP of increasing an aspect is relatively high, as it benefits a
+     wide range of Abilities.  This cost increases as the level of the aspect
+     increases; it also increases with the level of other aspects.  It's cheaper
+     to bring one aspect to level 6 than two to level 3.
+    -Aspects may have more subtle effects than enhancing Abilities; for instance
+     they may affect how terrain is generated around the player.  They could
+     also change some rules of character progression; e.g. "Morphic" aspect
+     might permit "selling back" soul upgrades
+
+--------------------------------------------------------------------------------
+
+
+Body Skills:
+  These are improved by spending XP on them directly, at will.  While SP is
+  gained primarily through completing missions, spiritual growth, or predation,
+  XP is gained directly by defeating enemies (or completing tasks which have
+  some risk associated?).
+  -The cost of raising a skill is dependant solely upon the current level of
+   that skill.
+
+  Combat:
+  -Fighting: This applies to all types of melee combat, providing a small boost.
+    Attack types: All weapons use one, two or three types of attacks.  Training
+                  in an attack type improves your ability with weapons that use
+                  that type; when attacking with a weapon with more than one
+                  attack type, both have their damage calculated (using the same
+                  roll) and the best is used.
+    -Slashing:    Enemy gets dodge malus
+    -Stabbing:    Damage bonus against fast movers
+    -Bludgeoning: Enemy gets AC malus
+    Techniques: New techniques are gained by learning them from a teacher, and
+                their effectiveness scales with higher levels.  These can all be
+                toggled on & off, much like soul enchantments are.
+    -Fury: This increases the speed and damage of your attacks, but decreases
+           dodge & parry abilities.
+    -Sweep: If applicable, you'll make attack attempts on all adjacent enemies
+            when you attack.  Each attack attempt beyong the first costs half
+            the movement points of the previous attack (so, 50%, 25%, 12%, etc)
+    -Knockback: A hit may knock the target back a tile (or more, depending on
+                your strength:size ratio; very effective against flyers)
+
+  -Ranged: Applies to all ranged weapons.
+    -Snipe: This increases the damage done on a critical hit.
+    -Burst: This increases your firing speed.
+
+  Defense:
+  -Dodge: Your ability to dodge attacks.
+  -Parry: Your ability to block attacks, with a weapon or shield.
+
+  ?Do we want a "light weapons"/"Heavy weapons" skill? Since all weapons have a
+   light & heavy version...
+
+  Non-Combat:  Those with a * are boosted by Empathy (soul skill)
+  *Music: Your ability to play musical instruments.  This includes magical and
+          enchanted instruments, as well as more mundane ones.
+          boosted by soul level.
+  *Barter: Your ability to get a better deal when buying things.  This will
+           reduce costs towards equity
+  -Sneak: Your ability to sneak around without being detected
+  -Logic: Mathematics, finances, etc.
+  -Chemistry: Include alchemy, etc
+
+
+How'd you lose your soul?
+  -Sold it for skill: Extra physical skill points.
+  -Had it stolen: Boost to shield, small penalty to Empathy
+  -Was born without one: Start with a power, small penalty to Empathy
+  -Spent it through hard work: Bonus to max PP
+  -Sacrificed it to save a loved one: Bonus to Empathy
+Classes:
+  -Banker:
+    Skills: Logic 3, Barter 3
+    Items: Suit
+  -Musician:
+    Skills: Music 4, 
+    

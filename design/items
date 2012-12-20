@@ -1,0 +1,68 @@
+%Food
+  Blood Berries
+  Dragon Tail
+  Kraken Burger
+  Soul Food:
+    
+  
+
+One-Time Use
+! Potion
+    Healing     Heal some HP
+    Energizing  Regain some PP
+    Changing    Temporary, partial change of form
+    Shrinking   Size--
+    Growing     Size++
+    Numbing     Lose strength, morale moves towards 0
+* Crystal
+    Red         Throw to spawn fire
+    White       Throw to spawn ice
+    Blue        Throw to create water
+    Green       Throw to create growth
+    Brown       Throw to create erosion
+    Yellow      Throw to create acid
+    Black       Throw to create decay
+    Magenta     Throw to create shift
+    Cyan        Throw to create permanence
+
+Weapons have a speed, accuracy, and damage, and each class has two kinds:
+)Weapons (melee or launcher)
+  Staff/Bowstaff;   uses slash, stab, bludgeon
+  Sword/Sabre;      uses slash, stab
+  Axe/Battleaxe     uses slash,       bludgeon
+  Halberd/Glaive    uses        stab, bludgeon
+  Sickle/Scythe     uses slash
+  Spear/Lance       uses        stab
+  Hammer/Warhammer  uses              bludgeon
+
+  Bow/Longbow
+  Minicrossbow/Crossbow
+  Revolver/Shotgun
+  Laser Pistol/Plasma Rifle
+(Missiles
+  Rock/Boulder
+  Dart/Javelin
+  Arrow, Bolt, Ammo, ECPack
+
+&Instruments:
+All instruments can play one to three songs, randomly selected from the pool
+given.  Some instruments are better at certain songs.  Note that music has no
+effect on the soulless.
+
+Songs include:
+  Charming: attempts to pacify or charm nearby listeners.
+  Sleep: attempts to put listeners to sleep.
+  Summon X: Attempt to summon one or more flavor-appropriate creatures
+  Soothe Nature: Create several (or a ripple of?) safer terrain generators
+  Rile Nature: Create several (or a ripple of?) dangerous terrain generators
+  Enrage: Induce a beserk state in listeners.
+  Frighten: Increase the fear level of listeners.
+  Confuse: Confuse listeners.
+  Quake: Cause heavy erosion to random nearby tiles.
+  
+  Lyre: Charm 5, Sleepy 3, Summon Forest 3, Soothe 4, Rile 2, Confuse 2 
+  Flute: Charm 4, Sleep 4, Summon Sea 4, Summon Air 4
+  Drum: Summon Caverns 3, Summon Fire 3, Rile 2, Enrage 3, Frighten 3, Quake 4
+  Trumpet: Summon Mists 4, Rile 3, Enrage 3, Frighten 4, Quake 4
+  
+Soul Egg

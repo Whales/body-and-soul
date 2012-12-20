@@ -4,6 +4,7 @@
 #include <list>
 #include <string>
 #include <istream>
+#include <vector>
 #include "challenge.h"
 #include "glyph.h"
 
@@ -43,6 +44,7 @@ struct body_part
  int hp;
  std::string name;
  std::list<body_stat> stats;
+ std::list<body_ability> abilities;
 
  std::string save_data();
  void load_data(std::istream &datastream);

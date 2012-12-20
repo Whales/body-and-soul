@@ -20,6 +20,14 @@
 
 #define KEY_ESC 27
 
+enum Window_type
+{
+ WINDOW_TYPE_GENERAL,
+ WINDOW_TYPE_GLYPHS,
+ WINDOW_TYPE_TEXT,
+ WINDOW_TYPE_OTHER
+};
+
 void init_display();
 long input();
 void debugmsg(const char *mes, ...);
@@ -42,9 +50,12 @@ class Window
 {
  public:
   Window();
-  Window(int posx, int posy, int sizex, int sizey);
+  Window(int posx, int posy, int sizex, int sizey,
+         Window_type ntype = WINDOW_TYPE_GENERAL);
   ~Window();
-  void init(int posx, int posy, int sizex, int sizey);
+
+  void init(int posx, int posy, int sizex, int sizey,
+            Window_type ntype = WINDOW_TYPE_GENERAL);
   void close();
 
   void outline();
@@ -54,8 +65,12 @@ class Window
 // The three essential output functions
   void putch(int x, int y, nc_color fg, nc_color, long sym);
   void putglyph(int x, int y, glyph gl);
+
+// Putstr places a string (unless we're designated as tiles-only)
   void putstr(int x, int y, nc_color fg, nc_color bg, std::string str, ...);
+// Putstr_raw ignores color tags
   void putstr_raw(int x, int y, nc_color fg, nc_color bg, std::string str, ...);
+// Putstr_n limits the length to maxlength
   void putstr_n(int x, int y, nc_color fg, nc_color bg, int maxlength,
                 std::string str, ...);
 // Special helper drawing functions
@@ -68,6 +83,7 @@ class Window
  private:
   WINDOW* w;
   bool outlined;
+  Window_type type;
   int xdim, ydim;
 };
 
