@@ -1,3 +1,5 @@
+#include <string>
+
 enum challenge_type
 {
  CHAL_NULL = 0,
@@ -26,3 +28,6 @@ enum challenge_type
 
  CHAL_MAX
 };
+
+std::string challenge_name(challenge_type type);
+std::string challenge_name(int type);

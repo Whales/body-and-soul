@@ -189,7 +189,7 @@ void add_member(cuss::interface &i_editor, edit_group editing)
       }
       break;
 
-    case EDIT_BODIES:
+    case EDIT_PARTS:
       for (int i = 0; !done && i < BODY_PARTS_POOL.size; i++) {
         if (BODY_PARTS_POOL[i].name == edited) {
           std::vector<std::string> part_names;
@@ -198,7 +198,7 @@ void add_member(cuss::interface &i_editor, edit_group editing)
           part_names.push_back("Cancel");
           int bp_picked = menu_vec(part_names);
           if (bp_picked != part_names.size() - 1)
-            BODY_PARTS_POOL[i].body_parts.push_back(BODY_STATS_POOL[bp_picked]);
+            BODY_PARTS_POOL[i].stats.push_back(BODY_STATS_POOL[bp_picked]);
           done = true;
         }
       }
@@ -206,16 +206,21 @@ void add_member(cuss::interface &i_editor, edit_group editing)
  
     case EDIT_STATS:
       for (int i = 0; !done && i < BODY_PARTS_POOL.size; i++) {
-        if (BODY_PARTS_POOL[i].name == edited) {
+        if (BODY_STATS_POOL[i].name == edited) {
           std::vector<std::string> part_names;
-          for (int j = 0; j < BODY_STATS_POOL.size(); j++)
-            part_names.push_back( BODY_STATS_POOL[i].name );
+          for (int j = 1; j < CHAL_MAX; j++)
+            part_names.push_back( challenge_name(j) );
           part_names.push_back("Cancel");
           int bp_picked = menu_vec(part_names);
           if (bp_picked != part_names.size() - 1)
-            BODY_PARTS_POOL[i].body_parts.push_back(BODY_STATS_POOL[bp_picked]);
+            BODY_STATS_POOL[i].chals.push_back( challenge_type(bp_picked + 1) );
           done = true;
         }
       }
       break;
  
+    default:
+      debugmsg("What the heck?");
+      break;
+  }
+}
