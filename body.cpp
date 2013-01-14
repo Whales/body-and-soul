@@ -40,8 +40,7 @@ int body::skill_level(challenge_type type)
 std::string body::save_data()
 {
  std::stringstream ret;
- ret << symbol.save_data() << name << " " << STD_DELIM << " " <<
-        body_parts.size() << " ";
+ ret << symbol.save_data() << name << "; " << body_parts.size() << " ";
  for (std::list<body_part>::iterator it = body_parts.begin();
       it != body_parts.end(); it++)
   ret << it->save_data() << " ";
@@ -52,7 +51,7 @@ std::string body::save_data()
 void body::load_data(std::istream &datastream)
 {
  symbol.load_data(datastream);
- name = load_to_delim(datastream, STD_DELIM);
+ name = load_to_character(datastream, ";", true);
 
  int num_parts;
  datastream >> num_parts;
@@ -67,7 +66,7 @@ void body::load_data(std::istream &datastream)
 std::string body_part::save_data()
 {
  std::stringstream ret;
- ret << name << " " << STD_DELIM << " " << stats.size() << " ";
+ ret << name << "; " <<  stats.size() << " ";
  for (std::list<body_stat>::iterator it = stats.begin();
       it != stats.end(); it++)
   ret << it->save_data() << " ";
@@ -77,7 +76,7 @@ std::string body_part::save_data()
 
 void body_part::load_data(std::istream &datastream)
 {
- name = load_to_delim(datastream, STD_DELIM);
+ name = load_to_character(datastream, ";", true);
 
  int statsize;
  datastream >> statsize;
@@ -91,7 +90,7 @@ void body_part::load_data(std::istream &datastream)
 std::string body_stat::save_data()
 {
  std::stringstream ret;
- ret << name << " " << STD_DELIM << " " << value << " " << chals.size();
+ ret << name << "; " << value << " " << chals.size();
  for (std::list<challenge_type>::iterator it = chals.begin();
       it != chals.end(); it++)
   ret << int(*it) << " ";
@@ -101,7 +100,7 @@ std::string body_stat::save_data()
 
 void body_stat::load_data(std::istream &datastream)
 {
- name = load_to_delim(datastream, STD_DELIM);
+ name = load_to_character(datastream, ";", true);
 
  datastream >> value;
 
