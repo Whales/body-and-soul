@@ -1,5 +1,7 @@
 #include "terrain.h"
 
+#define SUBMAP_SIZE 100
+
 enum map_type
 {
  MAP_NULL,
@@ -16,24 +18,46 @@ enum map_type
  MAP_WASTES,
  MAP_MISTS,
  MAP_SEA,
+
  MAP_MAX
 };
 
 enum transform_type
 {
-  TRANS_NULL,
-  TRANS_
+  TRANS_NULL = 0,
 
-#define SUBMAP_SIZE 100
+  TRANS_FOREST,
+  TRANS_WASTES,
+  TRANS_SEA,
+  TRANS_MISTS,
+
+  TRANS_HEAT,
+  TRANS_COLD,
+
+  TRANS_MAX
+};
+
+struct ter_type
+{
+  std::string name;
+  glyph symbol;
+};
 
 struct tile
 {
- ter_id ter;
+  tile() { type = NULL; };
+  ~tile(){};
+
+  void set_type(ter_type *_type) { type = _type; };
+  ter_type *type;
+  
 };
 
 struct submap
 {
- tile tiles[SUBMAP_SIZE][SUBMAP_SIZE];
+  submap();
+  ~submap();
+  tile tiles[SUBMAP_SIZE][SUBMAP_SIZE];
 };
 
 struct transformer
@@ -41,14 +65,18 @@ struct transformer
   transform_type type;
   int posx;
   int posy;
-  
+};
 
 class map
 {
  public:
+// Constructors
   map();
-  map(int x, int y);
-  terrain ter(int x, int y);
+
+// Accessors
+  terrain& ter(int x, int y);
+
+// Mutators
   void generate(map_type type);
   void update();
   void resize(int x, int y);

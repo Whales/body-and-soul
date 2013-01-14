@@ -47,6 +47,9 @@ std::string challenge_name(challenge_type type)
       return "Kick Accuracy";
     case CHAL_DODGE:
       return "Dodging";
+    default:
+      return "Unknown";
+  }
+  return "Missed default";
 
- CHAL_MAX
 }

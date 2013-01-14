@@ -54,9 +54,6 @@ void body::load_data(std::istream &datastream)
  symbol.load_data(datastream);
  name = load_to_delim(datastream, STD_DELIM);
 
- if (!name.empty())
-  name = name.substr(0, name.size() - 1); // Clear out the extra " "
-
  int num_parts;
  datastream >> num_parts;
 
@@ -82,9 +79,6 @@ void body_part::load_data(std::istream &datastream)
 {
  name = load_to_delim(datastream, STD_DELIM);
 
- if (!name.empty())
-  name = name.substr(0, name.size() - 1); // Clear out the extra " "
-
  int statsize;
  datastream >> statsize;
  for (int i = 0; i < statsize; i++) {
@@ -108,9 +102,6 @@ std::string body_stat::save_data()
 void body_stat::load_data(std::istream &datastream)
 {
  name = load_to_delim(datastream, STD_DELIM);
-
- if (!name.empty())
-  name = name.substr(0, name.size() - 1); // Clear out the extra " "
 
  datastream >> value;
 

@@ -18,7 +18,7 @@ void update_interface(cuss::interface& i_editor, edit_group editing,
 edit_group pick_edit_group();
 
 void new_item(edit_group editing);
-void add_member(cuss::interface &i_editor, edit_group editing);
+void add_member (cuss::interface &i_editor, edit_group editing);
 void delete_item(cuss::interface& i_editor, edit_group editing);
 
 int main()
@@ -113,26 +113,26 @@ void update_interface(cuss::interface& i_editor, edit_group editing,
 
   if (selected > 0 && selected < selectables) {
     switch (editing) {
+
       case EDIT_STATS:
         body *bp = &(BODY_STATS_POOL[selected]);
         for (int i = 0; i < bp->chals.size(); i++)
           members.push_back( challenge_name(bp->chals[i]) );
         break;
+
       case EDIT_PARTS:
         body_part *bp = &(BODY_PARTS_POOL[selected]);
         for (int i = 0; i < bp->stats.size(); i++)
           members.push_back( bp->stats[i].name );
         break;
+
       case EDIT_BODIES:
         body *bp = &(BODIES_POOL[selected]);
-        for (int i = 0; i < bp->parts.size(); i++)
-          members.push_back( bp->parts[i].name );
+        for (int i = 0; i < bp->body_parts.size(); i++)
+          members.push_back( bp->body_parts[i].name );
         break;
     }
   }
-}
-
-  i_editor.set_data("list_edit", members);
 }
 
 edit_group pick_edit_group()

@@ -11,6 +11,7 @@ extern std::list<body_stat> BODY_STATS_POOL;
 extern std::list<body_part> BODY_PARTS_POOL;
 extern std::list<body> BODIES_POOL;
 extern std::list<Window*> WINDOWLIST;
+extern std::vector<tile_type*> TILES_POOL;
 
 void init_environment();
 void init_data();
