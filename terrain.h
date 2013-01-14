@@ -5,18 +5,46 @@
 #include <istream>
 #include "glyph.h"
 
+enum terrain_flag
+{
+  TF_NULL = 0,
+  TF_MAX
+};
+
+enum terrain_id
+{
+  TER_NULL = 0,
+// Floor-like tiles
+  TER_FLOOR,
+  TER_DIRT,
+  TER_SAND,
+// Water-like tiles
+  TER_WATER,
+// Wall-like tiles
+  TER_WALL,
+  TER_ROCK,
+// Other tiles
+  TER_TREE,
+  TER_MAX
+};
+
 struct terrain_type
 {
- std::string name;
- int move_cost;
- glyph symbol;
+  std::string name;
+  int uid;
+  int move_cost;
+  int sight_cost;
+  glyph symbol;
 
- terrain_type() { name = "UNINITIALIZED"; move_cost = 0; };
- terrain_type(std::string N, int M, glyph S) : name (N), move_cost (M),
-                                               symbol (S) { };
+  std::vector<bool> flags;
+  std::vector<tile_id> transformations;
+ 
 
- std::string save_data();
- void load_data(std::istream &datastream);
+  terrain_type();
+  ~terrain_type()
+
+  std::string save_data();
+  void load_data(std::istream &datastream);
 };
 
 #endif

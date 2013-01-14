@@ -37,19 +37,13 @@ enum transform_type
   TRANS_MAX
 };
 
-struct ter_type
-{
-  std::string name;
-  glyph symbol;
-};
-
 struct tile
 {
   tile() { type = NULL; };
   ~tile(){};
 
   void set_type(ter_type *_type) { type = _type; };
-  ter_type *type;
+  terrain_type *type;
   
 };
 
