@@ -128,3 +128,14 @@ std::string trim(const std::string &orig)
 
   return ret;
 }
+
+std::string all_caps(const std::string &orig)
+{
+  std::string ret = orig;
+  for (int i = 0; i < ret.length(); i++) {
+    if (ret[i] >= 'a' && ret[i] <= 'z')
+      ret[i] += 'A' - 'a';
+  }
+
+  return ret;
+}

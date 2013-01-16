@@ -29,6 +29,24 @@ enum terrain_id
   TER_MAX
 };
 
+enum transform_type
+{
+  TRANS_NULL = 0,
+
+  TRANS_FOREST,
+  TRANS_WASTES,
+  TRANS_SEA,
+  TRANS_MISTS,
+
+  TRANS_HEAT,
+  TRANS_COLD,
+
+  TRANS_OPEN,
+  TRANS_CLOSE,
+
+  TRANS_MAX
+};
+
 struct terrain_type
 {
   std::string name;
@@ -39,10 +57,9 @@ struct terrain_type
 
   std::vector<bool> flags;
   std::vector<tile_id> transformations;
- 
 
   terrain_type();
-  ~terrain_type()
+  ~terrain_type();
 
   std::string save_data();
   void load_data(std::istream &datastream);

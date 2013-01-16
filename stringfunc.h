@@ -17,4 +17,6 @@ std::string load_to_character(std::istream &datastream, std::string chars,
 
 std::string trim(const std::string &orig);
 
+std::string all_caps(const std::string &orig);
+
 #endif

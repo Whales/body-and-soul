@@ -22,27 +22,13 @@ enum map_type
  MAP_MAX
 };
 
-enum transform_type
-{
-  TRANS_NULL = 0,
-
-  TRANS_FOREST,
-  TRANS_WASTES,
-  TRANS_SEA,
-  TRANS_MISTS,
-
-  TRANS_HEAT,
-  TRANS_COLD,
-
-  TRANS_MAX
-};
-
 struct tile
 {
   tile() { type = NULL; };
   ~tile(){};
 
-  void set_type(ter_type *_type) { type = _type; };
+  void set_type(terrain_id id) { type = TERRAIN_POOL[id]; };
+  void set_type(terrain_type *_type) { type = _type; };
   terrain_type *type;
   
 };
