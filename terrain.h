@@ -25,6 +25,7 @@ enum terrain_id
   TER_ROCK,
 // Other tiles
   TER_TREE,
+
   TER_MAX
 };
 

@@ -113,12 +113,12 @@ std::string load_to_character(std::istream &datastream, std::string chars,
 std::string trim(const std::string &orig)
 {
   std::string ret = orig;
-  int front = -1, back = ret.length() - 1;
+  int front = 0, back = ret.length() - 1;
   while (front < ret.length() &&
          (ret[front] == ' ' || ret[front] == '\n' || ret[front] == '\t'))
     front++;
 
-  ret = ret.substr(front + 1);
+  ret = ret.substr(front);
 
   while (back >= 0 &&
          (ret[back] == ' ' || ret[back] == '\n' || ret[back] == '\t'))
