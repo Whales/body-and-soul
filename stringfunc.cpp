@@ -139,3 +139,14 @@ std::string all_caps(const std::string &orig)
 
   return ret;
 }
+
+std::string no_caps(const std::string &orig)
+{
+  std::string ret = orig;
+  for (int i = 0; i < ret.length(); i++) {
+    if (ret[i] >= 'A' && ret[i] <= 'Z')
+      ret[i] += 'a' - 'A';
+  }
+
+  return ret;
+}

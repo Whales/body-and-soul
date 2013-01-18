@@ -47,6 +47,9 @@ enum transform_type
   TRANS_MAX
 };
 
+transform_type lookup_transformation(std::string name);
+std::string get_transformation_name(transform_type type);
+
 struct terrain_type
 {
   std::string name;
@@ -63,6 +66,11 @@ struct terrain_type
 
   std::string save_data();
   void load_data(std::istream &datastream);
+
+  void init_transformations();
+
+private:
+  std::vector<std::string> pre_transformations;
 };
 
 #endif

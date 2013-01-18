@@ -31,12 +31,22 @@ std::string terrain_type::save_data()
     ret << "Flags: ";
     for (int i = 0; i < flags.size(); i++) {
       if (flags[i])
-        ret << flag_name( terrain_flag(i) ) << ",";
+        ret << flag_name( terrain_flag(i) ) << ", ";
     }
+    ret << "Done\n";
   }
 
   bool has_transforms = false;
-  for (int i = 0; i < transformations.size() && !has_transforms; i++) {
+  for (int i = 0; i < transformations.size() && !has_transforms; i++)
+    has_transforms |= (transformations[i] != TER_NULL);
+  if (has_transforms) {
+    ret << "Transformations: ";
+    for (int i = 0; i < transformations.size(); i++) {
+      ret << get_transformation_name( transform_type(i) ) << ">" <<
+             TERRAIN_POOL[ transformations[i] ].name << ", "
+    }
+    ret << "Done\n";
+  }
   return ret.str();
 }
 
@@ -50,14 +60,30 @@ void terrain_type::load_data(std::istream &datastream)
   std::string ident;
   do {
     datastream >> ident;
-    if (ident == "Flags:") {
+    if (all_caps(ident) == "FLAGS:") {
       std::string flagname;
       do {
         flagname = load_to_character(datastream, ";,\n", true);
         flags[ lookup_flag(flagname) ] = true;
-      } while (all_caps(flagname) != "Done");
+      } while (all_caps(flagname) != "DONE");
+    } else if (all_caps(ident) == "TRANSFORMATIONS") {
+      std::string transname, tername;
+      do {
+        transname = load_to_character(">;,", true);
+        if (all_caps(transname) != "DONE") {
+          tername = load_to_character(";,", true);
+          if (all_caps(tername) != "DONE") {
+            pre_transformations[ lookup_transformation(transname) ] =
+              tername;
+          }
+        }
+      } while (all_caps(transname) != "DONE" && all_caps(tername) != "DONE");
     }
-  }
+  } while (all_caps(ident) != "DONE" && !datastream.eof());
 }
 
 
+transform_type lookup_transformation(std::string name)
+{
+  name = all_caps(name);
+  if (name == "FOREST")
