@@ -1,0 +1,111 @@
+Player is Good:
+  Imagos is good: Protect
+    >Assistance in Combat (Guardian)
+      Imagos manifests itself and fights with the player.  Imagos will only
+      attack aggressors.
+    >Deflection of Damage (Guardian, Old Wise)
+      Damage is reduced or entirely prevented.
+    >Ward Evil Spells (Guardian, Old Wise, Child)
+      Evil spells power and success rate are reduced.  Player's ward power is
+      increased.
+    >Inner Strength (All)
+      All evasive techniques (dodge, block, ward) improved slightly
+  Imagos is neutral: Guide
+    >Answer a question (Voice - 100%; Syzygy - 75%; Anima - 50%; Strength - 10%)
+      Imagos manifests briefly, with knowledge of 50%/75%/100% of the world. It
+      will answer a single question; if it does not know the answer, it may
+      invent one or truthfully admit that it cannot see.
+    >Guide to Location (Syzygy, Anima, Voice - somewhat)
+      Imagos manifests itself, and will start pathing to a location given by the
+      player.  It will attack any aggressors which come close to it.
+    >Inspire Quest (Voice, Syzygy)
+      Imagos will assign a Quest to the player.  Completing this quest has the
+      effect of increasing soul points, and moving karma towards 0.
+  Imagos is evil: Assault
+    >Physical Assault (Nemesis)
+      Imagos manifests itself and attacks the player directly.
+    >Mental Assault (Nemesis, Shadow, Loki)
+      The player's fears and temptations manifest themselves.
+    >Moral Assault (Nemesis, Shadow)
+      A Major Obstacle manifests; generally of higher difficulty than is
+      appropriate for the player.  The player is temporarily given a powerful
+      Evil spell.
+
+Player is Neutral
+  Imagos is Good: Inspire
+    >Empower (All)
+      The player's spiritual powers are improved slightly.
+    >Enlighten (Guardian, Wise Old)
+      The player temporarily receives a good power.
+    >Illustrate (Guardian, Wise Old)
+      Imagos manifests itself briefly (3-5 turns) to use a good power.
+  Imagos is Neutral: Strengthen
+    >Regenerate (Voice)
+      The player temporarily regenerates HP and SP at a very fast rate.
+    >Bolster (Syzygy, Anima)
+      Imagos manifests itself to fight on the player's side.
+    >Augment (All)
+      The player's skills of all types are improved slightly.
+    >Rebuff (Voice)
+      Enemies are temporarily frightened.
+  Imagos is Evil: Tempt
+    >Entice (All, power is scaled)
+      The player temporarily receives an evil power.
+    >Corrupt (Nemesis, Shadow)
+      The player temporarily receives a powerful adjustment to their body; an
+      extra clawed arm, horns, stinging tail, etc.
+    >Swarm (Nemesis)
+      Several Shades are created, allied with the player.  The player is given
+      Soul Steal at high power for a few turns; using it on a shade extends the
+      power 2 turns.
+
+Player is Evil
+  Imagos is Good: Cleanse
+    >Alert Enemies (Guardian, Wise Old, Child)
+      If any Good entities are searching or questing for the player, they are
+      notified of the player's location, or, at high Imagos power, gated
+      directly to the player.  If no entities are seeking the player, then the
+      nearest Good entity is made aware of and enraged at the player.
+    >Test Abilities (Guardian, Wise Old)
+      Several Good creatures are created at a high power level.  The player's
+      Evil soul powers have their power level reduced temporarily.
+    >Direct Attack (Guardian)
+      The Imagos manifests itself and attacks the player directly.  Since Good
+      Imagos are physically weak, it is aided by a few Good creatures.
+  Imagos is Neutral: Guide
+    See above under Player is Good.
+  Imagos is Evil: Goad
+    >Direct to Victims (Nemesis, Shadow, Loki)
+      The Imagos will manifest itself and lead the player to a vulnerable soul.
+      It will direct the player to attack them, but will not intervene unless a
+      third party gets involved.
+    >Augment Power (Nemesis)
+      The player's evil soul powers are increased in power significantly.
+    >Torrent (Nemesis, Shadow)
+      Friendly shades & jinxes will be summoned every turn for several turns.
+
+
+Imagos Particulars:
+Virtue
+Strength
+Vice
+  Barely true Imagos, these manifest themselves as an inner voice.  They don't
+  lend any powers to the player, aside from moral support (if such a thing is
+  implemented), but provide flavor in the form of text.
+
+Child
+  Playful and innocent, but surprisingly powerful.
+Anima
+  A form of the player of the opposite sex.  Its personality is a complement to
+  the player's; it has the powers they lack.
+  >Embrace: A manifestation of the Anima may embrace the player, bolstering
+   their morale.
+Loki
+
+Wise Old
+Syzygy
+Shadow
+
+Guardian
+Voice
+Nemesis

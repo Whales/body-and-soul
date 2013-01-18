@@ -1,0 +1,41 @@
+Who
+  are you
+    Response = EntityInfo(me).name
+    Response = EntityInfo(me).description
+  are your friends
+    Response = list( EntityInfo( Each(friendlist) ).name )
+  are your enemies
+    Response = list( EntityInfo( Each(enemylist) ).name )
+  is <input person>
+    Response = EntityInfo(person).description
+What
+  are you doing
+    Response = TaskInfo(current).process.description
+  do you want/need
+    Response = TaskInfo(current).goal.name
+    Response = TaskInfo(current).goal.description
+  do you think about <input place, person>
+    Response = Opinion(input).description
+Where
+  is <input place, person>
+    Response = Opinion(input).location
+  do you live
+    Response = PlaceInfo(home).location
+  are you going
+    Response = TaskInfo(current).goal.location
+When
+  is <input event>
+    Response = EventInfo(input).time
+Why
+How
+  can I <input power>
+    Response = PowerInfo(input).method
+  can I <input goal>
+    Response = TaskInfo(input).method
+
+Opinion
+EntityInfo
+PlaceInfo
+TaskInfo
+EventInfo
+PowerInfo

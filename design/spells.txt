@@ -1,0 +1,43 @@
+Spells cost soul (permanent or temporary), are resisted with shell
+Temporary costs, if they cannot be paid, can be "bought" by at a rate of 1P:4T
+Spells may darken your soul as well, moving soul points down a level
+
+Ghost-only:
+  Substantiate:
+    Creates a temporary physical form.
+
+Soul steal; Karma
+	Cost: 10P, 20T
+  Karma: -5
+  Sap = 10 - shell + power; target loses sap P, you gain sap * .9 P
+Time slow
+	Cost: 30T
+Dreambeast
+	Cost: 20T
+
+Illuminate
+Darken
+Bind
+Change Self
+Change Other
+Heal
+Flight
+Open Gate
+	To real world, to another place in spirit world, to Dark Realm
+True Sight
+Ward
+Draw In
+Nightmare
+  Create creatures/items that the target fears
+Create Object
+Soul Egg
+Enshroud
+Attention
+Architecture
+Haste
+Blink
+Confuse
+Sanctuary
+Stablize
+  Temporarily stops any terrain from shifting; this includes terrain created by
+  Architecture fading away.

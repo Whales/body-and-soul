@@ -1,0 +1,10 @@
+Soul levels:
+  Negative: <0
+  None: 0 - 99
+  Weak: 100 - 999
+  Normal: 1000 - 1999
+  Strong: 2000 - 2499
+  High:   2500+
+
+	
+

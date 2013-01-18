@@ -1,0 +1,122 @@
+Bodies have special properties; generally these only belong to living beings,
+but ghosts may cast Substantiate to gain a body temporarily.
+
+Bodies are composed of parts.  Parts all have HP 100, and a stat or two.
+The value of the stat is multiplied by the % of HP remaining.
+
+Parts:
+  Head:
+    Stat Intelligence
+      Reason
+      Persuade
+    Stat Perception
+      Notice
+      Target
+  Arm:
+    Stat Strength
+      Push
+      Strike (damage)
+    Stat Dexterity
+      Block
+      Strike (hit)
+  Torso:
+    Stat Strength
+      Lift
+    Stat Endurance
+      Resist
+  Leg:
+    Stat Strength
+      Kick (damage)
+      Run
+    Stat Dexterity
+      Dodge
+      Kick (hit)
+      Dance
+
+Body Examples:
+  Spirit - This is a "pseudobody" and is not presented as such in-game.  It does
+           not follow the usual rules of a body; e.g. it cannot be hit with most
+           physical attacks.  It houses the stats that a bodiless soul uses.
+    Head:
+      Perception = Per As Human * 0.9
+      Intelligence = Int As Human * 1.1
+
+  Human - This is what all characters start with.
+    Head:
+      Per 8-12
+      Int 8-12
+    Torso:
+      Str 8-12
+      End 8-12
+    Arm (left):
+    Arm (right):
+      Str 8-12
+      Dex 8-12
+      Non-dominant side receives Str-2, Dex-4 (unless Ambidextrous)
+    Leg (left):
+    Leg (right):
+      Str 8-12
+      Dex 8-12
+
+
+Spirit Bodies:  Spirits can assume one of these using the "Substantiate" spell
+                Spirit bodies may have "special attacks" on any body part
+                When a range is given for a stat, it is affected by the spirit's
+                appropriate skill
+  Anthro-X: X is any body from below
+    Head:
+      Stats as spirit
+      Special Attacks preserved
+    Body:
+      Stats as spirit
+    Arms:
+      Stats average of spirit and selected form; use legs if form is armless
+      Special Attacks preserved
+    Legs:
+      Stats as spirit
+
+  Wolf (Forest, Beast)
+    Run speed 120%
+    Size 80%
+    Head:
+      Per Spirit * 1.2
+      Int Spirit * .8
+      Special Attack: Bite
+    Torso:
+      Str 8 - 12
+      End 8 - 14
+    Leg x4:
+      Str 6 - 10
+      Dex 6 - 10
+      Special Attack: Claw
+
+  Bear (Forest, Beast)
+    Run speed 110%
+    Size 160%
+    Head:
+      Per Spirit
+      Int Spirit
+      Special Attack: Bite
+    Torso:
+      Str 12 - 16
+      End 12 - 16
+    Leg x 4:
+      Str 10 - 16
+      Dex  8 - 10
+      Special Attack: Swipe
+
+  Rabbit (Forest, nonbeast)
+    Run speed 140%
+    Size 10%
+    Head:
+      Per Spirit * 1.3
+      Int Spirit * 0.3
+    Torso:
+      Str 1 - 4
+      End 6 - 10
+    Leg x 2:
+      Str 1 - 4
+      Dex 6 - 12
+    Leg x 2:
+      Str 3 - 10
+      Dex 5 - 10
