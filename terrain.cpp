@@ -60,30 +60,52 @@ void terrain_type::load_data(std::istream &datastream)
   std::string ident;
   do {
     datastream >> ident;
-    if (all_caps(ident) == "FLAGS:") {
+    if (no_caps(ident) == "flags:") {
       std::string flagname;
       do {
         flagname = load_to_character(datastream, ";,\n", true);
         flags[ lookup_flag(flagname) ] = true;
-      } while (all_caps(flagname) != "DONE");
-    } else if (all_caps(ident) == "TRANSFORMATIONS") {
+      } while (no_caps(flagname) != "done");
+    } else if (no_caps(ident) == "transformations") {
       std::string transname, tername;
       do {
         transname = load_to_character(">;,", true);
-        if (all_caps(transname) != "DONE") {
+        if (no_caps(transname) != "done") {
           tername = load_to_character(";,", true);
-          if (all_caps(tername) != "DONE") {
+          if (no_caps(tername) != "done") {
             pre_transformations[ lookup_transformation(transname) ] =
               tername;
           }
         }
-      } while (all_caps(transname) != "DONE" && all_caps(tername) != "DONE");
+      } while (no_caps(transname) != "done" && no_caps(tername) != "done");
     }
-  } while (all_caps(ident) != "DONE" && !datastream.eof());
+  } while (no_caps(ident) != "done" && !datastream.eof());
 }
 
 
 transform_type lookup_transformation(std::string name)
 {
-  name = all_caps(name);
-  if (name == "FOREST")
+  name = no_caps(name);
+  if (name == "forest")
+    return TRANS_FOREST;
+  if (name == "wastes")
+    return TRANS_WASTES;
+  if (name == "sea")
+    return TRANS_SEA;
+  if (name == "mists")
+    return TRANS_MISTS;
+
+  if (name == "heat")
+    return TRANS_HEAT;
+  if (name == "cold")
+    return TRANS_COLD;
+
+  if (name == "open")
+    return TRANS_OPEN;
+  if (name == "close")
+    return TRANS_CLOSE;
+
+  return TRANS_NULL;
+}
+
+
