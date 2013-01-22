@@ -1,4 +1,5 @@
 #include "terrain.h"
+#include "globals.h"
 
 #define SUBMAP_SIZE 100
 
@@ -54,7 +55,7 @@ class map
   map();
 
 // Accessors
-  terrain& ter(int x, int y);
+  tile& ter(int x, int y);
 
 // Mutators
   void generate(map_type type);

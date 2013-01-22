@@ -1,6 +1,8 @@
 #include <sstream>
 #include "terrain.h"
 #include "stringfunc.h"
+#include "window.h"
+#include "globals.h"
 
 terrain_type::terrain_type()
 {
@@ -31,7 +33,7 @@ std::string terrain_type::save_data()
     ret << "Flags: ";
     for (int i = 0; i < flags.size(); i++) {
       if (flags[i])
-        ret << flag_name( terrain_flag(i) ) << ", ";
+        ret << get_flag_name( terrain_flag(i) ) << ", ";
     }
     ret << "Done\n";
   }
@@ -43,7 +45,7 @@ std::string terrain_type::save_data()
     ret << "Transformations: ";
     for (int i = 0; i < transformations.size(); i++) {
       ret << get_transformation_name( transform_type(i) ) << ">" <<
-             TERRAIN_POOL[ transformations[i] ].name << ", "
+             TERRAIN_POOL[ transformations[i] ]->name << ", ";
     }
     ret << "Done\n";
   }
@@ -69,9 +71,9 @@ void terrain_type::load_data(std::istream &datastream)
     } else if (no_caps(ident) == "transformations") {
       std::string transname, tername;
       do {
-        transname = load_to_character(">;,", true);
+        transname = load_to_character(datastream, ">;,\n", true);
         if (no_caps(transname) != "done") {
-          tername = load_to_character(";,", true);
+          tername = load_to_character(datastream, ";,\n", true);
           if (no_caps(tername) != "done") {
             pre_transformations[ lookup_transformation(transname) ] =
               tername;
@@ -86,26 +88,68 @@ void terrain_type::load_data(std::istream &datastream)
 transform_type lookup_transformation(std::string name)
 {
   name = no_caps(name);
-  if (name == "forest")
-    return TRANS_FOREST;
-  if (name == "wastes")
-    return TRANS_WASTES;
-  if (name == "sea")
-    return TRANS_SEA;
-  if (name == "mists")
-    return TRANS_MISTS;
-
-  if (name == "heat")
-    return TRANS_HEAT;
-  if (name == "cold")
-    return TRANS_COLD;
-
-  if (name == "open")
-    return TRANS_OPEN;
-  if (name == "close")
-    return TRANS_CLOSE;
-
+  for (int i = 0; i < TRANS_MAX; i++) {
+    transform_type tmp = transform_type(i);
+    if (no_caps(get_transformation_name(tmp)) == name)
+      return tmp;
+  }
+  debugmsg("Couldn't find transformation named \"%s\".", name.c_str());
   return TRANS_NULL;
 }
 
 
+std::string get_transformation_name(transform_type type)
+{
+  switch (type) {
+    case TRANS_NULL:    return "none";
+
+    case TRANS_FOREST:  return "forest";
+    case TRANS_WASTES:  return "wastes";
+    case TRANS_SEA:     return "sea";
+    case TRANS_MISTS:   return "mists";
+
+    case TRANS_HEAT:    return "heat";
+    case TRANS_COLD:    return "cold";
+
+    case TRANS_OPEN:    return "open";
+    case TRANS_CLOSE:   return "close";
+
+    case TRANS_MAX:     return "none";
+
+    default:
+      debugmsg("No name defined for transform_type %d", type);
+      return "error";
+  }
+
+  return "wtf";
+}
+
+terrain_flag lookup_flag(std::string name)
+{
+  name = no_caps(name);
+  for (int i = 0; i < TF_MAX; i++) {
+    terrain_flag tmp = terrain_flag(i);
+    if (no_caps(get_flag_name(tmp)) == name)
+      return tmp;
+  }
+
+  debugmsg("Couldn't find terrain flag named \"%s\".", name.c_str());
+  return TF_NULL;
+}
+
+std::string get_flag_name(terrain_flag flag)
+{
+  switch (flag) {
+    case TF_NULL:
+    case TF_MAX:
+      return "none";
+
+    case TF_TEST: return "test";
+
+    default:
+      debugmsg("Couldn't find name for terrain_flag %d.", flag);
+      return "error";
+  }
+
+  return "wtf";
+}

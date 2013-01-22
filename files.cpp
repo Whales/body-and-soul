@@ -20,5 +20,3 @@ std::vector<std::string> files_in(std::string dir, std::string suffix)
  closedir(dp);
  return ret;
 }
-
-void 

@@ -138,9 +138,9 @@ void update_interface(cuss::interface& i_editor, edit_group editing,
 edit_group pick_edit_group()
 {
   switch (popup_menu("Edit:", "Bodies", "Body Parts", "Stats", NULL)) {
-    case 1: return EDIT_BODIES;
-    case 2: return EDIT_PARTS;
-    case 3: return EDIT_STATS;
+    case 1:  return EDIT_BODIES;
+    case 2:  return EDIT_PARTS;
+    case 3:  return EDIT_STATS;
     default: return EDIT_BODIES;
   }
   return EDIT_BODIES;
@@ -172,6 +172,7 @@ void add_member(cuss::interface &i_editor, edit_group editing)
 {
   std::string edited = i_editor.get_str("list_edit");
   bool done = false;
+
   switch (editing) {
 
     case EDIT_BODIES:

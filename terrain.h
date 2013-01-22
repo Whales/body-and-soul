@@ -3,11 +3,13 @@
 
 #include <string>
 #include <istream>
+#include <vector>
 #include "glyph.h"
 
 enum terrain_flag
 {
   TF_NULL = 0,
+  TF_TEST,
   TF_MAX
 };
 
@@ -50,6 +52,9 @@ enum transform_type
 transform_type lookup_transformation(std::string name);
 std::string get_transformation_name(transform_type type);
 
+terrain_flag lookup_flag(std::string name);
+std::string get_flag_name(terrain_flag flag);
+
 struct terrain_type
 {
   std::string name;
@@ -59,7 +64,7 @@ struct terrain_type
   glyph symbol;
 
   std::vector<bool> flags;
-  std::vector<tile_id> transformations;
+  std::vector<terrain_id> transformations;
 
   terrain_type();
   ~terrain_type();
