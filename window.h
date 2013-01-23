@@ -29,6 +29,7 @@ enum Window_type
 };
 
 void init_display();
+void end_display();
 long input();
 void debugmsg(const char *mes, ...);
 void refresh_all(bool erase = false);

@@ -52,7 +52,7 @@ std::string terrain_type::save_data()
     ret << "Done\n";
   }
 
-  ret << "\nDone\n";
+  ret << "Endtype\n";
   return ret.str();
 }
 
@@ -60,7 +60,7 @@ void terrain_type::load_data(std::istream &datastream)
 {
   std::string glyphdata;
   name = load_to_character(datastream, ";", true);
-  datastream >> name >> move_cost >> sight_cost;
+  datastream >> uid >> move_cost >> sight_cost;
   symbol.load_data(datastream);
 
   std::string ident;
@@ -85,7 +85,7 @@ void terrain_type::load_data(std::istream &datastream)
         }
       } while (no_caps(transname) != "done" && no_caps(tername) != "done");
     }
-  } while (no_caps(ident) != "done" && !datastream.eof());
+  } while (no_caps(ident) != "endtype" && !datastream.eof());
 }
 
 

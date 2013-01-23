@@ -105,7 +105,8 @@ void init_data()
     for (int i = 0; i < TER_MAX && !fin.eof(); i++) {
       terrain_type* tmp = new terrain_type;
       tmp->load_data(fin);
-      TERRAIN_POOL.push_back(tmp);
+      if (!tmp->name.empty())
+        TERRAIN_POOL.push_back(tmp);
     }
     fin.close();
   }

@@ -248,6 +248,12 @@ void init_display()
  timeout(-1);
 }
 
+void end_display()
+{
+  erase();
+  endwin();
+}
+
 long input()
 {
  return getch();
