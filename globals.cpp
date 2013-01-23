@@ -154,7 +154,7 @@ void save_data()
   filename = DATADIR + "/terrain.txt";
   fout.open (filename.c_str() );
   if (fout.is_open()) {
-    fout << TERRAIN_POOL.size() << " ";
+   // fout << TERRAIN_POOL.size() << " ";
     for (std::vector<terrain_type*>::iterator it = TERRAIN_POOL.begin();
          it != TERRAIN_POOL.end(); it++)
       fout << (*it)->save_data() << std::endl;

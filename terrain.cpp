@@ -44,11 +44,15 @@ std::string terrain_type::save_data()
   if (has_transforms) {
     ret << "Transformations: ";
     for (int i = 0; i < transformations.size(); i++) {
-      ret << get_transformation_name( transform_type(i) ) << ">" <<
-             TERRAIN_POOL[ transformations[i] ]->name << ", ";
+      if (transformations[i] != TER_NULL) {
+        ret << get_transformation_name( transform_type(i) ) << ">" <<
+              TERRAIN_POOL[ transformations[i] ]->name << ", ";
+      }
     }
     ret << "Done\n";
   }
+
+  ret << "\nDone\n";
   return ret.str();
 }
 
@@ -133,7 +137,6 @@ terrain_flag lookup_flag(std::string name)
       return tmp;
   }
 
-  debugmsg("Couldn't find terrain flag named \"%s\".", name.c_str());
   return TF_NULL;
 }
 
