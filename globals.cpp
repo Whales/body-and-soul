@@ -109,6 +109,9 @@ void init_data()
         TERRAIN_POOL.push_back(tmp);
     }
     fin.close();
+    for (int i = 0; i < TERRAIN_POOL.size(); i++) {
+      TERRAIN_POOL[i]->init_transformations();
+    }
   }
 }
 

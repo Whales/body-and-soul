@@ -17,6 +17,7 @@ terrain_type::terrain_type()
   }
   for (int i = 0; i < TRANS_MAX; i++) {
     transformations.push_back(TER_NULL);
+    pre_transformations.push_back("");
   }
 }
 
@@ -40,7 +41,8 @@ std::string terrain_type::save_data()
 
   bool has_transforms = false;
   for (int i = 0; i < transformations.size() && !has_transforms; i++)
-    has_transforms |= (transformations[i] != TER_NULL);
+    has_transforms = (transformations[i] != TER_NULL);
+
   if (has_transforms) {
     ret << "Transformations: ";
     for (int i = 0; i < transformations.size(); i++) {
@@ -72,7 +74,7 @@ void terrain_type::load_data(std::istream &datastream)
         flagname = load_to_character(datastream, ";,\n", true);
         flags[ lookup_flag(flagname) ] = true;
       } while (no_caps(flagname) != "done");
-    } else if (no_caps(ident) == "transformations") {
+    } else if (no_caps(ident) == "transformations:") {
       std::string transname, tername;
       do {
         transname = load_to_character(datastream, ">;,\n", true);
@@ -88,6 +90,18 @@ void terrain_type::load_data(std::istream &datastream)
   } while (no_caps(ident) != "endtype" && !datastream.eof());
 }
 
+void terrain_type::init_transformations()
+{
+  for (int i = 0; i < pre_transformations.size(); i++) {
+    bool found = false;
+    for (int j = 0; !found && j < TERRAIN_POOL.size(); j++) {
+      if (no_caps(pre_transformations[i]) == no_caps(TERRAIN_POOL[j]->name)) {
+        transformations[i] = terrain_id(j);
+        found = true;
+      }
+    }
+  }
+}
 
 transform_type lookup_transformation(std::string name)
 {

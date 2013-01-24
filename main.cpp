@@ -12,6 +12,9 @@ std::vector<std::string> get_transformation_names(terrain_type *type);
 void add_flag(terrain_type *type);
 void add_transformation(terrain_type *type);
 
+void remove_flag(terrain_type *type, int index);
+void remove_transformation(terrain_type *type, int index);
+
 int main()
 {
   init_environment();
@@ -53,19 +56,48 @@ int main()
       current_ter = TERRAIN_POOL[ i_editor.get_int("list_types") ];
       flags = get_flag_names(current_ter);
       transformations = get_transformation_names(current_ter);
+      i_editor.ref_data("num_move", &(current_ter->move_cost));
+      i_editor.ref_data("num_sight", &(current_ter->sight_cost));
+      i_editor.ref_data("text_name", &(current_ter->name));
     } else {
       current_ter = NULL;
     }
     i_editor.draw(&w_editor);
     long ch = getch();
-    if (ch == KEY_ESC) {
+    if (selected->name == "text_name" &&
+        ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || ch == ' ')) {
+      current_ter->name += ch;
+    } else if (selected->name == "text_name" && ch == KEY_BACKSPACE &&
+               !current_ter->name.empty()) {
+      current_ter->name =
+        current_ter->name.substr(0, current_ter->name.length() - 1);
+    } else if (ch == 's' || ch == 'S') {
       quit = true;
     } else if (ch == 'a' || ch == 'A') {
       if (selected->name == "list_flags") {
         add_flag(current_ter);
+        i_editor.set_data("list_flags", 0);
       } else if (selected->name == "list_transformations") {
         add_transformation(current_ter);
+        i_editor.set_data("list_transformations", 0);
       }
+    } else if (ch == 'd' || ch == 'D') {
+      if (selected->name == "list_flags") {
+        int index = i_editor.get_int("list_flags");
+        if (index < flags.size()) {
+          remove_flag(current_ter, index);
+          i_editor.set_data("list_flags", 0);
+        }
+      } else if (selected->name == "list_transformations") {
+        int index = i_editor.get_int("list_transformations");
+        if (index < transformations.size()) {
+          remove_transformation(current_ter, index);
+          i_editor.set_data("list_transformations", 0);
+        }
+      }
+    } else if (ch == '?') {
+      debugmsg("%d of %d", i_editor.get_int("list_transformations"),
+                           transformations.size());
     } else {
       i_editor.handle_action(ch);
     }
@@ -119,14 +151,75 @@ std::vector<std::string> get_transformation_names(terrain_type *type)
       std::stringstream flagdata;
       flagdata << get_transformation_name( transform_type(i) ) << " => " <<
                   TERRAIN_POOL[ type->transformations[i] ]->name;
+      ret.push_back(flagdata.str());
     }
   }
+
+  return ret;
 }
 
 void add_flag(terrain_type* type)
 {
+  std::vector<std::string> flag_names;
+  std::vector<int> flag_indices;
+  for (int i = 1; i < TF_MAX; i++) {
+    if (!type->flags[i]) {
+      flag_names.push_back( get_flag_name( terrain_flag(i) ) );
+      flag_indices.push_back(i);
+    }
+  }
+
+  if (flag_names.empty()) {
+    popup("All flags are turned on.");
+    return;
+  }
+
+  int picked = menu_vec("Apply flag:", flag_names);
+  type->flags[ flag_indices[picked] ] = true;
 }
 
 void add_transformation(terrain_type* type)
 {
+  std::vector<std::string> transform_names;
+  for (int i = 1; i < TRANS_MAX; i++) {
+    transform_names.push_back( get_transformation_name( transform_type(i) ) );
+  }
+
+  int picked = 1 + menu_vec("Transformation type:", transform_names);
+
+  std::vector<std::string> terrain_names;
+  for (int i = 1; i < TERRAIN_POOL.size(); i++) {
+    terrain_names.push_back(TERRAIN_POOL[i]->name);
+  }
+  int result = 1 + menu_vec("Transform to:", terrain_names);
+
+  type->transformations[picked] = terrain_id(result);
+}
+
+void remove_flag(terrain_type *type, int index)
+{
+  for (int i = 0; i < type->flags.size(); i++) {
+    if (type->flags[i]) {
+      if (index == 0) {
+        type->flags[i] = false;
+        return;
+      } else {
+        index--;
+      }
+    }
+  }
+}
+
+void remove_transformation(terrain_type *type, int index)
+{
+  for (int i = 0; i < type->transformations.size(); i++) {
+    if (type->transformations[i] != TER_NULL) {
+      if (index == 0) {
+        type->transformations[i] = TER_NULL;
+        return;
+      } else {
+        index--;
+      }
+    }
+  }
 }
