@@ -156,3 +156,26 @@ std::string get_flag_name(terrain_flag flag)
 
   return "wtf";
 }
+
+std::string default_terrain_name(terrain_id type)
+{
+  switch (type) {
+    case TER_NULL:  return "Null";
+  // Floor-like tiles
+    case TER_FLOOR: return "Floor";
+    case TER_DIRT:  return "Dirt";
+    case TER_SAND:  return "Sand";
+  // Water-like tiles
+    case TER_WATER: return "Water";
+  // Wall-like tiles
+    case TER_WALL:  return "Wall";
+    case TER_ROCK:  return "Rock";
+  // Other tiles
+    case TER_TREE:  return "Tree";
+  
+    case TER_MAX:   return "out of bounds";
+
+    default:        return "No default name in code";
+  }
+  return "Escaped switch";
+}

@@ -121,7 +121,7 @@ nc_color color_string(std::string id)
 {
  if (id == "black")
   return c_black;
- if (id == "ltgray")
+ if (id == "ltgray" || id == "ltgrey")
   return c_ltgray;
  if (id == "red")
   return c_red;
@@ -135,7 +135,7 @@ nc_color color_string(std::string id)
   return c_magenta;
  if (id == "brown")
   return c_brown;
- if (id == "dkgray")
+ if (id == "dkgray" || id == "dkgrey")
   return c_dkgray;
  if (id == "white")
   return c_white;
@@ -175,6 +175,31 @@ std::string color_name(nc_color color)
   case c_pink:    return "Pink";
   case c_yellow:  return "Yellow";
   case c_null:    return "Unchanged";
+  default:        return "???";
+ }
+ return "???";
+}
+
+std::string color_tag_name(nc_color color)
+{
+ switch (color) {
+  case c_black:   return "black";
+  case c_ltgray:  return "ltgray";
+  case c_red:     return "red";
+  case c_green:   return "green";
+  case c_blue:    return "blue";
+  case c_cyan:    return "cyan";
+  case c_magenta: return "magenta";
+  case c_brown:   return "brown";
+  case c_dkgray:  return "dkgray";
+  case c_white:   return "white";
+  case c_ltred:   return "ltred";
+  case c_ltgreen: return "ltgreen";
+  case c_ltblue:  return "ltblue";
+  case c_ltcyan:  return "ltcyan";
+  case c_pink:    return "pink";
+  case c_yellow:  return "yellow";
+  case c_null:    return "";
   default:        return "???";
  }
  return "???";

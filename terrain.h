@@ -55,6 +55,8 @@ std::string get_transformation_name(transform_type type);
 terrain_flag lookup_flag(std::string name);
 std::string get_flag_name(terrain_flag flag);
 
+std::string default_terrain_name(terrain_id type);
+
 struct terrain_type
 {
   std::string name;
