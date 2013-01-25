@@ -10,6 +10,8 @@ enum terrain_flag
 {
   TF_NULL = 0,
   TF_TEST,
+  TF_LIQUID,
+  TF_FIERY,
   TF_MAX
 };
 
@@ -35,6 +37,7 @@ enum transform_type
 {
   TRANS_NULL = 0,
 
+  TRANS_CITY,
   TRANS_FOREST,
   TRANS_WASTES,
   TRANS_SEA,
@@ -42,6 +45,11 @@ enum transform_type
 
   TRANS_HEAT,
   TRANS_COLD,
+
+  TRANS_WATER,
+  TRANS_DAMAGE,
+  TRANS_GROWTH,
+  TRANS_DEATH,
 
   TRANS_OPEN,
   TRANS_CLOSE,
@@ -57,6 +65,14 @@ std::string get_flag_name(terrain_flag flag);
 
 std::string default_terrain_name(terrain_id type);
 
+struct transform
+{
+  transform(int _result = 0, int _resistance = 0) :
+           result(_result), resistance(_resistance) { };
+  int result;
+  int resistance;
+};
+
 struct terrain_type
 {
   std::string name;
@@ -66,7 +82,8 @@ struct terrain_type
   glyph symbol;
 
   std::vector<bool> flags;
-  std::vector<terrain_id> transformations;
+  std::vector<transform> transformations;
+  
 
   terrain_type();
   ~terrain_type();
@@ -78,6 +95,7 @@ struct terrain_type
 
 private:
   std::vector<std::string> pre_transformations;
+  std::vector<int> pre_resistances;
 };
 
 #endif

@@ -102,7 +102,9 @@ void init_data()
   filename = DATADIR + "/terrain.txt";
   fin.open( filename.c_str() );
   if (fin.is_open()) {
-    for (int i = 0; i < TER_MAX && !fin.eof(); i++) {
+    int numter;
+    fin >> numter;
+    for (int i = 0; i < numter && !fin.eof(); i++) {
       terrain_type* tmp = new terrain_type;
       tmp->load_data(fin);
       if (!tmp->name.empty())
@@ -158,7 +160,7 @@ void save_data()
   filename = DATADIR + "/terrain.txt";
   fout.open (filename.c_str() );
   if (fout.is_open()) {
-   // fout << TERRAIN_POOL.size() << " ";
+    fout << TERRAIN_POOL.size() << std::endl;
     for (std::vector<terrain_type*>::iterator it = TERRAIN_POOL.begin();
          it != TERRAIN_POOL.end(); it++)
       fout << (*it)->save_data() << std::endl;

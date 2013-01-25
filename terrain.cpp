@@ -16,8 +16,9 @@ terrain_type::terrain_type()
     flags.push_back(false);
   }
   for (int i = 0; i < TRANS_MAX; i++) {
-    transformations.push_back(TER_NULL);
+    transformations.push_back( transform(TER_NULL, 0) );
     pre_transformations.push_back("");
+    pre_resistances.push_back(0);
   }
 }
 
@@ -41,14 +42,15 @@ std::string terrain_type::save_data()
 
   bool has_transforms = false;
   for (int i = 0; i < transformations.size() && !has_transforms; i++)
-    has_transforms = (transformations[i] != TER_NULL);
+    has_transforms = (transformations[i].result != TER_NULL);
 
   if (has_transforms) {
     ret << "Transformations: ";
     for (int i = 0; i < transformations.size(); i++) {
-      if (transformations[i] != TER_NULL) {
+      if (transformations[i].result != TER_NULL) {
         ret << get_transformation_name( transform_type(i) ) << ">" <<
-              TERRAIN_POOL[ transformations[i] ]->name << ", ";
+               TERRAIN_POOL[ transformations[i].result ]->name << ", " <<
+               transformations[i].resistance << " ";
       }
     }
     ret << "Done\n";
@@ -76,13 +78,16 @@ void terrain_type::load_data(std::istream &datastream)
       } while (no_caps(flagname) != "done");
     } else if (no_caps(ident) == "transformations:") {
       std::string transname, tername;
+      int resistance;
       do {
         transname = load_to_character(datastream, ">;,\n", true);
         if (no_caps(transname) != "done") {
           tername = load_to_character(datastream, ";,\n", true);
           if (no_caps(tername) != "done") {
+            datastream >> resistance;
             pre_transformations[ lookup_transformation(transname) ] =
               tername;
+            pre_resistances[ lookup_transformation(transname) ] = resistance;
           }
         }
       } while (no_caps(transname) != "done" && no_caps(tername) != "done");
@@ -96,7 +101,8 @@ void terrain_type::init_transformations()
     bool found = false;
     for (int j = 0; !found && j < TERRAIN_POOL.size(); j++) {
       if (no_caps(pre_transformations[i]) == no_caps(TERRAIN_POOL[j]->name)) {
-        transformations[i] = terrain_id(j);
+        transformations[i].result = terrain_id(j);
+        transformations[i].resistance = pre_resistances[i];
         found = true;
       }
     }
@@ -121,6 +127,7 @@ std::string get_transformation_name(transform_type type)
   switch (type) {
     case TRANS_NULL:    return "none";
 
+    case TRANS_CITY:    return "city";
     case TRANS_FOREST:  return "forest";
     case TRANS_WASTES:  return "wastes";
     case TRANS_SEA:     return "sea";
@@ -128,6 +135,11 @@ std::string get_transformation_name(transform_type type)
 
     case TRANS_HEAT:    return "heat";
     case TRANS_COLD:    return "cold";
+
+    case TRANS_WATER:   return "water";
+    case TRANS_DAMAGE:  return "damage";
+    case TRANS_GROWTH:  return "growth";
+    case TRANS_DEATH:   return "death";
 
     case TRANS_OPEN:    return "open";
     case TRANS_CLOSE:   return "close";
@@ -161,7 +173,10 @@ std::string get_flag_name(terrain_flag flag)
     case TF_MAX:
       return "none";
 
-    case TF_TEST: return "test";
+    case TF_TEST:   return "test";
+
+    case TF_LIQUID: return "liquid";
+    case TF_FIERY:  return "fiery";
 
     default:
       debugmsg("Couldn't find name for terrain_flag %d.", flag);

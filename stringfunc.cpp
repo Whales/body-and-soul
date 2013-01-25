@@ -79,32 +79,37 @@ std::string load_to_delim(std::istream &datastream, std::string delim)
  return ret;
 }
 
-std::string load_to_character(std::istream &datastream, char ch, bool trim)
+std::string load_to_character(std::istream &datastream, char ch, bool _trim)
 {
   std::string ret;
   char *tmp = new char [1];
   do {
     datastream.read(tmp, 1);
-    if (tmp[0] != ch &&
-        (!trim || (tmp[0] != ' ' && tmp[0] != '\n' && tmp[0] != '\t')))
+    if (tmp[0] != ch) {
       ret.push_back(tmp[0]);
+    }
   } while (tmp[0] != ch && !(datastream.eof()));
 
+  if (_trim)
+    ret = trim(ret);
   delete [] tmp;
   return ret;
 }
 
 std::string load_to_character(std::istream &datastream, std::string chars,
-                              bool trim)
+                              bool _trim)
 {
   std::string ret;
   char *tmp = new char [1];
   do {
     datastream.read(tmp, 1);
-    if (chars.find(tmp[0]) == std::string::npos &&
-        (!trim || (tmp[0] != ' ' && tmp[0] != '\n' && tmp[0] != '\t')))
+    if (chars.find(tmp[0]) == std::string::npos) {
       ret.push_back(tmp[0]);
+    }
   } while (chars.find(tmp[0]) == std::string::npos && !(datastream.eof()));
+
+  if (_trim)
+    ret = trim(ret);
 
   delete [] tmp;
   return ret;
@@ -119,6 +124,8 @@ std::string trim(const std::string &orig)
     front++;
 
   ret = ret.substr(front);
+
+  back = ret.length() - 1;
 
   while (back >= 0 &&
          (ret[back] == ' ' || ret[back] == '\n' || ret[back] == '\t'))

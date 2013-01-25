@@ -309,6 +309,11 @@ std::string key_name(long ch)
  return "???";
 }
 
+bool is_backspace(long ch)
+{
+  return (ch == KEY_BACKSPACE || ch == 127 || ch == 8);
+}
+
 /*
 std::string file_selector(std::string start)
 {
@@ -495,13 +500,13 @@ int menu_vec(const char *mes, std::vector<std::string> options)
  w.putstr(1, 1, c_white, c_black, title);
  
  for (int i = 0; i < options.size(); i++)
-  w.putstr(1, i + 2, c_white, c_black, "%d: %s", i + 1, options[i].c_str());
+  w.putstr(1, i + 2, c_white, c_black, "%c: %s", 'a' + i, options[i].c_str());
  long ch;
  w.refresh();
  do
   ch = getch();
- while (ch < '1' || ch >= '1' + options.size());
- return (ch - '1');
+ while (ch < 'a' || ch >= 'a' + options.size());
+ return (ch - 'a');
 }
 
 int menu(const char *mes, ...)

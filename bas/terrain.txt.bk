@@ -1,0 +1,69 @@
+10
+
+
+Null; -1 0 0 120 9 2
+Endtype
+
+
+
+
+
+Floor; -1 0 0 46 4 0
+Endtype
+
+
+
+
+
+Dirt; -1 0 0 46 7 0
+Endtype
+
+
+
+
+
+Sand; -1 0 0 46 15 0
+Endtype
+
+
+
+
+
+Water; -1 0 0 61 4 0
+Endtype
+
+
+
+
+
+Wall; -1 0 0 35 9 0
+Endtype
+
+
+
+
+
+Rock; -1 0 0 35 7 0
+Endtype
+
+
+
+
+
+Tree; -1 0 0 55 3 0
+Endtype
+
+
+
+
+
+Glass; -1 10 0 95 13 0
+Endtype
+
+
+
+
+
+DeadTree; -1 0 0 55 7 0
+Endtype
+

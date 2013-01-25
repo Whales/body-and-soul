@@ -15,6 +15,8 @@ void add_transformation(terrain_type *type);
 void remove_flag(terrain_type *type, int index);
 void remove_transformation(terrain_type *type, int index);
 
+void set_symbol(terrain_type *type);
+
 int main()
 {
   init_environment();
@@ -44,11 +46,11 @@ int main()
     }
   }
 
-  type_names = get_names();
 
 // Main loop
   bool quit = false;
   do {
+    type_names = get_names();
     cuss::element* selected = i_editor.selected();
     int ter_num = i_editor.get_int("list_types");
     terrain_type* current_ter;
@@ -67,14 +69,23 @@ int main()
     if (selected->name == "text_name" &&
         ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || ch == ' ')) {
       current_ter->name += ch;
-    } else if (selected->name == "text_name" && ch == KEY_BACKSPACE &&
+    } else if (selected->name == "text_name" && is_backspace(ch) &&
                !current_ter->name.empty()) {
       current_ter->name =
         current_ter->name.substr(0, current_ter->name.length() - 1);
     } else if (ch == 's' || ch == 'S') {
       quit = true;
+    } else if (ch == 'c' || ch == 'C') {
+      set_symbol(current_ter);
     } else if (ch == 'a' || ch == 'A') {
-      if (selected->name == "list_flags") {
+      if (selected->name == "list_types") {
+        terrain_type *tmp = new terrain_type;
+        tmp->move_cost = 10;
+        tmp->name = string_input_popup("Name:");
+        set_symbol(tmp);
+        TERRAIN_POOL.push_back(tmp);
+        i_editor.set_data("list_types", 999);
+      } else if (selected->name == "list_flags") {
         add_flag(current_ter);
         i_editor.set_data("list_flags", 0);
       } else if (selected->name == "list_transformations") {
@@ -98,6 +109,7 @@ int main()
     } else if (ch == '?') {
       debugmsg("%d of %d", i_editor.get_int("list_transformations"),
                            transformations.size());
+      debugmsg("%d (\\n = %d", TERRAIN_POOL[1]->name[0], '\n');
     } else {
       i_editor.handle_action(ch);
     }
@@ -111,8 +123,8 @@ int main()
 std::vector<std::string> get_names()
 {
   std::vector<std::string> type_names;
-  for (int i = 0; i < TER_MAX; i++) {
-    if (i >= TERRAIN_POOL.size() || TERRAIN_POOL[i] == NULL) {
+  for (int i = 0; i < TERRAIN_POOL.size(); i++) {
+    if (TERRAIN_POOL[i] == NULL) {
       type_names.push_back("Bug in editor");
     } else {
       terrain_type* cur = TERRAIN_POOL[i];
@@ -147,10 +159,11 @@ std::vector<std::string> get_transformation_names(terrain_type *type)
     return ret;
 
   for (int i = 1; i < type->transformations.size(); i++) {
-    if (type->transformations[i] != TER_NULL) {
+    if (type->transformations[i].result != TER_NULL) {
       std::stringstream flagdata;
-      flagdata << get_transformation_name( transform_type(i) ) << " => " <<
-                  TERRAIN_POOL[ type->transformations[i] ]->name;
+      flagdata << type->transformations[i].resistance << "x " <<
+                  get_transformation_name( transform_type(i) ) << " => " <<
+                  TERRAIN_POOL[ type->transformations[i].result ]->name;
       ret.push_back(flagdata.str());
     }
   }
@@ -161,6 +174,7 @@ std::vector<std::string> get_transformation_names(terrain_type *type)
 void add_flag(terrain_type* type)
 {
   std::vector<std::string> flag_names;
+  flag_names.push_back("Cancel");
   std::vector<int> flag_indices;
   for (int i = 1; i < TF_MAX; i++) {
     if (!type->flags[i]) {
@@ -169,31 +183,53 @@ void add_flag(terrain_type* type)
     }
   }
 
-  if (flag_names.empty()) {
+  if (flag_names.size() == 1) {
     popup("All flags are turned on.");
     return;
   }
 
   int picked = menu_vec("Apply flag:", flag_names);
-  type->flags[ flag_indices[picked] ] = true;
+  if (picked != 0) {
+    picked--;
+    type->flags[ flag_indices[picked] ] = true;
+  }
 }
 
 void add_transformation(terrain_type* type)
 {
   std::vector<std::string> transform_names;
+  transform_names.push_back("Cancel");
   for (int i = 1; i < TRANS_MAX; i++) {
     transform_names.push_back( get_transformation_name( transform_type(i) ) );
   }
 
-  int picked = 1 + menu_vec("Transformation type:", transform_names);
+  int picked = menu_vec("Transformation type:", transform_names);
+  if (picked == 0)
+    return;
 
   std::vector<std::string> terrain_names;
+  terrain_names.push_back("Cancel");
   for (int i = 1; i < TERRAIN_POOL.size(); i++) {
     terrain_names.push_back(TERRAIN_POOL[i]->name);
   }
-  int result = 1 + menu_vec("Transform to:", terrain_names);
+  int result = menu_vec("Transform to:", terrain_names);
+  if (result == 0)
+    return;
 
-  type->transformations[picked] = terrain_id(result);
+  int resistance = menu(
+"Amount required:",
+"Miniscule",    //  1
+"Small",        //  4
+"Moderate",     //  9
+"Large",        // 16
+"Huge",         // 25
+"Incredible",   // 36
+NULL);
+  resistance++;
+  resistance *= resistance;
+
+  type->transformations[picked].result = result;
+  type->transformations[picked].resistance = resistance;
 }
 
 void remove_flag(terrain_type *type, int index)
@@ -213,13 +249,43 @@ void remove_flag(terrain_type *type, int index)
 void remove_transformation(terrain_type *type, int index)
 {
   for (int i = 0; i < type->transformations.size(); i++) {
-    if (type->transformations[i] != TER_NULL) {
+    if (type->transformations[i].result != TER_NULL) {
       if (index == 0) {
-        type->transformations[i] = TER_NULL;
+        type->transformations[i].result = TER_NULL;
         return;
       } else {
         index--;
       }
     }
   }
+}
+
+void set_symbol(terrain_type *type)
+{
+  if (!type)
+    return;
+
+  long ch = popup_getkey("Enter symbol for %s.", type->name.c_str());
+  if (ch == KEY_ESC)
+    return;
+
+  type->symbol.symbol = ch;
+
+  Window w_col(1, 1, 20, 6);
+  w_col.outline();
+  for (int i = 0; i < c_dkgray; i++) {
+    w_col.putch(i + 1, 1, nc_color(i), c_black, '#');
+    w_col.putch(i + 1, 3, nc_color(i + 8), c_black, '#');
+  }
+  w_col.putstr(1, 2, c_white, c_black, "12345678");
+  w_col.putstr(1, 4, c_white, c_black, "abcdefgh");
+
+  w_col.refresh();
+  ch = getch();
+
+  if (ch >= '1' && ch <= '8')
+    type->symbol.fg = nc_color(ch - '1');
+  if (ch >= 'a' && ch <= 'h')
+    type->symbol.fg = nc_color(ch - 'a' + c_dkgray);
+  type->symbol.bg = c_black;
 }

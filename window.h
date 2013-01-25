@@ -35,15 +35,18 @@ void debugmsg(const char *mes, ...);
 void refresh_all(bool erase = false);
 
 std::string key_name(long ch);
+bool is_backspace(long ch);
 
 std::string file_selector(std::string start = ".");
 
-std::string string_edit_popup(std::string orig, const char *mes, ...);
+std::string string_edit_popup (std::string orig, const char *mes, ...);
 std::string string_input_popup(const char *mes, ...);
-int         int_input_popup(const char *mes, ...);
-long popup_getkey(const char *mes, ...);
+int         int_input_popup   (const char *mes, ...);
+long        popup_getkey      (const char *mes, ...);
+
 int  menu_vec(const char *mes, std::vector<std::string> options);
 int  menu(const char *mes, ...);
+
 void popup(const char *mes, ...);
 void popup_fullscreen(const char *mes, ...);
 
