@@ -66,6 +66,8 @@ class Window
 
 // Info functions
   glyph glyphat(int x, int y);
+  int sizex() { return xdim; };
+  int sizey() { return ydim; };
 // The three essential output functions
   void putch(int x, int y, nc_color fg, nc_color, long sym);
   void putglyph(int x, int y, glyph gl);

@@ -1,7 +1,7 @@
 #include "terrain.h"
 #include "globals.h"
 
-#define SUBMAP_SIZE 100
+#define SUBMAP_SIZE 50
 
 enum map_type
 {
@@ -29,7 +29,7 @@ struct tile
   ~tile();
 
   void set_type(int id);
-  void set_type(terrain_type *_type); };
+  void set_type(terrain_type *_type);
 
   void apply_transformation(transform_type type, int amount);
 
@@ -66,14 +66,18 @@ class map
 
 // Accessors
   tile& ter(int x, int y);
+  void draw(Window *w, int origx, int origy, int sight_dist);
 
 // Mutators
   void generate(map_type type);
   void update();
   void resize(int x, int y);
+  void apply_transformation(int x, int y, transform_type type, int amount);
+  void process_transformations();
 
  private:
   submap submaps[3][3];
   
   bool bounded;
+  tile nulltile;
 };
