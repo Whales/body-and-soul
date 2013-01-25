@@ -25,12 +25,16 @@ enum map_type
 
 struct tile
 {
-  tile() { type = NULL; };
-  ~tile(){};
+  tile();
+  ~tile();
 
-  void set_type(terrain_id id) { type = TERRAIN_POOL[id]; };
-  void set_type(terrain_type *_type) { type = _type; };
+  void set_type(int id);
+  void set_type(terrain_type *_type); };
+
+  void apply_transformation(transform_type type, int amount);
+
   terrain_type *type;
+  std::vector<int> transforms;
   
 };
 
@@ -38,7 +42,12 @@ struct submap
 {
   submap();
   ~submap();
+
+  void apply_transformation(int x, int y, transform_type type, int amount);
+  void process_transformations();
+
   tile tiles[SUBMAP_SIZE][SUBMAP_SIZE];
+  std::vector<int> unprocessed_transformations;
 };
 
 struct transformer
@@ -53,6 +62,7 @@ class map
  public:
 // Constructors
   map();
+  ~map();
 
 // Accessors
   tile& ter(int x, int y);
