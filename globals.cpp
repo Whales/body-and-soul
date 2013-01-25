@@ -8,7 +8,6 @@
 std::string DATADIR;
 std::string CUSSDIR;
 
-std::list<body_stat> BODY_STATS_POOL;
 std::list<body_part> BODY_PARTS_POOL;
 std::list<body> BODIES_POOL;
 std::vector<terrain_type*> TERRAIN_POOL;
@@ -59,19 +58,6 @@ void init_data()
 
  std::ifstream fin;
  std::string filename;
-
- filename = DATADIR + "/stats.txt";
- fin.open( filename.c_str() );
- if (fin.is_open()) {
-  int numstats;
-  fin >> numstats;
-  for (int i = 0; i < numstats; i++) {
-   body_stat tmpstat;
-   tmpstat.load_data(fin);
-   BODY_STATS_POOL.push_back(tmpstat);
-  }
-  fin.close();
- }
 
  filename = DATADIR + "/parts.txt";
  fin.open( filename.c_str() );
@@ -126,16 +112,6 @@ void save_data()
 
  std::ofstream fout;
  std::string filename;
-
- filename = DATADIR + "/stats.txt";
- fout.open( filename.c_str() );
- if (fout.is_open()) {
-  fout << BODY_STATS_POOL.size() << " ";
-  for (std::list<body_stat>::iterator it = BODY_STATS_POOL.begin();
-       it != BODY_STATS_POOL.end(); it++)
-   fout << it->save_data() << " ";
-  fout.close();
- }
 
  filename = DATADIR + "/parts.txt";
  fout.open( filename.c_str() );

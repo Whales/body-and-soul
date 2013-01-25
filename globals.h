@@ -8,7 +8,6 @@
 #include "window.h"
 
 extern std::string DATADIR;
-extern std::list<body_stat> BODY_STATS_POOL;
 extern std::list<body_part> BODY_PARTS_POOL;
 extern std::list<body> BODIES_POOL;
 extern std::list<Window*> WINDOWLIST;
