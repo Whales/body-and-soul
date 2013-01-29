@@ -18,10 +18,16 @@ BODY_ABILITY_ATTACK,  // Takes a damage amount
 BODY_ABILITY_MAX
 };
 
+std::string body_ability_name(body_ability_id type);
+
 struct body_ability
 {
  body_ability_id type;
  int level;
+
+ body_ability(body_ability_id _type = BODY_ABILITY_NULL, int _level = 0) :
+  type(_type), level(_level) { };
+ ~body_ability() { };
 
  std::string save_data();
  void load_data(std::istream &datastream);
@@ -37,6 +43,9 @@ struct body_part
  int perception;
  int speed;
  std::list<body_ability> abilities;
+
+ body_part();
+ ~body_part();
 
  std::string save_data();
  void load_data(std::istream &datastream);

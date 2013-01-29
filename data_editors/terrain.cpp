@@ -53,7 +53,8 @@ int main()
     type_names = get_names();
     cuss::element* selected = i_editor.selected();
     int ter_num = i_editor.get_int("list_types");
-    terrain_type* current_ter;
+    terrain_type* current_ter = NULL;
+
     if (ter_num < TERRAIN_POOL.size()) {
       current_ter = TERRAIN_POOL[ i_editor.get_int("list_types") ];
       flags = get_flag_names(current_ter);
@@ -61,9 +62,8 @@ int main()
       i_editor.ref_data("num_move", &(current_ter->move_cost));
       i_editor.ref_data("num_sight", &(current_ter->sight_cost));
       i_editor.ref_data("text_name", &(current_ter->name));
-    } else {
-      current_ter = NULL;
     }
+
     i_editor.draw(&w_editor);
     long ch = getch();
     if (selected->name == "text_name" &&

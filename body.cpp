@@ -43,6 +43,20 @@ void body_ability::load_data(std::istream &datastream)
   type = body_ability_id(tmptype);
 }
 
+body_part::body_part()
+{
+  maxhp = 100;
+  weight = 1;
+  strength = 0;
+  dexterity = 0;
+  perception = 0;
+  speed = 0;
+}
+
+body_part::~body_part()
+{
+}
+
 std::string body_part::save_data()
 {
   std::stringstream ret;
@@ -71,4 +85,22 @@ void body_part::load_data(std::istream &datastream)
     tmp.load_data(datastream);
     abilities.push_back(tmp);
   }
+}
+
+std::string body_ability_name(body_ability_id type)
+{
+  switch (type) {
+    case BODY_ABILITY_NULL:
+    case BODY_ABILITY_MAX:      return "Null";
+    case BODY_ABILITY_FLIGHT:   return "Flight";
+    case BODY_ABILITY_ARMOR:    return "Armor";
+    case BODY_ABILITY_ENCUMBER: return "Encumber";
+    case BODY_ABILITY_EVASION:  return "Evasion";
+    case BODY_ABILITY_DEFENSE:  return "Defense";
+    case BODY_ABILITY_ATTACK:   return "Attack";
+
+    default: return "Bug-Unnamed";
+  }
+
+  return "Bug-EscapedSwitch";
 }

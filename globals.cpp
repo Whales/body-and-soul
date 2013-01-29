@@ -8,8 +8,8 @@
 std::string DATADIR;
 std::string CUSSDIR;
 
-std::list<body_part> BODY_PARTS_POOL;
-std::list<body> BODIES_POOL;
+std::vector<body_part> BODY_PARTS_POOL;
+std::vector<body> BODIES_POOL;
 std::vector<terrain_type*> TERRAIN_POOL;
 
 std::list<Window*> WINDOWLIST;
@@ -117,7 +117,7 @@ void save_data()
  fout.open( filename.c_str() );
  if (fout.is_open()) {
   fout << BODY_PARTS_POOL.size() << " ";
-  for (std::list<body_part>::iterator it = BODY_PARTS_POOL.begin();
+  for (std::vector<body_part>::iterator it = BODY_PARTS_POOL.begin();
        it != BODY_PARTS_POOL.end(); it++)
    fout << it->save_data() << " ";
   fout.close();
@@ -127,7 +127,7 @@ void save_data()
  fout.open( filename.c_str() );
  if (fout.is_open()) {
   fout << BODIES_POOL.size() << " ";
-  for (std::list<body>::iterator it = BODIES_POOL.begin();
+  for (std::vector<body>::iterator it = BODIES_POOL.begin();
        it != BODIES_POOL.end(); it++)
    fout << it->save_data() << " ";
   fout.close();
