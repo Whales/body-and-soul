@@ -11,6 +11,7 @@ std::string CUSSDIR;
 std::vector<body_part> BODY_PARTS_POOL;
 std::vector<body> BODIES_POOL;
 std::vector<terrain_type*> TERRAIN_POOL;
+std::vector< std::vector<mapgen_spec*> > MAPGEN_POOL;
 
 std::list<Window*> WINDOWLIST;
 
@@ -101,6 +102,16 @@ void init_data()
       TERRAIN_POOL[i]->init_transformations();
     }
   }
+
+/* Loading mapgen specs is special because:
+ * A) They may be spread across multiple files
+ * B) A file may contain multiple specs
+ * C) There's some metadata which indicates where the data should go
+ * Thus, there's a special function for this.  In order to keep all the real
+ * "meat" of mapgen spec loading in the same place, this function is in
+ * mapgen.cpp.
+ */
+  load_mapgen_specs();
 }
 
 void save_data()

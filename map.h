@@ -1,3 +1,7 @@
+#ifndef _MAP_H_
+#define _MAP_H_
+
+#include "window.h"
 #include "terrain.h"
 #include "globals.h"
 
@@ -22,6 +26,7 @@ enum map_type
 
  MAP_MAX
 };
+
 
 struct tile
 {
@@ -81,3 +86,5 @@ class map
   bool bounded;
   tile nulltile;
 };
+
+#endif
