@@ -141,9 +141,9 @@ void map::generate(map_type type)
   if (type == MAP_TEST) {
     for (int x = 0; x < SUBMAP_SIZE * 3; x++) {
       for (int y = 0; y < SUBMAP_SIZE * 3; y++) {
-        if (x % 10 == 0 || x % 10 == 1)
+        if (x % 10 == 0 || x % 10 == 1) {
           ter(x, y).set_type(TER_FLOOR);
-        else {
+        } else {
           ter(x, y).set_type( y % (TERRAIN_POOL.size() - 1) + 1);
         }
       }

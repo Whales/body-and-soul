@@ -375,6 +375,7 @@ int main()
  std::stringstream foutname;
  foutname << "cuss/" << edited.name << ".cuss";
  std::string fname = foutname.str();
+  debugmsg("%s", fname.c_str());
  fout.open(fname.c_str());
  if (fout.is_open()) {
   fout << edited.save_data();

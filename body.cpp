@@ -7,7 +7,7 @@ std::string body::save_data()
 {
  std::stringstream ret;
  ret << symbol.save_data() << name << "; " << body_parts.size() << " ";
- for (std::list<body_part>::iterator it = body_parts.begin();
+ for (std::vector<body_part>::iterator it = body_parts.begin();
       it != body_parts.end(); it++)
   ret << it->save_data() << " ";
 
@@ -64,7 +64,7 @@ std::string body_part::save_data()
          strength << " " << dexterity << " " << perception << " " <<
          speed << " ";
   ret << abilities.size() << " ";
-  for (std::list<body_ability>::iterator it = abilities.begin();
+  for (std::vector<body_ability>::iterator it = abilities.begin();
        it != abilities.end();
        it++) {
     ret << it->save_data() << " ";

@@ -42,7 +42,7 @@ struct body_part
  int dexterity;
  int perception;
  int speed;
- std::list<body_ability> abilities;
+ std::vector<body_ability> abilities;
 
  body_part();
  ~body_part();
@@ -54,7 +54,7 @@ struct body_part
 struct body
 {
  std::string name;
- std::list<body_part> body_parts;
+ std::vector<body_part> body_parts;
  glyph symbol;
 
  std::string save_data();
