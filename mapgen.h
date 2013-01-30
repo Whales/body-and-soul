@@ -58,5 +58,11 @@ struct mapgen_spec_heightmap : public mapgen_spec
 
   std::vector<heightmap> maps;
 };
+
+struct mapgen_spec_container()
+{
+  void load_data(std::istream &datastream);
+  std::vector<mapgen_spec*> specs;
+};
   
 #endif
