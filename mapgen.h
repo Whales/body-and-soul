@@ -52,9 +52,10 @@ struct mapgen_spec_labyrinth : public mapgen_spec
   int width_low, width_high;
 };
 
-struct heightmap
+struct height_point
 {
-  std::vector<int> terrain;
+  int ter_id;
+  int percentile;
 };
 
 struct mapgen_spec_heightmap : public mapgen_spec
@@ -62,7 +63,7 @@ struct mapgen_spec_heightmap : public mapgen_spec
   virtual mapgen_type gentype() { return MAPGEN_HEIGHTMAP; };
   virtual void load_data(std::istream &datastream);
 
-  std::vector<heightmap> maps;
+  std::list< std::vector<height_point> > maps;
 };
 
 #endif

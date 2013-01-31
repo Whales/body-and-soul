@@ -120,9 +120,9 @@ void mapgen_spec_labyrinth::load_data(std::istream &datastream)
       wall_id = get_mapgen_ter_id(datastream, "wall");
     } else if (id.find("floor") == 0) {
       floor_id = get_mapgen_ter_id(datastream, "floor");
-    } else if (id.find("minwidth")) {
+    } else if (id.find("minwidth") == 0) {
       datastream >> width_low;
-    } else if (id.find("maxwidth")) {
+    } else if (id.find("maxwidth") == 0) {
       datastream >> width_high;
     }
   } while (!datastream.eof() && id != "done");
@@ -130,6 +130,46 @@ void mapgen_spec_labyrinth::load_data(std::istream &datastream)
 
 void mapgen_spec_heightmap::load_data(std::istream &datastream)
 {
+  std::string id;
+  do {
+    std::vector<height_point> tmpmap;
+    datastream >> id;
+    id = no_caps(id);
+
+    if (id.find("map") == 0) {
+      std::string terid;
+      do {
+        terid = no_caps(load_to_character(datastream, ";:,", true));
+        int val;
+        if (terid != "done") {
+          datastream >> val;
+          height_point tmppoint;
+          tmppoint.ter_id = lookup_terrain_id(terid);
+          tmppoint.percentile = val;
+          if (ter_id == 0) {
+            debugmsg("Error in height map; no terrain '%s'", terid.c_str());
+          } else if (tmpmap.empty() ||
+                     tmppoint.percentile >= tmpmap.back().percentile) {
+            tmpmap.push_back(tmppoint);
+          } else { // Search for proper insertion point
+            bool done = false;
+            for (std::vector<height_point>::iterator it = tmpmap.begin();
+                 it != tmpmap.end() && !done;
+                 it++) {
+              if (it->percentile > tmppoint.percentile) {
+                tmpmap.insert(it, tmppoint);
+                done = true;
+              }
+            }
+          }
+        } 
+      } while (terid != "done"); // Heightmap loop
+
+    } else if (id.find("endmap") == 0) {
+      maps.push_back(tmpmap);
+      tmpmap.clear();
+    }
+  } while (!datastream.eof() && id != "done");
 }
 
 mapgen_type lookup_mapgen_type(std::string name)
