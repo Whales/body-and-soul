@@ -23,10 +23,13 @@ enum map_type
  MAP_WASTES,
  MAP_MISTS,
  MAP_SEA,
+ MAP_CAVERNS,
 
  MAP_MAX
 };
 
+map_type lookup_map_type(std::string name);
+std::string map_type_name(map_type type);
 
 struct tile
 {

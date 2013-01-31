@@ -155,3 +155,13 @@ void save_data()
   }
 
 }
+
+int lookup_terrain_id(std::string name)
+{
+  name = no_caps(name);
+  for (int i = 0; i < TERRAIN_POOL.size(); i++) {
+    if (no_caps(TERRAIN_POOL[i]->name) == name)
+      return i;
+  }
+  return 0;
+}

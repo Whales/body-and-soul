@@ -17,6 +17,9 @@ enum mapgen_type
   MAPGEN_MAX
 };
 
+mapgen_type lookup_mapgen_type(std::string name);
+std::string mapgen_type_name(mapgen_type type);
+
 struct mapgen_spec
 {
   virtual mapgen_type gentype() { return MAPGEN_NULL; };

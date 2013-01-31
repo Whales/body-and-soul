@@ -167,3 +167,33 @@ void map::process_transformations()
     }
   }
 }
+
+map_type lookup_map_type(std::string name)
+{
+  for (int i = 0; i < MAP_MAX; i++) {
+    if (no_caps(name) == no_caps(map_type_name( map_type(i) ))) {
+      return map_type(i);
+    }
+  }
+}
+
+std::string map_type_name(map_type type)
+{
+  switch (type) {
+    case MAP_MAX:
+    case MAP_NULL:      return "Null";
+    case MAP_TEST:      return "Test";
+    case MAP_CITY:      return "City";
+    case MAP_LABYRINTH: return "Labyrinth";
+    case MAP_CITADEL:   return "Citadel";
+    case MAP_PARK:      return "Park";
+    case MAP_SEWERS:    return "Sewers";
+    case MAP_WOODS:     return "Woods";
+    case MAP_WASTES:    return "Wastes";
+    case MAP_MISTS:     return "Mists";
+    case MAP_SEA:       return "Sea";
+    case MAP_CAVERNS:   return "Caverns";
+    default:            return "ForgotIt";
+  }
+  return "Escaped switch";
+}

@@ -99,13 +99,8 @@ void terrain_type::init_transformations()
 {
   for (int i = 0; i < pre_transformations.size(); i++) {
     bool found = false;
-    for (int j = 0; !found && j < TERRAIN_POOL.size(); j++) {
-      if (no_caps(pre_transformations[i]) == no_caps(TERRAIN_POOL[j]->name)) {
-        transformations[i].result = terrain_id(j);
-        transformations[i].resistance = pre_resistances[i];
-        found = true;
-      }
-    }
+    transformations[i].resistance = pre_resistances[i];
+    transformations[i].result = lookup_terrain_id( pre_transformations[i] );
   }
 }
 
