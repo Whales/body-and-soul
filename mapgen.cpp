@@ -81,7 +81,8 @@ void load_mapgen_file(std::istream &datastream)
           MAPGEN_POOL[current_type].push_back(tmp);
         } break;
         default:
-          debugmsg("Forgot to code for mapgen type #%d", gen_type);
+          debugmsg("Forgot to code for mapgen type #%d (%s)", gen_type,
+                   gen_type_name.c_str());
       }
     }
   } while (!datastream.eof() && id != "done");
@@ -156,7 +157,7 @@ void mapgen_spec_heightmap::load_data(std::istream &datastream)
           height_point tmppoint;
           tmppoint.ter_id = lookup_terrain_id(terid);
           tmppoint.percentile = val;
-          debugmsg("terrain '%s'", terid.c_str());
+          debugmsg("terrain '%s' %d", terid.c_str(), tmppoint.ter_id);
           if (tmppoint.ter_id == 0) {
             debugmsg("Error in height map; no terrain '%s'", terid.c_str());
           } else if (tmpmap.empty() ||
@@ -175,8 +176,6 @@ void mapgen_spec_heightmap::load_data(std::istream &datastream)
           }
         } 
       } while (terid != "done"); // Heightmap loop
-
-    } else if (id.find("endmap") == 0) {
       maps.push_back(tmpmap);
       tmpmap.clear();
     }
@@ -191,6 +190,7 @@ mapgen_type lookup_mapgen_type(std::string name)
     if (name == no_caps(mapgen_type_name(ret)))
       return ret;
   }
+  return MAPGEN_NULL;
 }
 
 std::string mapgen_type_name(mapgen_type type)
@@ -237,6 +237,7 @@ void submap::generate(mapgen_spec* spec)
       for (std::list< std::vector<height_point> >::iterator it =
            hspec->maps.begin(); it != hspec->maps.end(); it++) {
         std::vector< std::vector<int> > noise = noise_map();
+        debugmsg("map size %d", it->size());
         for (int x = 0; x < SUBMAP_SIZE; x++) {
           for (int y = 0; y < SUBMAP_SIZE; y++) {
             bool done = false;
@@ -260,6 +261,8 @@ void submap::generate(mapgen_spec* spec)
 
 std::vector< std::vector<int> > noise_map()
 {
+
+  Window w_test(0, 0, 80, 24);
   std::vector< std::vector<int> > noise;
   for (int x = 0; x < SUBMAP_SIZE; x++) {
     std::vector<int> tmprow;
@@ -275,16 +278,70 @@ std::vector< std::vector<int> > noise_map()
         int val = rng(0, 99);
         if (size == 1) {
           noise[x][y] = val;
+              if (x < 80 && y < 24) {
+                int valout = noise[x][y] / 10;
+                nc_color fg = c_white;
+                switch (valout) {
+                  case 0: fg = c_dkgray; break;
+                  case 1: fg = c_ltgray; break;
+                  case 2: fg = c_blue;   break;
+                  case 3: fg = c_green;  break;
+                  case 4: fg = c_ltgreen;break;
+                  case 5: fg = c_yellow; break;
+                  case 6: fg = c_ltred;  break;
+                  case 7: fg = c_red;    break;
+                  case 8: fg = c_brown;  break;
+                  case 9: fg = c_white;  break;
+                }
+                w_test.putch(x, y, fg, c_black, '0' + valout);
+              }
         } else {
           for (int px = x; px < x + size; px++) {
             for (int py = y; py < y + size; py++) {
-              noise[px][py] += 1 + val;
-              noise[px][py] /= 2;
+              double split = double(double(size - 1) / 2);
+              double xscaling = 0., yscaling = 0.;
+              if (px - x <= split)
+                xscaling = .2 + .8 * double(double(px - x) / split);
+              else
+                xscaling = .2 + .8 * double(double(x + size - 1 - px) / split);
+              if (py - y <= split)
+                yscaling = .2 + .8 * double(double(py - y) / split);
+              else
+                yscaling = .2 + .8 * double(double(y + size - 1 - py) / split);
+              double alpha = (xscaling + yscaling) / 2;
+              if (alpha > 1 || alpha < 0) {
+                debugmsg("Bad alpha - %f; xsc = %f, ysc = %f, size = %d (x=%d;px=%d;xs=%f) (y=%d;py=%d;ys=%f", alpha, xscaling, yscaling, size, x, px, split, y, py, split);
+              }
+              noise[px][py] *= (1 - alpha);
+              int valcp = val;
+              val *= alpha;
+              debugmsg("%d * %f = %d", valcp, alpha, val);
+              noise[px][py] += val;
+
+              if (px < 80 && py < 24) {
+                int valout = alpha * 10;
+                nc_color fg = c_white;
+                switch (valout) {
+                  case 0: fg = c_dkgray; break;
+                  case 1: fg = c_ltgray; break;
+                  case 2: fg = c_blue;   break;
+                  case 3: fg = c_green;  break;
+                  case 4: fg = c_ltgreen;break;
+                  case 5: fg = c_yellow; break;
+                  case 6: fg = c_ltred;  break;
+                  case 7: fg = c_red;    break;
+                  case 8: fg = c_brown;  break;
+                  case 9: fg = c_white;  break;
+                }
+                w_test.putch(px, py, fg, c_black, '0' + valout);
+              }
             }
           }
         }
       }
     }
+    w_test.refresh();
+    getch();
   }
 
   return noise;

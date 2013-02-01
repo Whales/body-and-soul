@@ -1,5 +1,4 @@
 maptype city
   gen heightmap
-    map water: 10 dirt: 30 sand: 60 floor: 90 done
-    endmap
+    map deep water: 0 water: 10 dirt: 20 floor: 60 rock: 90 done
   done
