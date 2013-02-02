@@ -20,9 +20,9 @@ void delete_member(body* _body, body_part* _body_part, int index);
 
 int main()
 {
+  init_display();
   init_environment();
   init_data();
-  init_display();
 
   cuss::interface i_editor;
   Window w_editor(0, 0, 80, 24);

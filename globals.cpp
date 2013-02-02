@@ -4,6 +4,7 @@
 #include <fstream>
 #include "globals.h"
 #include "window.h"
+#include "stringfunc.h"
 
 std::string DATADIR;
 std::string CUSSDIR;

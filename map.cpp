@@ -1,6 +1,7 @@
 #include "map.h"
 #include "globals.h"
 #include "rng.h"
+#include "stringfunc.h"
 
 tile::tile()
 {
@@ -148,6 +149,21 @@ void map::generate(map_type type)
         }
       }
     }
+  } else {
+    mapgen_spec* gen;
+    std::vector<mapgen_spec*> choices = MAPGEN_POOL[type];
+    if (choices.empty()) {
+      debugmsg("No mapgen specifications for %s found.",
+               map_type_name(type).c_str());
+      generate(MAP_TEST);
+      return;
+    }
+    mapgen_spec* spec = choices[rng(0, choices.size() - 1)];
+    for (int x = 0; x < 3; x++) {
+      for (int y = 0; y < 3; y++) {
+        submaps[x][y].generate(spec);
+      }
+    }
   }
 }
 
@@ -197,3 +213,4 @@ std::string map_type_name(map_type type)
   }
   return "Escaped switch";
 }
+

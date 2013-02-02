@@ -5,7 +5,9 @@
 #include "terrain.h"
 #include "globals.h"
 
-#define SUBMAP_SIZE 50
+#define SUBMAP_SIZE 64
+
+class mapgen_spec;
 
 enum map_type
 {
@@ -53,6 +55,8 @@ struct submap
 
   void apply_transformation(int x, int y, transform_type type, int amount);
   void process_transformations();
+
+  void generate(mapgen_spec* spec);
 
   tile tiles[SUBMAP_SIZE][SUBMAP_SIZE];
   std::vector<int> unprocessed_transformations;
