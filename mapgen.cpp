@@ -100,6 +100,7 @@ void mapgen_spec::load_data(std::istream &datastream)
 
 void mapgen_spec_buildings::load_data(std::istream &datastream)
 {
+  name = load_to_character(datastream, ":;\n", true);
   std::string id;
   do {
     datastream >> id;
@@ -126,6 +127,7 @@ void mapgen_spec_buildings::load_data(std::istream &datastream)
 
 void mapgen_spec_labyrinth::load_data(std::istream &datastream)
 {
+  name = load_to_character(datastream, ":;\n", true);
   std::string id;
   do {
     datastream >> id;
@@ -145,6 +147,7 @@ void mapgen_spec_labyrinth::load_data(std::istream &datastream)
 
 void mapgen_spec_heightmap::load_data(std::istream &datastream)
 {
+  name = load_to_character(datastream, ":;\n", true);
   std::string id;
   do {
     std::vector<height_point> tmpmap;

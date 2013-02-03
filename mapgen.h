@@ -22,6 +22,8 @@ std::string mapgen_type_name(mapgen_type type);
 
 struct mapgen_spec
 {
+  std::string name;
+
   virtual mapgen_type gentype() { return MAPGEN_NULL; };
 
   virtual void load_data(std::istream &datastream);
