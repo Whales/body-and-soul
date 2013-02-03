@@ -9,6 +9,7 @@
 void load_mapgen_file(std::istream &datastream);
 int get_mapgen_ter_id(std::istream &datastream, std::string name);
 std::vector< std::vector<int> > noise_map();
+int interpolate(int a, int b, float alpha);
 
 void load_mapgen_specs()
 {
@@ -29,7 +30,6 @@ void load_mapgen_specs()
     filename = dp->d_name;
     if (filename != "." && filename != "..") {
       filename = DATADIR + "/mapgen/" + filename;
-      debugmsg("File %s", filename.c_str());
       std::ifstream fin;
       fin.open(filename.c_str());
       if (fin.is_open()) {
@@ -45,7 +45,6 @@ void load_mapgen_file(std::istream &datastream)
 {
   std::string id;
   map_type current_type = MAP_NULL;
-  debugmsg("Loading...");
   do {
     datastream >> id;
     id = no_caps(id);
@@ -53,7 +52,6 @@ void load_mapgen_file(std::istream &datastream)
     if (id == "maptype") {
       std::string new_type = load_to_character(datastream, ",;\n", true);
       current_type = lookup_map_type(new_type);
-      debugmsg("%s - %d", new_type.c_str(), current_type);
       if (current_type == MAP_NULL) {
         debugmsg("Invalid maptype %s.", new_type.c_str());
       }
@@ -61,25 +59,31 @@ void load_mapgen_file(std::istream &datastream)
       std::string gen_id, gen_type_name;
       datastream >> gen_type_name;
       mapgen_type gen_type = lookup_mapgen_type(gen_type_name);
+
       switch (gen_type) {
+
         case MAPGEN_NULL:
           debugmsg("Invalid mapgen type: %s", gen_type_name.c_str());
           break;
+
         case MAPGEN_BUILDINGS: {
           mapgen_spec_buildings* tmp = new mapgen_spec_buildings;
           tmp->load_data(datastream);
           MAPGEN_POOL[current_type].push_back(tmp);
         } break;
+
         case MAPGEN_LABYRINTH: {
           mapgen_spec_labyrinth* tmp = new mapgen_spec_labyrinth;
           tmp->load_data(datastream);
           MAPGEN_POOL[current_type].push_back(tmp);
         } break;
+
         case MAPGEN_HEIGHTMAP: {
           mapgen_spec_heightmap* tmp = new mapgen_spec_heightmap;
           tmp->load_data(datastream);
           MAPGEN_POOL[current_type].push_back(tmp);
         } break;
+
         default:
           debugmsg("Forgot to code for mapgen type #%d (%s)", gen_type,
                    gen_type_name.c_str());
@@ -157,11 +161,8 @@ void mapgen_spec_heightmap::load_data(std::istream &datastream)
           height_point tmppoint;
           tmppoint.ter_id = lookup_terrain_id(terid);
           tmppoint.percentile = val;
-          debugmsg("terrain '%s' %d", terid.c_str(), tmppoint.ter_id);
-          if (tmppoint.ter_id == 0) {
-            debugmsg("Error in height map; no terrain '%s'", terid.c_str());
-          } else if (tmpmap.empty() ||
-                     tmppoint.percentile <= tmpmap.back().percentile) {
+          if (tmpmap.empty() ||
+              tmppoint.percentile <= tmpmap.back().percentile) {
             tmpmap.push_back(tmppoint);
           } else { // Search for proper insertion point
             bool done = false;
@@ -237,7 +238,6 @@ void submap::generate(mapgen_spec* spec)
       for (std::list< std::vector<height_point> >::iterator it =
            hspec->maps.begin(); it != hspec->maps.end(); it++) {
         std::vector< std::vector<int> > noise = noise_map();
-        debugmsg("map size %d", it->size());
         for (int x = 0; x < SUBMAP_SIZE; x++) {
           for (int y = 0; y < SUBMAP_SIZE; y++) {
             bool done = false;
@@ -264,85 +264,37 @@ std::vector< std::vector<int> > noise_map()
 
   Window w_test(0, 0, 80, 24);
   std::vector< std::vector<int> > noise;
+  std::vector< std::vector<int> > ret;
   for (int x = 0; x < SUBMAP_SIZE; x++) {
-    std::vector<int> tmprow;
+    std::vector<int> tmprow, tmpretrow;;
     for (int y = 0; y < SUBMAP_SIZE; y++) {
-      tmprow.push_back(0);
+      tmprow.push_back( rng(0, 99) );
+      tmpretrow.push_back( tmprow[y] );
     }
     noise.push_back(tmprow);
+    ret.push_back(tmpretrow);
   }
-      
-  for (int size = 1; size <= SUBMAP_SIZE / 2; size *= 2) {
-    for (int x = 0; x < SUBMAP_SIZE; x += size) {
-      for (int y = 0; y < SUBMAP_SIZE; y += size) {
-        int val = rng(0, 99);
-        if (size == 1) {
-          noise[x][y] = val;
-              if (x < 80 && y < 24) {
-                int valout = noise[x][y] / 10;
-                nc_color fg = c_white;
-                switch (valout) {
-                  case 0: fg = c_dkgray; break;
-                  case 1: fg = c_ltgray; break;
-                  case 2: fg = c_blue;   break;
-                  case 3: fg = c_green;  break;
-                  case 4: fg = c_ltgreen;break;
-                  case 5: fg = c_yellow; break;
-                  case 6: fg = c_ltred;  break;
-                  case 7: fg = c_red;    break;
-                  case 8: fg = c_brown;  break;
-                  case 9: fg = c_white;  break;
-                }
-                w_test.putch(x, y, fg, c_black, '0' + valout);
-              }
-        } else {
-          for (int px = x; px < x + size; px++) {
-            for (int py = y; py < y + size; py++) {
-              double split = double(double(size - 1) / 2);
-              double xscaling = 0., yscaling = 0.;
-              if (px - x <= split)
-                xscaling = .2 + .8 * double(double(px - x) / split);
-              else
-                xscaling = .2 + .8 * double(double(x + size - 1 - px) / split);
-              if (py - y <= split)
-                yscaling = .2 + .8 * double(double(py - y) / split);
-              else
-                yscaling = .2 + .8 * double(double(y + size - 1 - py) / split);
-              double alpha = (xscaling + yscaling) / 2;
-              if (alpha > 1 || alpha < 0) {
-                debugmsg("Bad alpha - %f; xsc = %f, ysc = %f, size = %d (x=%d;px=%d;xs=%f) (y=%d;py=%d;ys=%f", alpha, xscaling, yscaling, size, x, px, split, y, py, split);
-              }
-              noise[px][py] *= (1 - alpha);
-              int valcp = val;
-              val *= alpha;
-              debugmsg("%d * %f = %d", valcp, alpha, val);
-              noise[px][py] += val;
 
-              if (px < 80 && py < 24) {
-                int valout = alpha * 10;
-                nc_color fg = c_white;
-                switch (valout) {
-                  case 0: fg = c_dkgray; break;
-                  case 1: fg = c_ltgray; break;
-                  case 2: fg = c_blue;   break;
-                  case 3: fg = c_green;  break;
-                  case 4: fg = c_ltgreen;break;
-                  case 5: fg = c_yellow; break;
-                  case 6: fg = c_ltred;  break;
-                  case 7: fg = c_red;    break;
-                  case 8: fg = c_brown;  break;
-                  case 9: fg = c_white;  break;
-                }
-                w_test.putch(px, py, fg, c_black, '0' + valout);
-              }
-            }
-          }
-        }
+  for (int size = 2; size <= SUBMAP_SIZE / 2; size *= 2) {
+    float freq = 1.0 / float(size);
+    for (int x = 0; x < SUBMAP_SIZE; x++) {
+      int x0 = (x / size) * size, x1 = (x0 + size) % SUBMAP_SIZE;
+      float xalpha = (x - x0) * freq;
+      for (int y = 0; y < SUBMAP_SIZE; y++) {
+        int y0 = (y / size) * size, y1 = (y0 + size) % SUBMAP_SIZE;
+        int yalpha = (y - y0) * freq;
+        int top    = interpolate(noise[x0][y0], noise[x1][y0], xalpha),
+            bottom = interpolate(noise[x0][y1], noise[x1][y1], xalpha);
+
+        int result = interpolate(top, bottom, yalpha);
+        ret[x][y] = interpolate(ret[x][y], result, freq * 1.8);
       }
     }
-    w_test.refresh();
-    getch();
   }
+  return ret;
+}
 
-  return noise;
+int interpolate(int a, int b, float alpha)
+{
+  return a * (1.0 - alpha) + b * alpha;
 }
