@@ -1,5 +1,4 @@
 maptype city
-  gen heightmap
-    map deep water: 0 water: 20 dirt: 40 floor: 50 rock: 70 done
-    map null: 0 tree: 70 done
+  gen heightmap test
+    map deep water: 0 water: 25 dirt: 50 tree: 75 rock: 80 done
   done

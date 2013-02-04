@@ -78,7 +78,6 @@ void submap::process_transformations()
 // Resulting terrain - 0 if no transformation takes place
       int result = cur->type->transformations[j].result;
       int amount = cur->transforms[j]; // If < 0, we transform
-      debugmsg("Result = %s, amount = %d", TERRAIN_POOL[result]->name.c_str(), amount);
       if (amount < 0) { // We're affected by the transform
         if (result == 0) { // No actual transformation; just clear it out
           cur->transforms[j] = 0;
@@ -94,7 +93,6 @@ void submap::process_transformations()
       }
     }
     if (!results.empty()) { // We've got to change!
-      debugmsg("Changing!");
       cur->set_type( results[rng(0, results.size() - 1)] );
     }
   }
@@ -161,7 +159,15 @@ void map::generate(map_type type)
     mapgen_spec* spec = choices[rng(0, choices.size() - 1)];
     for (int x = 0; x < 3; x++) {
       for (int y = 0; y < 3; y++) {
-        submaps[x][y].generate(spec);
+        submap* north = NULL;
+        submap* west  = NULL;
+        if (x > 0) {
+          west  = &(submaps[x - 1][y]);
+        }
+        if (y > 0) {
+          north = &(submaps[x][y - 1]);
+        }
+        submaps[x][y].generate(spec, north, NULL, NULL, west);
       }
     }
   }

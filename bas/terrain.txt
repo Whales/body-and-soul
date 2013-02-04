@@ -1,61 +1,61 @@
 15
-Null; -1 0 0 120 9 2
+Null; 0 0 0 120 9 2
 Endtype
 
-Floor; -1 10 0 46 5 0
+Floor; 1 10 0 46 5 0
 Transformations: forest>Dirt, 9 wastes>Sand, 9 sea>Water, 16 Done
 Endtype
 
-Dirt; -1 10 0 46 7 0
+Dirt; 2 10 0 46 7 0
 Transformations: wastes>Sand, 1 sea>Water, 16 Done
 Endtype
 
-Sand; -1 10 0 46 15 0
+Sand; 3 10 0 46 15 0
 Endtype
 
-Water; -1 15 0 61 12 0
+Water; 4 15 0 61 12 0
 Flags: none, liquid, Done
 Transformations: city>Dirt, 16 forest>Dirt, 16 wastes>Sand, 16 sea>Deep Water, 16 heat>Dirt, 16 cold>Ice, 9 Done
 Endtype
 
-Wall; -1 0 -1 35 1 0
+Wall; 5 0 -1 35 1 0
 Transformations: city>Metal Wall, 16 forest>Rock, 25 wastes>Rock, 16 mists>Sand, 25 damage>Dirt, 36 growth>Tree, 25 Done
 Endtype
 
-Rock; -1 0 -1 35 7 0
+Rock; 6 0 -1 35 7 0
 Transformations: city>Wall, 9 forest>Tree, 16 wastes>Sand, 25 damage>Sand, 25 growth>Tree, 16 Done
 Endtype
 
-Tree; -1 0 5 55 3 0
+Tree; 7 0 5 55 3 0
 Transformations: wastes>Dead Tree, 9 mists>Dead Tree, 16 heat>Dead Tree, 16 cold>Dead Tree, 9 death>Dead Tree, 4 Done
 Endtype
 
-Dead Tree; -1 0 4 55 7 0
+Dead Tree; 8 0 4 55 7 0
 Transformations: wastes>Dirt, 16 growth>Tree, 9 Done
 Endtype
 
-Deep Water; -1 15 0 61 4 0
+Deep Water; 9 15 0 61 4 0
 Flags: none, liquid, Done
 Transformations: wastes>Water, 25 heat>Water, 36 cold>Deep Ice, 9 Done
 Endtype
 
-Metal Wall; -1 0 -1 35 13 0
+Metal Wall; 10 0 -1 35 13 0
 Transformations: sea>Rusted Wall, 25 mists>Rusted Wall, 36 water>Rusted Wall, 9 Done
 Endtype
 
-Rusted Wall; -1 0 -1 35 10 0
+Rusted Wall; 11 0 -1 35 10 0
 Transformations: city>Metal Wall, 25 forest>Rock, 25 heat>Sand, 36 water>Sand, 36 damage>Sand, 25 Done
 Endtype
 
-Ice; -1 12 0 61 9 0
+Ice; 12 12 0 61 9 0
 Transformations: heat>Water, 9 damage>Water, 25 Done
 Endtype
 
-Deep Ice; -1 12 0 61 9 0
+Deep Ice; 13 12 0 61 9 0
 Transformations: heat>Deep Water, 9 damage>Deep Water, 36 Done
 Endtype
 
-Lava; -1 20 0 61 2 0
+Lava; 14 20 0 61 2 0
 Flags: none, liquid, fiery, Done
 Transformations: city>Floor, 36 forest>Dirt, 36 wastes>Sand, 36 sea>Dirt, 36 mists>Sand, 36 cold>Dirt, 16 water>Dirt, 25 Done
 Endtype

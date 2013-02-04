@@ -7,7 +7,7 @@
 terrain_type::terrain_type()
 {
   name = "UNINITIALIZED";
-  uid = -1;
+  uid = TERRAIN_POOL.size(); 
   move_cost = 0;
   sight_cost = 0;
   symbol = glyph('x', c_white, c_red);

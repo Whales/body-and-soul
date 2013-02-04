@@ -8,8 +8,11 @@
 
 void load_mapgen_file(std::istream &datastream);
 int get_mapgen_ter_id(std::istream &datastream, std::string name);
-std::vector< std::vector<int> > noise_map();
+std::vector< std::vector<int> > noise_map(int mapsize,
+                                         std::vector< std::vector<int> > &orig);
 int interpolate(int a, int b, float alpha);
+int rev_heightmap(int ter_id, int dist,
+                  std::list< std::vector<height_point> >::iterator &it);
 
 void load_mapgen_specs()
 {
@@ -223,7 +226,8 @@ int get_mapgen_ter_id(std::istream &datastream, std::string name)
 
 // The actual meat of generation.
 
-void submap::generate(mapgen_spec* spec)
+void submap::generate(mapgen_spec* spec, submap *north, submap *east,
+                                         submap *south, submap *west)
 {
   switch (spec->gentype()) {
 
@@ -240,20 +244,47 @@ void submap::generate(mapgen_spec* spec)
 // Run through all the height maps
       for (std::list< std::vector<height_point> >::iterator it =
            hspec->maps.begin(); it != hspec->maps.end(); it++) {
-        std::vector< std::vector<int> > noise = noise_map();
+// Initialize the noisemap with 0, or with appropriate values taken from
+// adjacent submaps
+        std::vector< std::vector<int> > noise;
+        for (int x = 0; x < SUBMAP_SIZE; x++) {
+          std::vector<int> tmprow;
+          for (int y = 0; y < SUBMAP_SIZE; y++) {
+            if (x <= 10 && west) {
+              int ter_id = west->tiles[SUBMAP_SIZE - 1][y].type->uid;
+              tmprow.push_back(rev_heightmap(ter_id, x, it));
+            } else if (y <= 10 && north) {
+              int ter_id = north->tiles[x][SUBMAP_SIZE - 1].type->uid;
+              tmprow.push_back(rev_heightmap(ter_id, y, it));
+            } else if (x >= SUBMAP_SIZE - 11 && east) {
+              int ter_id = east->tiles[0][y].type->uid;
+              tmprow.push_back(rev_heightmap(ter_id, SUBMAP_SIZE - 1 - x, it));
+            } else if (y >= SUBMAP_SIZE - 11 && south) {
+              int ter_id = south->tiles[x][0].type->uid;
+              tmprow.push_back(rev_heightmap(ter_id, SUBMAP_SIZE - 1 - y, it));
+            } else {
+              tmprow.push_back(0);
+            }
+          }
+          noise.push_back(tmprow);
+        }
+        noise = noise_map(SUBMAP_SIZE, noise);
         for (int x = 0; x < SUBMAP_SIZE; x++) {
           for (int y = 0; y < SUBMAP_SIZE; y++) {
             bool done = false;
             for (int i = 0; !done && i < it->size(); i++) {
               if ((*it)[i].percentile < noise[x][y]) {
                 done = true;
-                if ((*it)[i].ter_id > 0)
+                if ((*it)[i].ter_id > 0) {
                   tiles[x][y].set_type((*it)[i].ter_id);
+                }
               }
             }
+/*
             if (!done && !it->empty() && it->back().ter_id > 0) {
               tiles[x][y].set_type(it->back().ter_id);
             }
+*/
           }
         }
       }
@@ -262,35 +293,45 @@ void submap::generate(mapgen_spec* spec)
   }
 }
 
-std::vector< std::vector<int> > noise_map()
+std::vector< std::vector<int> > noise_map(int mapsize,
+                                          std::vector< std::vector<int> > &orig)
 {
-
   Window w_test(0, 0, 80, 24);
   std::vector< std::vector<int> > noise;
   std::vector< std::vector<int> > ret;
-  for (int x = 0; x < SUBMAP_SIZE; x++) {
+  for (int x = 0; x < mapsize; x++) {
     std::vector<int> tmprow, tmpretrow;;
-    for (int y = 0; y < SUBMAP_SIZE; y++) {
-      tmprow.push_back( rng(0, 99) );
-      tmpretrow.push_back( tmprow[y] );
+    for (int y = 0; y < mapsize; y++) {
+      if (orig[x][y] == 0) {
+        tmprow.push_back( rng(0, 99) );
+      } else {
+        tmprow.push_back( orig[x][y] );
+      }
+      tmpretrow.push_back( 0 );
     }
     noise.push_back(tmprow);
     ret.push_back(tmpretrow);
   }
 
-  for (int size = 2; size <= SUBMAP_SIZE / 2; size *= 2) {
+  for (int size = 1; size <= mapsize / 2; size *= 2) {
     float freq = 1.0 / float(size);
-    for (int x = 0; x < SUBMAP_SIZE; x++) {
-      int x0 = (x / size) * size, x1 = (x0 + size) % SUBMAP_SIZE;
+    for (int x = 0; x < mapsize; x++) {
+      int x0 = (x / size) * size, x1 = (x0 + size) % mapsize;
       float xalpha = (x - x0) * freq;
-      for (int y = 0; y < SUBMAP_SIZE; y++) {
-        int y0 = (y / size) * size, y1 = (y0 + size) % SUBMAP_SIZE;
+      for (int y = 0; y < mapsize; y++) {
+        int y0 = (y / size) * size, y1 = (y0 + size) % mapsize;
         int yalpha = (y - y0) * freq;
         int top    = interpolate(noise[x0][y0], noise[x1][y0], xalpha),
             bottom = interpolate(noise[x0][y1], noise[x1][y1], xalpha);
 
         int result = interpolate(top, bottom, yalpha);
-        ret[x][y] = interpolate(ret[x][y], result, freq * 1.8);
+        //double layer_alpha = .1 + .9 * (double(size) / double(mapsize * 2));
+        double layer_alpha = .1 + freq * 1.6;
+        if (size == 1)
+          ret[x][y] = result;
+        else
+          ret[x][y] = interpolate(ret[x][y], result, layer_alpha);
+       // ret[x][y] = interpolate(result, ret[x][y], freq);
       }
     }
   }
@@ -301,3 +342,21 @@ int interpolate(int a, int b, float alpha)
 {
   return a * (1.0 - alpha) + b * alpha;
 }
+
+int rev_heightmap(int ter_id, int dist,
+                  std::list< std::vector<height_point> >::iterator &it)
+{
+  double alpha = double(dist) / 20;
+  for (int i = 0; i < it->size(); i++) {
+    if (ter_id == (*it)[i].ter_id) {
+      int low = (*it)[i].percentile;
+      int high = 99;
+      if (i > 0) {
+        high = (*it)[i - 1].percentile - 1;
+      }
+      return interpolate((high + low) / 2, rng(0, 99), alpha);
+    }
+  }
+  return 0;
+}
+

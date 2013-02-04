@@ -56,7 +56,8 @@ struct submap
   void apply_transformation(int x, int y, transform_type type, int amount);
   void process_transformations();
 
-  void generate(mapgen_spec* spec);
+  void generate(mapgen_spec* spec, submap *north = NULL, submap *east = NULL,
+                                   submap *south = NULL, submap *west = NULL);
 
   tile tiles[SUBMAP_SIZE][SUBMAP_SIZE];
   std::vector<int> unprocessed_transformations;
