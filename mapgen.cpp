@@ -1,5 +1,6 @@
 #include <dirent.h>
 #include <fstream>
+#include <stdlib.h>
 #include "map.h"
 #include "mapgen.h"
 #include "stringfunc.h"
@@ -13,6 +14,12 @@ std::vector< std::vector<int> > noise_map(int mapsize,
 int interpolate(int a, int b, float alpha);
 int rev_heightmap(int ter_id, int dist,
                   std::list< std::vector<height_point> >::iterator &it);
+
+void set_connectors(submap* neighbor, int ter_id,
+                    int xs, int ys, int &pos, int &width);
+
+void draw_road(submap* sm, bool vertical, int ter_id, 
+               int x0, int y0, int width0, int x1, int y1, int width1);
 
 void load_mapgen_specs()
 {
@@ -105,6 +112,19 @@ void mapgen_spec_buildings::load_data(std::istream &datastream)
 {
   name = load_to_character(datastream, ":;\n", true);
   std::string id;
+// Set all terrain to 0 - e.g. "clear" or "no change"
+  wall_id = 0;
+  floor_id = 0;
+  door_id = 0;
+  outside_id = 0;
+  road_id = 0;
+// Set the size bounds to some reasonble values
+  minsize = 2;
+  maxsize = 5;
+  minspacing = 0;
+  maxspacing = 4;
+  minroad = 3;
+  maxroad = 6;
   do {
     datastream >> id;
     id = no_caps(id);
@@ -116,14 +136,20 @@ void mapgen_spec_buildings::load_data(std::istream &datastream)
       door_id = get_mapgen_ter_id(datastream, "door");
     } else if (id.find("outside") == 0) {
       outside_id = get_mapgen_ter_id(datastream, "outside");
+    } else if (id.find("road") == 0) {
+      road_id = get_mapgen_ter_id(datastream, "road");
     } else if (id.find("minsize") == 0) {
-      datastream >> size_low;
+      datastream >> minsize;
     } else if (id.find("maxsize") == 0) {
-      datastream >> size_high;
+      datastream >> maxsize;
     } else if (id.find("minspacing") == 0) {
-      datastream >> spacing_low;
+      datastream >> minspacing;
     } else if (id.find("maxspacing") == 0) {
-      datastream >> spacing_high;
+      datastream >> maxspacing;
+    } else if (id.find("minroad") == 0) {
+      datastream >> minroad;
+    } else if (id.find("maxroad") == 0) {
+      datastream >> maxroad;
     }
   } while (!datastream.eof() && id != "done");
 }
@@ -132,6 +158,12 @@ void mapgen_spec_labyrinth::load_data(std::istream &datastream)
 {
   name = load_to_character(datastream, ":;\n", true);
   std::string id;
+// Set all terrain ids to 0; i.e. "clear" or "no change"
+  wall_id = 0;
+  door_id = 0;
+// Set width to some reasonable defaults
+  minwidth = 1;
+  maxwidth = 4;
   do {
     datastream >> id;
     id = no_caps(id);
@@ -141,9 +173,9 @@ void mapgen_spec_labyrinth::load_data(std::istream &datastream)
     } else if (id.find("floor") == 0) {
       floor_id = get_mapgen_ter_id(datastream, "floor");
     } else if (id.find("minwidth") == 0) {
-      datastream >> width_low;
+      datastream >> minwidth;
     } else if (id.find("maxwidth") == 0) {
-      datastream >> width_high;
+      datastream >> maxwidth;
     }
   } while (!datastream.eof() && id != "done");
 }
@@ -233,6 +265,28 @@ void submap::generate(mapgen_spec* spec, submap *north, submap *east,
 
     case MAPGEN_BUILDINGS: {
       mapgen_spec_buildings* bspec = static_cast<mapgen_spec_buildings*>(spec);
+// Start by setting everything to the "outdoor" terrain type
+      if (bspec->outside_id > 0) {
+        for (int x = 0; x < SUBMAP_SIZE; x++) {
+          for (int y = 0; y < SUBMAP_SIZE; y++) {
+            tiles[x][y].set_type(outside_id);
+          }
+        }
+      }
+// Next, determine where to start a vertical and horizontal road.
+// This is generally random; if there's an adjacent submap, copy that.
+      int vert_road_width_top = rng(bspec->minroad, bspec->maxroad),
+          vert_road_width_bot = rng(bspec->minroad, bspec->maxroad),
+          vert_road_pos_top = rng(5, SUBMAP_SIZE - 6 - vert_road_width),
+          vert_road_pos_bot = rng(5, SUBMAP_SIZE - 6 - vert_road_width);
+// Connect to neighbors if applicable
+      set_connectors(north, -1, SUBMAP_SIZE - 1, bspec->road_id,
+                       vert_road_width_top, vert_road_width_bot);
+      set_connectors(south, -1, 0, bspec->road_id,
+                       vert_road_width_top, vert_road_width_bot);
+      draw_road(this, true, bspec->road_id, // "true" means this is vertical
+                vert_road_pos_top, 0, vert_road_width_top,
+                vert_road_pos_bottom, SUBMAP_SIZE - 1, vert_road_width_bottom);
     } break;
 
     case MAPGEN_LABYRINTH: {
@@ -360,3 +414,100 @@ int rev_heightmap(int ter_id, int dist,
   return 0;
 }
 
+void set_connectors(submap* neighbor, int ter_id,
+                    int xs, int ys, int &pos, int &width)
+{
+  if (!neighbor) {
+    return;
+  }
+  int tmppos = -1, tmpwidth = -1;
+  for (int i = 0; (tmppos == -1 || tmpwidth == -1) && i < SUBMAP_width; i++) {
+    int x = (xs == -1 ? i : xs);
+    int y = (ys == -1 ? i : ys);
+    if (tmppos == -1) {
+      if (neighbor->tiles[x][y].type->uid == ter_id) {
+        tmppos = i;
+      } else {
+        tmpwidth = i + 1 - tmppos;
+      }
+    }
+  }
+  if (tmppos >= 0) {
+    pos = tmppos;
+    if (tmpwidth >= 0) {
+      width = tmpwidth;
+    }
+  }
+}
+
+void draw_road(submap* sm, bool vertical, int ter_id, 
+               int x0, int y0, int width0, int x1, int y1, int width1)
+{
+/* All comments below will, for the sake of brevity and clarity, refer to a
+ * vertically-oriented road.  They apply to horizontal ones as well.
+ */
+
+/* If x0 != x1, then at some point we'll need to start moving horizontally.
+ * This will take abs(x1 - x0) steps, since we want to avoid slope > 1
+ * Thus, we must start sloping at (SUBMAP_SIZE - 1 - dx) at the latest!
+ */
+
+  int diff = (vertical ? abs(x1 - x0) : abs(y1 - y0));
+  int slopestart = rng(10, SUBMAP_SIZE - 10 - diff);
+
+/* We want to change the width - if necessarily - during the sloped portion of
+ * the road.  This makes it a little less jarring.  We want to space the width
+ * change evenly across the $diff steps we're taking; if we assume that the
+ * first change is at the very start, that leaves (diff - 1) steps to fit
+ * (dWidth - 1) changes.
+ */
+  int dWidth = abs(width1 - width0);
+  int widthspace = (dWidth == 1 ? 0 : (diff - 1) / (dWidth - 1));
+/* Of course, we don't want to always make the first width change at the very
+ * start of the sloping section.  Taking the remainer of (diff-1) / (dWidth-1)
+ * gives us the meximum position we can start from.  Randomize!
+ */
+  int widthoffset = (dWidth == 1 ? rng(0, diff) :
+                                   rng(0, (diff - 1) % (dWidth - 1)));
+  int primary_step, secondary_step, width_step;
+  if (vertical) {
+    primary_step = (y1 > y0 ? 1 : -1);
+    secondary_step = (x1 > x0 ? 1 : -1);
+  } else {
+    primary_step = (x1 > x0 ? 1 : -1);
+    secondary_step = (y1 > y0 ? 1 : -1);
+  }
+  if (width1 > width0) {
+    width_step = 1;
+  } else {
+    width_step = -1;
+  }
+  int x = x0, y = y0, width = width0;
+  while (x != x1 && y != y1) {
+    if (vertical) {
+      y += primary_step;
+      if (y >= slopestart && x != x1) {
+        x += secondary_step;
+      }
+      if (width != width1 && y >= slopestart + widthoffset &&
+          (y - slopestart - widthoffset) % widthspace == 0) {
+        width += width_step;
+      }
+      for (int xn = x; xn <= x + width; xn++) {
+        sm->tiles[xn][y].set_type(ter_id);
+      }
+    } else {
+      x += primary_step;
+      if (x >= slopestart && y != y1) {
+        y += secondary_step;
+      }
+      if (width != width1 && x >= slopestart + widthoffset &&
+          (x - slopestart - widthoffset) % widthspace == 0) {
+        width += width_step;
+      }
+      for (int yn = y; yn <= y + width; yn++) {
+        sm->tiles[x][yn].set_type(ter_id);
+      }
+    }
+  }
+}

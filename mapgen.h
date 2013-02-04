@@ -38,9 +38,11 @@ struct mapgen_spec_buildings : public mapgen_spec
   int floor_id;
   int door_id;
   int outside_id;
+  int road_id;
   
-  int size_low, size_high;
-  int spacing_low, spacing_high;
+  int minsize, maxsize;
+  int minspacing, maxspacing;
+  int minroad, maxroad;
 };
 
 struct mapgen_spec_labyrinth : public mapgen_spec
@@ -51,7 +53,7 @@ struct mapgen_spec_labyrinth : public mapgen_spec
   int wall_id;
   int floor_id;
 
-  int width_low, width_high;
+  int minwidth, maxwidth;
 };
 
 struct height_point
