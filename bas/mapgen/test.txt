@@ -1,4 +1,14 @@
-maptype city
+maptype woods
   gen heightmap test
     map deep water: 0 water: 25 dirt: 50 tree: 75 rock: 80 done
+  done
+
+maptype city
+  gen buildings test2
+    wall wall
+    floor floor
+    outside dirt
+    road floor
+    minroad 3
+    maxroad 6
   done

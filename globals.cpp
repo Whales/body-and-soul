@@ -5,6 +5,7 @@
 #include "globals.h"
 #include "window.h"
 #include "stringfunc.h"
+#include "rng.h"
 
 std::string DATADIR;
 std::string CUSSDIR;
@@ -49,6 +50,10 @@ void init_environment()
  #endif
  } else
   closedir(dir);
+
+ srand(time(NULL));
+ rand();  // For some reason a call to rand() seems to be necessary to avoid
+          // repetion.
 }
 
 void init_data()
