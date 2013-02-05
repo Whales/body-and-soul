@@ -11,4 +11,8 @@ maptype city
     road floor
     minroad 3
     maxroad 6
+    minspacing 1
+    maxspacing 3
+    minsize 2
+    maxsize 6
   done

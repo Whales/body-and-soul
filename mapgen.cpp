@@ -18,6 +18,11 @@ int rev_heightmap(int ter_id, int dist,
 void set_connectors(submap* neighbor, int ter_id,
                     int xs, int ys, int &pos, int &width);
 
+void plan_blocks(submap* sm, mapgen_spec_buildings* bg);
+void build_block(submap *sm, mapgen_spec_buildings *bg,
+                 int x0, int y0, int x1, int y1);
+void build_house(submap* sm, mapgen_spec_buildings* bg,
+                 int x0, int y0, int x1, int y1);
 void draw_road(submap* sm, bool vertical, int ter_id, 
                int x0, int y0, int width0,
                int x1, int y1, int width1);
@@ -313,6 +318,8 @@ void submap::generate(mapgen_spec* spec, submap *north, submap *east,
       draw_road(this, false, bspec->road_id, // "false" means this is horizontal
                               0, hori_road_pos_west, hori_road_width_west,
                 SUBMAP_SIZE - 1, hori_road_pos_east, hori_road_width_east);
+// Finally, build "blocks" (i.e. where the houses are)
+      plan_blocks(this, bspec);
     } break;
 
     case MAPGEN_LABYRINTH: {
@@ -539,29 +546,74 @@ void plan_blocks(submap* sm, mapgen_spec_buildings* bg)
     std::vector<bool> tmp;
     for (int x = 0; x < SUBMAP_SIZE; x++) {
       tmp.push_back( sm->tiles[x][y].type->uid != bg->road_id &&
-                     sm->tiles[x][y].type->move_cost <= 10)
+                     sm->tiles[x][y].type->move_cost <= 10);
     }
     available.push_back( tmp );
   }
-// +2 for the walls; *2 spacing for spacing on either side
-  int minsize = bg->minspacing * 2 + bg->minsize + 2;
+// *2 spacing for spacing on either side
+  int minsize = bg->minspacing * 2 + bg->minsize;
   for (int x = bg->minspacing; x < SUBMAP_SIZE - bg->minspacing; x++) {
     for (int y = bg->minspacing; y < SUBMAP_SIZE - bg->minspacing; y++) {
       terrain_type* curter = sm->tiles[x][y].type;
       if (available[x][y]) {
-        bool done = false;
-        for (int diag = 1; !done; diag++) {
-          if (x + diag >= SUBMAP_SIZE - bg->minspacing || 
-              y + diag >= SUBMAP_SIZE - bg->minspacing || !available[x][y]) {
-            done = true;
-            if (diag > bg->minspacing * 2 + bg->minsize + 2) {
-              build_block(sm, bg, x, y, x + diag - 1, y + diag - 1);
-            }
-            for (int bx = x; bx < x + diag; bx++) {
-              for (int by = y; by < y + diag; by++) {
-                available[bx][by] = false;
+/* We do two passes; one "x-first" pass, where we expand to the right until we
+ * bump into a wall, then expand that side south until it bumps into a wall; and
+ * a "y-first" pass, where we do the opposite.
+ * We DON'T do a "square" pass, because that minimizes the room remaining in an
+ * irregularly-shaped clearing.  TODO: Re-examine this assumption ;)
+ */
+        int pass1_x, pass1_y, pass2_x, pass2_y, pass1_size, pass2_size;
+        bool xdone = false, ydone = false;
+        for (pass1_x = x; !xdone; pass1_x++) {
+          if (pass1_x >= SUBMAP_SIZE - bg->minspacing - 1 ||
+              !available[pass1_x + 1][y]) {
+            xdone = true;
+            for (pass1_y = y; !ydone; pass1_y++) {
+              if (pass1_y >= SUBMAP_SIZE - bg->minspacing - 1) {
+                ydone = true;
+              } else {
+                for (int tmpx = x; !ydone && tmpx <= pass1_x; tmpx++) {
+                  if (!available[tmpx][pass1_y + 1]) {
+                    ydone = true;
+                  }
+                }
               }
             }
+          }
+        }
+        xdone = false;
+        ydone = false;
+        for (pass2_y = y; !ydone; pass2_y++) {
+          if (pass2_y >= SUBMAP_SIZE - bg->minspacing - 1 ||
+              !available[x][pass2_y + 1]) {
+            ydone = true;
+            for (pass2_x = x; !xdone; pass2_x++) {
+              if (pass2_x >= SUBMAP_SIZE - bg->minspacing - 1) {
+                xdone = true;
+              } else {
+                for (int tmpy = y; !xdone && tmpy <= pass2_y; tmpy++) {
+                  if (!available[pass2_x + 1][tmpy]) {
+                    xdone = true;
+                  }
+                }
+              }
+            }
+          }
+        }
+        pass1_size = (pass1_x - x) * (pass1_y - y);
+        pass2_size = (pass2_x - x) * (pass2_y - y);
+        int x1, y1;
+        if (pass1_size > pass2_size || (pass1_size == pass2_size && one_in(2))){
+          x1 = pass1_x;
+          y1 = pass1_y;
+        } else {
+          x1 = pass2_x;
+          y1 = pass2_y;
+        }
+        build_block(sm, bg, x, x1, y, y1);
+        for (int bx = x; bx <= x1; bx++) {
+          for (int by = y; by <= y1; by++) {
+            available[bx][by] = false;
           }
         }
       }
@@ -569,13 +621,167 @@ void plan_blocks(submap* sm, mapgen_spec_buildings* bg)
   }
 }
 
+
+/* The algorithm works like this:
+ * 1. Start with a block:
+ *    ............
+ *    ............
+ *    ............
+ *    ............
+ *    ............
+ * 2. If it's too small to fit a single house, we're done.
+ * 3. Otherwise, if one dimension is just big enough for a house, build as many
+ *    as we can:
+ *    ............
+ *    .####..####.
+ *    .####..####.
+ *    .####..####.
+ *    ............
+ * 4. If both dimensions are big enough for more than one house, then carve off
+ *    space on one of the shorter sides.  The carved off space should have a
+ *    depth that's just big enough for one house:
+ *    lllrrrrrrrrr
+ *    lllrrrrrrrrr
+ *    lllrrrrrrrrr
+ *    lllrrrrrrrrr
+ *    lllrrrrrrrrr
+ * 5. Recurse with l and r.
+ */
+
 void build_block(submap *sm, mapgen_spec_buildings *bg,
                  int x0, int y0, int x1, int y1)
 {
 // TODO: if very big, split and draw a road in the middle
+  if (x1 < x0) {
+    int tmp = x0;
+    x0 = x1;
+    x1 = tmp;
+  }
+  if (y1 < y0) {
+    int tmp = y0;
+    y0 = y1;
+    y1 = tmp;
+  }
   int dx = abs(x1 - x0), dy = abs(y1 - y0);
-  int space_required = bg->minspacing * 2 + bg->minsize + 2;
-  if (dx < space_required && dy < space_required)
-    return;
-  if (dx > dy || (dx == dy && one_in(2))) {
-    if (dx >= bg->minspaceing * 4 + bg->minsize * 2 + 4
+  int space_required = bg->minspacing * 2 + bg->minsize;
+  int max_space = bg->maxspacing * 2 + bg->maxsize;
+  if (dx < space_required || dy < space_required)
+    return; // Not big enough to fit a building!
+  bool x_bigger = (dx > dy || (dx == dy && one_in(2)));
+  int  long0 = (x_bigger ? x0 : y0),  long1 = (x_bigger ? x1 : y1),
+      short0 = (x_bigger ? y0 : x0), short1 = (x_bigger ? y1 : x1),
+      dlong  = (x_bigger ? dx : dy), dshort = (x_bigger ? dy : dx);
+  if (dshort > space_required * 2) {
+// Even the shorter side is long enough to fit more than one big house.
+    if (max_space > dlong - 1) {
+      max_space = dlong - 1; 
+    }
+    int split_dist = rng(space_required, max_space);
+    if (x_bigger) {
+      if (one_in(2)) { // Carve off the left side
+        build_block(sm, bg, x0, y0, x0 + split_dist - 1, y1);
+        build_block(sm, bg, x0 + split_dist, y0, x1, y1);
+      } else { // Carve off the right side
+        build_block(sm, bg, x0, y0, x1 - split_dist, y1);
+        build_block(sm, bg, x1 - split_dist + 1, y0, x1, y1);
+      }
+    } else { // y is bigger
+      if (one_in(2)) { // Carve off the north side
+        build_block(sm, bg, x0, y0, x1, y0 + split_dist - 1);
+        build_block(sm, bg, x0, y0 + split_dist, x1, y1);
+      } else { // Carve off the south side
+        build_block(sm, bg, x0, y0, x1, y1 - split_dist);
+        build_block(sm, bg, x0, y1 - split_dist + 1, x1, y1);
+      }
+    }
+  } else { // The shorter side isn't big enough to fit more than one house!
+/* Okay, we aren't going to split, since the dy is only big enough for a single
+ * house (albeit the largest possible house).  We don't really care about how we
+ * fill that y-space, since we know it's big enough for one house, no more, no
+ * less.  BUT!  We *do* care about the x-space, since we want to cram as many
+ * houses in as possible.
+ * To do that, we track "wiggle room."  We get the size of the smallest house,
+ * including spacing on one side (don't want to double up on spacing).  Then we
+ * divide dx by that size.  The remainder is our "wiggle room," extra space
+ * which we can distribute into between-building spaces or wall sizes.
+ */
+    int smallest_size = bg->minspacing + bg->minsize;
+    int long_available = dlong - bg->minspacing;
+    int num_houses = long_available / smallest_size;
+    int wiggle = long_available % smallest_size;
+    std::vector<int> spacing, walls;
+    std::vector<int> available; // Which values AREN'T at their max
+    for (int i = 0; i < num_houses; i++) {
+      spacing.push_back(bg->minspacing);
+      walls.push_back(bg->minsize);
+      available.push_back(i);
+      available.push_back(i + num_houses);
+    }
+    for (int i = 0; i < wiggle && !available.empty(); i++) {
+      int sel = rng(0, available.size() - 1);
+      int boost = available[sel];
+      //debugmsg("[%d]/%d = %d", sel, available.size(), boost);
+      if (boost >= num_houses) {
+        boost -= num_houses;
+        walls[boost]++;
+        if (walls[boost] >= bg->maxsize) {
+          available.erase( available.begin() + sel );
+        }
+      } else {
+        spacing[boost]++;
+        if (spacing[boost] >= bg->maxspacing) {
+          available.erase( available.begin() + sel );
+        }
+      }
+    }
+// Now, actually build the houses!
+    int longpos = 0;
+    for (int i = 0; i < num_houses; i++) {
+      longpos += spacing[i];
+// Randomize the y-dimensions
+      int max_shortsize = bg->maxsize;
+      if (max_shortsize > dy - bg->minspacing * 2) {
+        max_shortsize = dy - bg->minspacing * 2;
+      }
+      int shortsize = rng(bg->minsize, max_shortsize);
+      int max_shortspace = bg->maxspacing; // We only care about the top
+      if (dshort - max_shortspace - shortsize < bg->minspacing) {
+        max_shortspace = dshort - bg->minspacing - shortsize;
+      }
+      int shortspace = rng(bg->minspacing, max_shortspace);
+
+      int hx0, hy0, hx1, hy1;
+      if (x_bigger) {
+        hx0 = longpos;
+        hx1 = longpos + walls[i];
+        hy0 = y0 + shortspace;
+        hy1 = y0 + shortspace + shortsize;
+      } else {
+        hx0 = x0 + shortspace;
+        hx1 = x0 + shortspace + shortsize;
+        hy0 = longpos;
+        hy1 = longpos + walls[i];
+      }
+      build_house(sm, bg, hx0, hy0, hx1, hy1);
+      longpos += walls[i];
+    }
+  }
+}
+
+void build_house(submap* sm, mapgen_spec_buildings* bg,
+                 int x0, int y0, int x1, int y1)
+{
+// TODO: vaults in houses, decorations in houses
+// TODO: doors :v
+  for (int x = x0; x <= x1; x++) {
+    for (int y = y0; y <= y1; y++) {
+      if (x == x0 || x == x1 || y == y0 || y == y1) {
+        if (bg->wall_id > 0) {
+          sm->tiles[x][y].set_type(bg->wall_id);
+        }
+      } else if (bg->floor_id > 0) {
+        sm->tiles[x][y].set_type(bg->floor_id);
+      }
+    }
+  }
+}
