@@ -1,4 +1,4 @@
-15
+18
 Null; 0 0 0 120 9 2
 Endtype
 
@@ -39,7 +39,7 @@ Flags: none, liquid, Done
 Transformations: wastes>Water, 25 heat>Water, 36 cold>Deep Ice, 9 Done
 Endtype
 
-Metal Wall; 10 0 -1 35 13 0
+Metal Wall; 10 0 -1 35 5 0
 Transformations: sea>Rusted Wall, 25 mists>Rusted Wall, 36 water>Rusted Wall, 9 Done
 Endtype
 
@@ -58,5 +58,17 @@ Endtype
 Lava; 14 20 0 61 2 0
 Flags: none, liquid, fiery, Done
 Transformations: city>Floor, 36 forest>Dirt, 36 wastes>Sand, 36 sea>Dirt, 36 mists>Sand, 36 cold>Dirt, 16 water>Dirt, 25 Done
+Endtype
+
+Street; 15 10 0 46 8 0
+Transformations: forest>Dirt, 25 wastes>Sand, 25 sea>Dirt, 25 mists>Sand, 36 Done
+Endtype
+
+Closed Door; 16 0 -1 43 15 0
+Transformations: open>Open Door, 1 Done
+Endtype
+
+Open Door; 17 10 0 39 15 0
+Transformations: close>Closed Door, 1 Done
 Endtype
 

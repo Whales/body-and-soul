@@ -70,4 +70,11 @@ struct mapgen_spec_heightmap : public mapgen_spec
   std::list< std::vector<height_point> > maps;
 };
 
+struct road_end
+{
+  int posx;
+  int posy;
+  int width;
+};
+
 #endif

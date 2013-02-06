@@ -215,11 +215,12 @@ bool ele_textbox::set_data(int data)
   offset = sizey - broken.size();
  else
   offset = data;
+ return true;
 }
 
 bool ele_textbox::add_data(int data)
 {
- set_data(offset + data);
+ return set_data(offset + data);
 }
 
 std::vector<std::string> ele_textbox::get_str_list()
@@ -598,7 +599,7 @@ bool ele_menu::set_data(int data)
 
 bool ele_menu::add_data(int data)
 {
- set_data(selection + data);
+ return set_data(selection + data);
 }
 
 std::string ele_menu::get_str()
@@ -1339,6 +1340,7 @@ bool interface::rem_all_bindings(std::string target)
 bool interface::set_use_bindings(bool set)
 {
  use_bindings = set;
+ return true;
 }
 
 bool interface::handle_action(long ch)

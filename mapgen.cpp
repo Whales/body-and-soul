@@ -20,7 +20,7 @@ void set_connectors(submap* neighbor, int ter_id,
 
 void plan_blocks(submap* sm, mapgen_spec_buildings* bg);
 void build_block(submap *sm, mapgen_spec_buildings *bg,
-                 int x0, int y0, int x1, int y1);
+                 int x0, int y0, int x1, int y1, int depth = 0);
 void build_house(submap* sm, mapgen_spec_buildings* bg,
                  int x0, int y0, int x1, int y1);
 void draw_road(submap* sm, bool vertical, int ter_id, 
@@ -42,7 +42,7 @@ void load_mapgen_specs()
     return;
   }
   std::string filename;
-  while (dp = readdir(dir)) {
+  while ((dp = readdir(dir))) {
     filename = dp->d_name;
     if (filename != "." && filename != "..") {
       filename = DATADIR + "/mapgen/" + filename;
@@ -69,7 +69,7 @@ void load_mapgen_file(std::istream &datastream)
       std::string new_type = load_to_character(datastream, ",;\n", true);
       current_type = lookup_map_type(new_type);
       if (current_type == MAP_NULL) {
-        debugmsg("Invalid maptype %s.", new_type.c_str());
+        //debugmsg("Invalid maptype %s.", new_type.c_str());
       }
     } else if (id == "gen") {
       std::string gen_id, gen_type_name;
@@ -79,7 +79,7 @@ void load_mapgen_file(std::istream &datastream)
       switch (gen_type) {
 
         case MAPGEN_NULL:
-          debugmsg("Invalid mapgen type: %s", gen_type_name.c_str());
+          //debugmsg("Invalid mapgen type: %s", gen_type_name.c_str());
           break;
 
         case MAPGEN_BUILDINGS: {
@@ -541,20 +541,24 @@ void draw_road(submap* sm, bool vertical, int ter_id,
 
 void plan_blocks(submap* sm, mapgen_spec_buildings* bg)
 {
+Window w_debug(0, 0, 80, 24);
   std::vector< std::vector<bool> > available;
   for (int y = 0; y < SUBMAP_SIZE; y++) {
     std::vector<bool> tmp;
     for (int x = 0; x < SUBMAP_SIZE; x++) {
       tmp.push_back( sm->tiles[x][y].type->uid != bg->road_id &&
                      sm->tiles[x][y].type->move_cost <= 10);
+      w_debug.putch(x, y, (tmp.back() ? c_green : c_red), c_black, '#');
+      
     }
     available.push_back( tmp );
   }
+  w_debug.refresh();
+  getch();
 // *2 spacing for spacing on either side
-  int minsize = bg->minspacing * 2 + bg->minsize;
+debugmsg("spacing: %d/%d", bg->minspacing, bg->maxspacing);
   for (int x = bg->minspacing; x < SUBMAP_SIZE - bg->minspacing; x++) {
     for (int y = bg->minspacing; y < SUBMAP_SIZE - bg->minspacing; y++) {
-      terrain_type* curter = sm->tiles[x][y].type;
       if (available[x][y]) {
 /* We do two passes; one "x-first" pass, where we expand to the right until we
  * bump into a wall, then expand that side south until it bumps into a wall; and
@@ -568,6 +572,7 @@ void plan_blocks(submap* sm, mapgen_spec_buildings* bg)
           if (pass1_x >= SUBMAP_SIZE - bg->minspacing - 1 ||
               !available[pass1_x + 1][y]) {
             xdone = true;
+            ydone = false;
             for (pass1_y = y; !ydone; pass1_y++) {
               if (pass1_y >= SUBMAP_SIZE - bg->minspacing - 1) {
                 ydone = true;
@@ -587,6 +592,7 @@ void plan_blocks(submap* sm, mapgen_spec_buildings* bg)
           if (pass2_y >= SUBMAP_SIZE - bg->minspacing - 1 ||
               !available[x][pass2_y + 1]) {
             ydone = true;
+            xdone = false;
             for (pass2_x = x; !xdone; pass2_x++) {
               if (pass2_x >= SUBMAP_SIZE - bg->minspacing - 1) {
                 xdone = true;
@@ -606,11 +612,18 @@ void plan_blocks(submap* sm, mapgen_spec_buildings* bg)
         if (pass1_size > pass2_size || (pass1_size == pass2_size && one_in(2))){
           x1 = pass1_x;
           y1 = pass1_y;
+//debugmsg("Pass 1");
         } else {
           x1 = pass2_x;
           y1 = pass2_y;
+//debugmsg("Pass 2");
         }
-        build_block(sm, bg, x, x1, y, y1);
+std::ofstream fout;
+fout.open("debugblock.txt", std::ios::app);
+fout << "Request:  ";
+fout.close();
+        //debugmsg("%d:%d => %d:%d", x, y, x1, y1);
+        build_block(sm, bg, x, y, x1, y1);
         for (int bx = x; bx <= x1; bx++) {
           for (int by = y; by <= y1; by++) {
             available[bx][by] = false;
@@ -649,9 +662,12 @@ void plan_blocks(submap* sm, mapgen_spec_buildings* bg)
  */
 
 void build_block(submap *sm, mapgen_spec_buildings *bg,
-                 int x0, int y0, int x1, int y1)
+                 int x0, int y0, int x1, int y1, int depth)
 {
+  
 // TODO: if very big, split and draw a road in the middle
+std::ofstream debugout;
+debugout.open("debugblock.txt", std::ios::app);
   if (x1 < x0) {
     int tmp = x0;
     x0 = x1;
@@ -662,36 +678,80 @@ void build_block(submap *sm, mapgen_spec_buildings *bg,
     y0 = y1;
     y1 = tmp;
   }
+for (int i = 0; i < depth; i++) { debugout << " "; }
+debugout << "Block: " << x0 << ":" << y0 << " => " << x1 << ":" << y1 << std::endl;
   int dx = abs(x1 - x0), dy = abs(y1 - y0);
   int space_required = bg->minspacing * 2 + bg->minsize;
   int max_space = bg->maxspacing * 2 + bg->maxsize;
-  if (dx < space_required || dy < space_required)
+  if (dx < space_required || dy < space_required) {
+for (int i = 0; i < depth; i++) { debugout << " "; }
+debugout << "Too small.\n";
+debugout.close();
     return; // Not big enough to fit a building!
+  }
   bool x_bigger = (dx > dy || (dx == dy && one_in(2)));
-  int  long0 = (x_bigger ? x0 : y0),  long1 = (x_bigger ? x1 : y1),
-      short0 = (x_bigger ? y0 : x0), short1 = (x_bigger ? y1 : x1),
-      dlong  = (x_bigger ? dx : dy), dshort = (x_bigger ? dy : dx);
-  if (dshort > space_required * 2) {
+  int dlong  = (x_bigger ? dx : dy), dshort = (x_bigger ? dy : dx);
+  if (dshort >= space_required * 2) {
 // Even the shorter side is long enough to fit more than one big house.
     if (max_space > dlong - 1) {
       max_space = dlong - 1; 
     }
     int split_dist = rng(space_required, max_space);
     if (x_bigger) {
+for (int i = 0; i < depth; i++) { debugout << " "; }
+debugout << "X is bigger.\n";
       if (one_in(2)) { // Carve off the left side
-        build_block(sm, bg, x0, y0, x0 + split_dist - 1, y1);
-        build_block(sm, bg, x0 + split_dist, y0, x1, y1);
+for (int i = 0; i < depth; i++) { debugout << " "; }
+debugout << "carve off left\n";
+for (int i = 0; i < depth; i++) { debugout << " "; }
+debugout << "Split 1:\n";
+debugout.close();
+        build_block(sm, bg, x0, y0, x0 + split_dist - 1, y1, depth + 1);
+debugout.open("debugblock.txt", std::ios::app);
+for (int i = 0; i < depth; i++) { debugout << " "; }
+debugout << "Split 2:\n";
+debugout.close();
+        build_block(sm, bg, x0 + split_dist, y0, x1, y1, depth + 1);
       } else { // Carve off the right side
-        build_block(sm, bg, x0, y0, x1 - split_dist, y1);
-        build_block(sm, bg, x1 - split_dist + 1, y0, x1, y1);
+for (int i = 0; i < depth; i++) { debugout << " "; }
+debugout << "Carve off right.\n";
+for (int i = 0; i < depth; i++) { debugout << " "; }
+debugout << "Split 1:\n";
+debugout.close();
+        build_block(sm, bg, x0, y0, x1 - split_dist, y1, depth + 1);
+debugout.open("debugblock.txt", std::ios::app);
+for (int i = 0; i < depth; i++) { debugout << " "; }
+debugout << "Split 2:\n";
+debugout.close();
+        build_block(sm, bg, x1 - split_dist + 1, y0, x1, y1, depth + 1);
       }
     } else { // y is bigger
+for (int i = 0; i < depth; i++) { debugout << " "; }
+debugout << "Y is bigger.\n";
       if (one_in(2)) { // Carve off the north side
-        build_block(sm, bg, x0, y0, x1, y0 + split_dist - 1);
-        build_block(sm, bg, x0, y0 + split_dist, x1, y1);
+for (int i = 0; i < depth; i++) { debugout << " "; }
+debugout << "Carve off north.\n";
+for (int i = 0; i < depth; i++) { debugout << " "; }
+debugout << "Split 1:\n";
+debugout.close();
+        build_block(sm, bg, x0, y0, x1, y0 + split_dist - 1, depth + 1);
+debugout.open("debugblock.txt", std::ios::app);
+for (int i = 0; i < depth; i++) { debugout << " "; }
+debugout << "Split 2:\n";
+debugout.close();
+        build_block(sm, bg, x0, y0 + split_dist, x1, y1, depth + 1);
       } else { // Carve off the south side
-        build_block(sm, bg, x0, y0, x1, y1 - split_dist);
-        build_block(sm, bg, x0, y1 - split_dist + 1, x1, y1);
+for (int i = 0; i < depth; i++) { debugout << " "; }
+debugout << "Carve off south.\n";
+for (int i = 0; i < depth; i++) { debugout << " "; }
+debugout << "Split 1:\n";
+debugout.close();
+        build_block(sm, bg, x0, y0, x1, y1 - split_dist, depth + 1);
+debugout.open("debugblock.txt", std::ios::app);
+for (int i = 0; i < depth; i++) { debugout << " "; }
+debugout << "Split 2:\n";
+debugout.close();
+        build_block(sm, bg, x0, y1 - split_dist + 1, x1, y1, depth + 1);
       }
     }
   } else { // The shorter side isn't big enough to fit more than one house!
@@ -705,8 +765,10 @@ void build_block(submap *sm, mapgen_spec_buildings *bg,
  * divide dx by that size.  The remainder is our "wiggle room," extra space
  * which we can distribute into between-building spaces or wall sizes.
  */
+for (int i = 0; i < depth; i++) { debugout << " "; }
+debugout << "!!BUILD!!\n";
     int smallest_size = bg->minspacing + bg->minsize;
-    int long_available = dlong - bg->minspacing;
+    int long_available = dlong - bg->minspacing; // Extra space at the end
     int num_houses = long_available / smallest_size;
     int wiggle = long_available % smallest_size;
     std::vector<int> spacing, walls;
@@ -735,7 +797,7 @@ void build_block(submap *sm, mapgen_spec_buildings *bg,
       }
     }
 // Now, actually build the houses!
-    int longpos = 0;
+    int longpos = (x_bigger ? x0 : y0);
     for (int i = 0; i < num_houses; i++) {
       longpos += spacing[i];
 // Randomize the y-dimensions
@@ -762,10 +824,13 @@ void build_block(submap *sm, mapgen_spec_buildings *bg,
         hy0 = longpos;
         hy1 = longpos + walls[i];
       }
+for (int ii= 0; ii< depth; ii++) { debugout << " "; }
+debugout << "House: " << hx0 << ":" << hy0 << "=>" << hx1 << ":" << hy1 << "\n";
       build_house(sm, bg, hx0, hy0, hx1, hy1);
-      longpos += walls[i];
+      longpos += walls[i] + 1;
     }
   }
+debugout.close();
 }
 
 void build_house(submap* sm, mapgen_spec_buildings* bg,
@@ -773,8 +838,8 @@ void build_house(submap* sm, mapgen_spec_buildings* bg,
 {
 // TODO: vaults in houses, decorations in houses
 // TODO: doors :v
-  for (int x = x0; x <= x1; x++) {
-    for (int y = y0; y <= y1; y++) {
+  for (int x = x0; x <= x1 && x < SUBMAP_SIZE; x++) {
+    for (int y = y0; y <= y1 && y < SUBMAP_SIZE; y++) {
       if (x == x0 || x == x1 || y == y0 || y == y1) {
         if (bg->wall_id > 0) {
           sm->tiles[x][y].set_type(bg->wall_id);
@@ -784,4 +849,15 @@ void build_house(submap* sm, mapgen_spec_buildings* bg,
       }
     }
   }
+  //Window w_tmp(0, 0, 80, 24);
+/*
+  for (int x = 0; x < SUBMAP_SIZE; x++) {
+    for (int y = 0; y < SUBMAP_SIZE; y++) {
+      glyph print = sm->tiles[x][y].type->symbol;
+      w_tmp.putglyph(x, y, print);
+    }
+  }
+*/
+  //w_tmp.refresh();
+  //getch();
 }

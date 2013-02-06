@@ -98,7 +98,6 @@ void terrain_type::load_data(std::istream &datastream)
 void terrain_type::init_transformations()
 {
   for (int i = 0; i < pre_transformations.size(); i++) {
-    bool found = false;
     transformations[i].resistance = pre_resistances[i];
     transformations[i].result = lookup_terrain_id( pre_transformations[i] );
   }

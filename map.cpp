@@ -27,7 +27,7 @@ void tile::set_type(terrain_type* _type)
 {
   type = _type;
   transforms.clear();
-  for (int i = 0; i < TRANS_MAX; i++) {
+  for (int i = 0; i < TRANS_MAX && i < type->transformations.size(); i++) {
     transforms.push_back( type->transformations[i].resistance );
   }
 }
@@ -148,7 +148,6 @@ void map::generate(map_type type)
       }
     }
   } else {
-    mapgen_spec* gen;
     std::vector<mapgen_spec*> choices = MAPGEN_POOL[type];
     if (choices.empty()) {
       debugmsg("No mapgen specifications for %s found.",
@@ -197,6 +196,8 @@ map_type lookup_map_type(std::string name)
       return map_type(i);
     }
   }
+  map_type tmp;
+  return tmp;
 }
 
 std::string map_type_name(map_type type)

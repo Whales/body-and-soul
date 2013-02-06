@@ -8,11 +8,11 @@ maptype city
     wall wall
     floor floor
     outside dirt
-    road floor
+    road street
     minroad 3
     maxroad 6
     minspacing 1
     maxspacing 3
-    minsize 2
-    maxsize 6
+    minsize 6
+    maxsize 10
   done

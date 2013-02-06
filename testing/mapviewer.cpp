@@ -9,12 +9,12 @@
 
 int main()
 {
+  init_display();
   init_environment();
   init_data();
-  init_display();
 
   map demo;
-  demo.generate(MAP_TEST);
+  demo.generate(MAP_CITY);
 
   Window w_map(0, 0, 80, 24);
   int posx = 0, posy = 0;
