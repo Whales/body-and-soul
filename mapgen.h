@@ -40,6 +40,8 @@ struct mapgen_spec_buildings : public mapgen_spec
   int outside_id;
   int road_id;
   
+  int density;
+  int numroads;
   int minsize, maxsize;
   int minspacing, maxspacing;
   int minroad, maxroad;
@@ -70,10 +72,11 @@ struct mapgen_spec_heightmap : public mapgen_spec
   std::list< std::vector<height_point> > maps;
 };
 
-struct road_end
+struct map_connect
 {
-  int posx;
-  int posy;
+  map_connect(int P, int W) : pos(P), width(W) { };
+  ~map_connect(){};
+  int pos;
   int width;
 };
 

@@ -15,8 +15,13 @@ int interpolate(int a, int b, float alpha);
 int rev_heightmap(int ter_id, int dist,
                   std::list< std::vector<height_point> >::iterator &it);
 
+/*
 void set_connectors(submap* neighbor, int ter_id,
                     int xs, int ys, int &pos, int &width);
+*/
+std::vector<map_connect> get_connectors(submap* neighbor, int ter_id,
+                                        int xs, int ys);
+std::vector<map_connect> randomize_roads(mapgen_spec_buildings *bg);
 
 void plan_blocks(submap* sm, mapgen_spec_buildings* bg);
 void build_block(submap *sm, mapgen_spec_buildings *bg,
@@ -156,6 +161,10 @@ void mapgen_spec_buildings::load_data(std::istream &datastream)
       datastream >> minroad;
     } else if (id.find("maxroad") == 0) {
       datastream >> maxroad;
+    } else if (id.find("density") == 0) {
+      datastream >> density;
+    } else if (id.find("numroads") == 0) {
+      datastream >> numroads;
     }
   } while (!datastream.eof() && id != "done");
 }
@@ -279,11 +288,35 @@ void submap::generate(mapgen_spec* spec, submap *north, submap *east,
           }
         }
       }
+/* Next, determine where to plunk down roads.  If there's nothing adjacent, we
+ * can randomize it; otherwise, we'll need to get connectors.
+ */
+      std::vector<map_connect> roads_north, roads_east, roads_south, roads_west;
+      if (north) {
+        roads_north = randomize_roads(bspec);
+      } else {
+        roads_north = get_connectors(north, bspec->road_id, -1, SUBMAP_SIZE-1);
+      }
+      if (east) {
+        roads_east = randomize_roads(bspec);
+      } else {
+        roads_east = get_connectors(east, bspec->road_id, 0, -1);
+      }
+      if (south) {
+        roads_south = randomize_roads(bspec);
+      } else {
+        roads_south = get_connectors(south, bspec->road_id, -1, 0);
+      }
+      if (west) {
+        roads_west = randomize_roads(bspec);
+      } else {
+        roads_west = get_connectors(west, bspec->road_id, SUBMAP_SIZE - 1, -1);
+      }
 // Next, determine where to start a vertical and horizontal road.
 // This is generally random; if there's an adjacent submap, copy that.
       int vert_road_width_top = rng(bspec->minroad, bspec->maxroad),
           vert_road_width_bot = rng(bspec->minroad, bspec->maxroad),
-          vert_road_pos_top = rng(5, SUBMAP_SIZE - 6 - vert_road_width_top);
+          vert_road_pos_top   = rng(5, SUBMAP_SIZE - 6 - vert_road_width_top);
 // Connect to neighbors if applicable
       set_connectors(north, bspec->road_id, -1, SUBMAP_SIZE - 1,
                        vert_road_pos_top, vert_road_width_top);
@@ -447,14 +480,15 @@ int rev_heightmap(int ter_id, int dist,
   return 0;
 }
 
-void set_connectors(submap* neighbor, int ter_id,
-                    int xs, int ys, int &pos, int &width)
+std::vector<map_connect> get_connectors(submap* neighbor, int ter_id,
+                                        int xs, int ys)
 {
+  std::vector<map_connect> ret;
   if (!neighbor) {
-    return;
+    return ret;
   }
   int tmppos = -1, tmpwidth = -1;
-  for (int i = 0; (tmppos == -1 || tmpwidth == -1) && i < SUBMAP_SIZE; i++) {
+  for (int i = 0; i < SUBMAP_SIZE; i++) {
     int x = (xs == -1 ? i : xs);
     int y = (ys == -1 ? i : ys);
     if (tmppos == -1) {
@@ -463,14 +497,25 @@ void set_connectors(submap* neighbor, int ter_id,
       }
     } else if (neighbor->tiles[x][y].type->uid != ter_id) {
       tmpwidth = i - 1 - tmppos;
+      ret.push_back( map_connect(tmppos, tmpwidth) );
     }
   }
-  if (tmppos >= 0) {
-    pos = tmppos;
-    if (tmpwidth >= 0) {
-      width = tmpwidth;
-    }
+  return ret;
+}
+
+std::vector<map_connect> randomize_roads(mapgen_spec_buildings* bg)
+{
+  std::vector<map_connect> roads;
+  if (bg->numroads == 0) {
+    return roads;
   }
+  int space_per_road = SUBMAP_SIZE / bg->numroads;
+  for (int i = 0; i < bg->numroads; i++) {
+    int width = rng(bg->minroad, bg->maxroad);
+    int pos = rng(space_per_road * i, space_per_road * (i + 1) - width);
+    ret.push_back( map_connect(pos, width) )
+  }
+  return ret;
 }
 
 void draw_road(submap* sm, bool vertical, int ter_id, 
