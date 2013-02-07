@@ -318,7 +318,7 @@ void submap::generate(mapgen_spec* spec, submap *north, submap *east,
                 sm_end, roads_east[i].pos, roads_east[i].width);
       //roads_east.erase( roads_east.begin() + n );
     }
-      
+    plan_blocks(this, bspec);
 /*
 // Finally, build "blocks" (i.e. where the houses are)
     plan_blocks(this, bspec);
@@ -563,95 +563,38 @@ void draw_road(submap* sm, bool vertical, int ter_id,
 
 void plan_blocks(submap* sm, mapgen_spec_buildings* bg)
 {
-Window w_debug(0, 0, 80, 24);
-  std::vector< std::vector<bool> > available;
-  for (int y = 0; y < SUBMAP_SIZE; y++) {
-    std::vector<bool> tmp;
-    for (int x = 0; x < SUBMAP_SIZE; x++) {
-      tmp.push_back( sm->tiles[x][y].type->uid != bg->road_id &&
-                     sm->tiles[x][y].type->move_cost <= 10);
-      w_debug.putch(x, y, (tmp.back() ? c_green : c_red), c_black, '#');
-      
-    }
-    available.push_back( tmp );
+  if (bg->wall_id <= 0) {
+    return;
   }
-  w_debug.refresh();
-  getch();
-// *2 spacing for spacing on either side
-debugmsg("spacing: %d/%d", bg->minspacing, bg->maxspacing);
-  for (int x = bg->minspacing; x < SUBMAP_SIZE - bg->minspacing; x++) {
-    for (int y = bg->minspacing; y < SUBMAP_SIZE - bg->minspacing; y++) {
-      if (available[x][y]) {
-/* We do two passes; one "x-first" pass, where we expand to the right until we
- * bump into a wall, then expand that side south until it bumps into a wall; and
- * a "y-first" pass, where we do the opposite.
- * We DON'T do a "square" pass, because that minimizes the room remaining in an
- * irregularly-shaped clearing.  TODO: Re-examine this assumption ;)
- */
-        int pass1_x, pass1_y, pass2_x, pass2_y, pass1_size, pass2_size;
-        bool xdone = false, ydone = false;
-        for (pass1_x = x; !xdone; pass1_x++) {
-          if (pass1_x >= SUBMAP_SIZE - bg->minspacing - 1 ||
-              !available[pass1_x + 1][y]) {
-            xdone = true;
-            ydone = false;
-            for (pass1_y = y; !ydone; pass1_y++) {
-              if (pass1_y >= SUBMAP_SIZE - bg->minspacing - 1) {
-                ydone = true;
-              } else {
-                for (int tmpx = x; !ydone && tmpx <= pass1_x; tmpx++) {
-                  if (!available[tmpx][pass1_y + 1]) {
-                    ydone = true;
-                  }
-                }
-              }
+  if (bg->road_id <= 0) {
+// TODO: Write free-standing blocks
+    return;
+  }
+  int new_ter[SUBMAP_SIZE][SUBMAP_SIZE];
+  for (int x = 0; x < SUBMAP_SIZE; x++) {
+    for (int y = 0; y < SUBMAP_SIZE; y++) {
+      if (sm->ter(x, y).type->uid == bg->outside_id) {
+        int num_roads = 0;
+        for (int rx = x - 1; rx <= x + 1; rx++) {
+          for (int ry = y - 1; ry <= y + 1; ry++) {
+            if (sm->ter(rx, ry).type->uid == bg->road_id) {
+              num_roads++;
             }
           }
         }
-        xdone = false;
-        ydone = false;
-        for (pass2_y = y; !ydone; pass2_y++) {
-          if (pass2_y >= SUBMAP_SIZE - bg->minspacing - 1 ||
-              !available[x][pass2_y + 1]) {
-            ydone = true;
-            xdone = false;
-            for (pass2_x = x; !xdone; pass2_x++) {
-              if (pass2_x >= SUBMAP_SIZE - bg->minspacing - 1) {
-                xdone = true;
-              } else {
-                for (int tmpy = y; !xdone && tmpy <= pass2_y; tmpy++) {
-                  if (!available[pass2_x + 1][tmpy]) {
-                    xdone = true;
-                  }
-                }
-              }
-            }
-          }
-        }
-        pass1_size = (pass1_x - x) * (pass1_y - y);
-        pass2_size = (pass2_x - x) * (pass2_y - y);
-        int x1, y1;
-        if (pass1_size > pass2_size || (pass1_size == pass2_size && one_in(2))){
-          x1 = pass1_x;
-          y1 = pass1_y;
-//debugmsg("Pass 1");
+        if (num_roads >= 1 && num_roads <= 5) {
+          new_ter[x][y] = bg->wall_id;
         } else {
-          x1 = pass2_x;
-          y1 = pass2_y;
-//debugmsg("Pass 2");
+          new_ter[x][y] = sm->ter(x, y).type->uid;
         }
-std::ofstream fout;
-fout.open("debugblock.txt", std::ios::app);
-fout << "Request:  ";
-fout.close();
-        //debugmsg("%d:%d => %d:%d", x, y, x1, y1);
-        build_block(sm, bg, x, y, x1, y1);
-        for (int bx = x; bx <= x1; bx++) {
-          for (int by = y; by <= y1; by++) {
-            available[bx][by] = false;
-          }
-        }
+      } else {
+        new_ter[x][y] = sm->ter(x, y).type->uid;
       }
+    }
+  }
+  for (int x = 0; x < SUBMAP_SIZE; x++) {
+    for (int y = 0; y < SUBMAP_SIZE; y++) {
+      sm->ter(x, y).set_type( new_ter[x][y] );
     }
   }
 }

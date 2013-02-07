@@ -112,8 +112,17 @@ How'd you lose your soul?
   -Sacrificed it to save a loved one: Bonus to Empathy
 Classes:
   -Banker:
-    Skills: Logic 3, Barter 3
-    Items: Suit
+    Skills: Logic 2, Barter 3
+    Items:  Suit
+    School: Greed
   -Musician:
-    Skills: Music 4, 
+    Skills: Music 4, Chem 1
+    Items:  Guitar
+    School: Harmony
+  -Thief:
+    Skills: Sneak 3, Barter 1, Dodge 1
+    Items:  Knife
+    School: Deception
+  -Priest:
+    Skills: 
     

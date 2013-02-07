@@ -10,10 +10,10 @@ maptype city
     outside dirt
     road street
     minroad 1
-    maxroad 2
+    maxroad 5
     minspacing 1
     maxspacing 3
     minsize 6
     maxsize 10
-    numroads 8
+    numroads 3
   done

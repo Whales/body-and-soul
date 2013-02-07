@@ -51,6 +51,15 @@ submap::~submap()
 {
 }
 
+tile& submap::ter(int x, int y)
+{
+  if (x < 0 || y < 0 || x >= SUBMAP_SIZE || y >= SUBMAP_SIZE) {
+    nulltile.set_type(0);
+    return nulltile;
+  }
+  return tiles[x][y];
+}
+
 void submap::apply_transformation(int x, int y, transform_type type, int amount)
 {
   if (x < 0 || x >= SUBMAP_SIZE || y < 0 || y >= SUBMAP_SIZE)

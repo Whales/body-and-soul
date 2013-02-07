@@ -59,7 +59,9 @@ struct submap
   void generate(mapgen_spec* spec, submap *north = NULL, submap *east = NULL,
                                    submap *south = NULL, submap *west = NULL);
 
+  tile &ter(int x, int y);
   tile tiles[SUBMAP_SIZE][SUBMAP_SIZE];
+  tile nulltile;
   std::vector<int> unprocessed_transformations;
 };
 

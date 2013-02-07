@@ -1,12 +1,16 @@
+Danger:
+Safe...Mild...Dangerous...Deadly
 City
 |
-|---Park---Forest
+|----Park---Forest
+|       \     \
+|        \----Lake----Sea
 |
-|---Road---Wastes
+|------Road------Wastes
 |
-|???Fog----Mists
+|???????Fog--------Mists
 |
+|------------Sewers-----Caverns
 |
-|
-|
+|---------------Labyrinth--Citadel
 |

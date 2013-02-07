@@ -22,4 +22,8 @@ rightstring C5 = "7500"
 rightstring A6 = "Very High"
 rightstring B6 = "5000"
 rightstring C6 = "15000"
-goto D3 A0
+rightstring A7 = "Win"
+rightstring B7 = "-"
+rightstring C7 = "30000"
+let C7 = 30000
+goto A7 A0
