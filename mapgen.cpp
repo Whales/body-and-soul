@@ -278,137 +278,107 @@ void submap::generate(mapgen_spec* spec, submap *north, submap *east,
 {
   switch (spec->gentype()) {
 
-    case MAPGEN_BUILDINGS: {
-      mapgen_spec_buildings* bspec = static_cast<mapgen_spec_buildings*>(spec);
+  case MAPGEN_BUILDINGS: {
+    mapgen_spec_buildings* bspec = static_cast<mapgen_spec_buildings*>(spec);
 // Start by setting everything to the "outdoor" terrain type
-      if (bspec->outside_id > 0) {
-        for (int x = 0; x < SUBMAP_SIZE; x++) {
-          for (int y = 0; y < SUBMAP_SIZE; y++) {
-            tiles[x][y].set_type(bspec->outside_id);
-          }
+    if (bspec->outside_id > 0) {
+      for (int x = 0; x < SUBMAP_SIZE; x++) {
+        for (int y = 0; y < SUBMAP_SIZE; y++) {
+          tiles[x][y].set_type(bspec->outside_id);
         }
       }
+    }
 /* Next, determine where to plunk down roads.  If there's nothing adjacent, we
  * can randomize it; otherwise, we'll need to get connectors.
  */
-      std::vector<map_connect> roads_north, roads_east, roads_south, roads_west;
-      if (north) {
-        roads_north = randomize_roads(bspec);
-      } else {
-        roads_north = get_connectors(north, bspec->road_id, -1, SUBMAP_SIZE-1);
-      }
-      if (east) {
-        roads_east = randomize_roads(bspec);
-      } else {
-        roads_east = get_connectors(east, bspec->road_id, 0, -1);
-      }
-      if (south) {
-        roads_south = randomize_roads(bspec);
-      } else {
-        roads_south = get_connectors(south, bspec->road_id, -1, 0);
-      }
-      if (west) {
-        roads_west = randomize_roads(bspec);
-      } else {
-        roads_west = get_connectors(west, bspec->road_id, SUBMAP_SIZE - 1, -1);
-      }
-// Next, determine where to start a vertical and horizontal road.
-// This is generally random; if there's an adjacent submap, copy that.
-      int vert_road_width_top = rng(bspec->minroad, bspec->maxroad),
-          vert_road_width_bot = rng(bspec->minroad, bspec->maxroad),
-          vert_road_pos_top   = rng(5, SUBMAP_SIZE - 6 - vert_road_width_top);
-// Connect to neighbors if applicable
-      set_connectors(north, bspec->road_id, -1, SUBMAP_SIZE - 1,
-                       vert_road_pos_top, vert_road_width_top);
+    int sm_end = SUBMAP_SIZE - 1;
+    std::vector<map_connect> roads_north, roads_east, roads_south, roads_west;
+    roads_north = (north ? get_connectors(north, bspec->road_id, -1, sm_end) :
+                           randomize_roads(bspec));
+    roads_east  = (east  ? get_connectors(east,  bspec->road_id, 0, -1) :
+                           randomize_roads(bspec));
+    roads_south = (south ? get_connectors(south, bspec->road_id, -1, 0) :
+                           randomize_roads(bspec));
+    roads_west  = (west  ? get_connectors(west,  bspec->road_id, sm_end, -1) :
+                           randomize_roads(bspec));
 
-      int min_pos_bot = (vert_road_pos_top <= 30 ? 0 : vert_road_pos_top - 30),
-          max_pos_bot = (vert_road_pos_top >= SUBMAP_SIZE - 31 ? 0 :
-                         vert_road_pos_top + 30) - vert_road_width_bot;
-      int vert_road_pos_bot = rng(min_pos_bot, max_pos_bot);
-
-      set_connectors(south, bspec->road_id, -1, 0,
-                       vert_road_pos_bot, vert_road_width_bot);
-
-      draw_road(this, true, bspec->road_id, // "true" means this is vertical
-                vert_road_pos_top,               0, vert_road_width_top,
-                vert_road_pos_bot, SUBMAP_SIZE - 1, vert_road_width_bot);
-
-      int hori_road_width_west = rng(bspec->minroad, bspec->maxroad),
-          hori_road_width_east = rng(bspec->minroad, bspec->maxroad),
-          hori_road_pos_west = rng(5, SUBMAP_SIZE - 6 - hori_road_width_west);
-// Connect to neighbors if applicable
-      set_connectors(west, bspec->road_id, SUBMAP_SIZE - 1, -1,
-                     hori_road_pos_west, hori_road_width_west);
-
-      int min_pos_east = (hori_road_pos_west <= 30 ? 0 : hori_road_pos_west-30),
-          max_pos_east = (hori_road_pos_west >= SUBMAP_SIZE - 31 ? 0 :
-                          hori_road_pos_west + 30) - hori_road_width_east;
-      int hori_road_pos_east = rng(min_pos_east, max_pos_east);
-
-      set_connectors(east, bspec->road_id, 0, -1,
-                     hori_road_pos_east, hori_road_width_east);
-
-      draw_road(this, false, bspec->road_id, // "false" means this is horizontal
-                              0, hori_road_pos_west, hori_road_width_west,
-                SUBMAP_SIZE - 1, hori_road_pos_east, hori_road_width_east);
+// Connect roads randomly!
+    for (int i = 0; i < roads_north.size() && !roads_south.empty(); i++) {
+      //int n = rng(0, roads_south.size() - 1);
+      draw_road(this, true, bspec->road_id,
+                roads_north[i].pos,      0, roads_north[i].width,
+                roads_south[i].pos, sm_end, roads_south[i].width);
+      //roads_south.erase( roads_south.begin() + n );
+    }
+      
+    for (int i = 0; i < roads_west.size() && !roads_east.empty(); i++) {
+      //int n = rng(0, roads_east.size() - 1);
+      draw_road(this, false, bspec->road_id,
+                     0, roads_west[i].pos, roads_west[i].width,
+                sm_end, roads_east[i].pos, roads_east[i].width);
+      //roads_east.erase( roads_east.begin() + n );
+    }
+      
+/*
 // Finally, build "blocks" (i.e. where the houses are)
-      plan_blocks(this, bspec);
-    } break;
+    plan_blocks(this, bspec);
+*/
+  } break;
 
-    case MAPGEN_LABYRINTH: {
-      mapgen_spec_labyrinth* lspec = static_cast<mapgen_spec_labyrinth*>(spec);
-    } break;
+  case MAPGEN_LABYRINTH: {
+    //mapgen_spec_labyrinth* lspec = static_cast<mapgen_spec_labyrinth*>(spec);
+  } break;
 
-    case MAPGEN_HEIGHTMAP: {
-      mapgen_spec_heightmap* hspec = static_cast<mapgen_spec_heightmap*>(spec);
+  case MAPGEN_HEIGHTMAP: {
+    mapgen_spec_heightmap* hspec = static_cast<mapgen_spec_heightmap*>(spec);
 // Run through all the height maps
-      for (std::list< std::vector<height_point> >::iterator it =
-           hspec->maps.begin(); it != hspec->maps.end(); it++) {
+    for (std::list< std::vector<height_point> >::iterator it =
+         hspec->maps.begin(); it != hspec->maps.end(); it++) {
 // Initialize the noisemap with 0, or with appropriate values taken from
 // adjacent submaps
-        std::vector< std::vector<int> > noise;
-        for (int x = 0; x < SUBMAP_SIZE; x++) {
-          std::vector<int> tmprow;
-          for (int y = 0; y < SUBMAP_SIZE; y++) {
-            if (x <= 10 && west) {
-              int ter_id = west->tiles[SUBMAP_SIZE - 1][y].type->uid;
-              tmprow.push_back(rev_heightmap(ter_id, x, it));
-            } else if (y <= 10 && north) {
-              int ter_id = north->tiles[x][SUBMAP_SIZE - 1].type->uid;
-              tmprow.push_back(rev_heightmap(ter_id, y, it));
-            } else if (x >= SUBMAP_SIZE - 11 && east) {
-              int ter_id = east->tiles[0][y].type->uid;
-              tmprow.push_back(rev_heightmap(ter_id, SUBMAP_SIZE - 1 - x, it));
-            } else if (y >= SUBMAP_SIZE - 11 && south) {
-              int ter_id = south->tiles[x][0].type->uid;
-              tmprow.push_back(rev_heightmap(ter_id, SUBMAP_SIZE - 1 - y, it));
-            } else {
-              tmprow.push_back(0);
-            }
+      std::vector< std::vector<int> > noise;
+      for (int x = 0; x < SUBMAP_SIZE; x++) {
+        std::vector<int> tmprow;
+        for (int y = 0; y < SUBMAP_SIZE; y++) {
+          if (x <= 10 && west) {
+            int ter_id = west->tiles[SUBMAP_SIZE - 1][y].type->uid;
+            tmprow.push_back(rev_heightmap(ter_id, x, it));
+          } else if (y <= 10 && north) {
+            int ter_id = north->tiles[x][SUBMAP_SIZE - 1].type->uid;
+            tmprow.push_back(rev_heightmap(ter_id, y, it));
+          } else if (x >= SUBMAP_SIZE - 11 && east) {
+            int ter_id = east->tiles[0][y].type->uid;
+            tmprow.push_back(rev_heightmap(ter_id, SUBMAP_SIZE - 1 - x, it));
+          } else if (y >= SUBMAP_SIZE - 11 && south) {
+            int ter_id = south->tiles[x][0].type->uid;
+            tmprow.push_back(rev_heightmap(ter_id, SUBMAP_SIZE - 1 - y, it));
+          } else {
+            tmprow.push_back(0);
           }
-          noise.push_back(tmprow);
         }
-        noise = noise_map(SUBMAP_SIZE, noise);
-        for (int x = 0; x < SUBMAP_SIZE; x++) {
-          for (int y = 0; y < SUBMAP_SIZE; y++) {
-            bool done = false;
-            for (int i = 0; !done && i < it->size(); i++) {
-              if ((*it)[i].percentile < noise[x][y]) {
-                done = true;
-                if ((*it)[i].ter_id > 0) {
-                  tiles[x][y].set_type((*it)[i].ter_id);
-                }
+        noise.push_back(tmprow);
+      }
+      noise = noise_map(SUBMAP_SIZE, noise);
+      for (int x = 0; x < SUBMAP_SIZE; x++) {
+        for (int y = 0; y < SUBMAP_SIZE; y++) {
+          bool done = false;
+          for (int i = 0; !done && i < it->size(); i++) {
+            if ((*it)[i].percentile < noise[x][y]) {
+              done = true;
+              if ((*it)[i].ter_id > 0) {
+                tiles[x][y].set_type((*it)[i].ter_id);
               }
             }
-/*
-            if (!done && !it->empty() && it->back().ter_id > 0) {
-              tiles[x][y].set_type(it->back().ter_id);
-            }
-*/
           }
+/*
+          if (!done && !it->empty() && it->back().ter_id > 0) {
+            tiles[x][y].set_type(it->back().ter_id);
+          }
+*/
         }
       }
-    } break;
+    }
+  } break;
 
   }
 }
@@ -498,6 +468,8 @@ std::vector<map_connect> get_connectors(submap* neighbor, int ter_id,
     } else if (neighbor->tiles[x][y].type->uid != ter_id) {
       tmpwidth = i - 1 - tmppos;
       ret.push_back( map_connect(tmppos, tmpwidth) );
+      tmppos = -1;
+      tmpwidth = -1;
     }
   }
   return ret;
@@ -505,15 +477,19 @@ std::vector<map_connect> get_connectors(submap* neighbor, int ter_id,
 
 std::vector<map_connect> randomize_roads(mapgen_spec_buildings* bg)
 {
-  std::vector<map_connect> roads;
-  if (bg->numroads == 0) {
-    return roads;
+  std::vector<map_connect> ret;
+  int numroads = bg->numroads;
+  if (numroads == 0) {
+    numroads = 1;
+  } else if (10 + numroads * bg->maxroad >= SUBMAP_SIZE) {
+    numroads = (SUBMAP_SIZE - 10) / bg->maxroad;
   }
-  int space_per_road = SUBMAP_SIZE / bg->numroads;
+// 10 on either side
+  int space_per_road = (SUBMAP_SIZE - 10) / numroads;
   for (int i = 0; i < bg->numroads; i++) {
     int width = rng(bg->minroad, bg->maxroad);
-    int pos = rng(space_per_road * i, space_per_road * (i + 1) - width);
-    ret.push_back( map_connect(pos, width) )
+    int pos = rng(5 + space_per_road * i, 5 + space_per_road * (i + 1) - width);
+    ret.push_back( map_connect(pos, width) );
   }
   return ret;
 }
@@ -522,7 +498,8 @@ void draw_road(submap* sm, bool vertical, int ter_id,
                int x0, int y0, int width0, int x1, int y1, int width1)
 {
 /* All comments below will, for the sake of brevity and clarity, refer to a
- * vertically-oriented road.  They apply to horizontal ones as well.
+ * vertically-oriented road.  They apply to horizontal ones as well (just switch x
+ * and y).
  */
 
 /* If x0 != x1, then at some point we'll need to start moving horizontally.

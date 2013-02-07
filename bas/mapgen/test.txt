@@ -9,10 +9,11 @@ maptype city
     floor floor
     outside dirt
     road street
-    minroad 3
-    maxroad 6
+    minroad 1
+    maxroad 2
     minspacing 1
     maxspacing 3
     minsize 6
     maxsize 10
+    numroads 8
   done
