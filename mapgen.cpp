@@ -597,6 +597,8 @@ void plan_blocks(submap* sm, mapgen_spec_buildings* bg)
       sm->ter(x, y).set_type( new_ter[x][y] );
     }
   }
+// Second pass: put floors in!
+// Third pass: remove extraneous walls
 }
 
 
