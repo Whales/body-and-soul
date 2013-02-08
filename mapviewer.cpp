@@ -33,6 +33,7 @@ int main()
     case 'b': posy++; posx--; break;
     case 'n': posy++; posx++; break;
     case 'q': quit = true;    break;
+    case '?': examine_terrain(); break;
     case '.': demo.apply_transformation(posx, posy, TRANS_HEAT, 50);
               demo.process_transformations(); break;
     }

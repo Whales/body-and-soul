@@ -2,6 +2,7 @@
 #include "globals.h"
 #include "rng.h"
 #include "stringfunc.h"
+#include <fstream>
 
 tile::tile()
 {
@@ -17,8 +18,10 @@ tile::~tile()
 
 void tile::set_type(int id)
 {
-  if (id < 0 || id >= TERRAIN_POOL.size())
+  if (id < 0 || id >= TERRAIN_POOL.size()) {
+    debugmsg("Bad set_type");
     return;
+  }
 
   set_type(TERRAIN_POOL[id]);
 }
@@ -54,6 +57,7 @@ submap::~submap()
 tile& submap::ter(int x, int y)
 {
   if (x < 0 || y < 0 || x >= SUBMAP_SIZE || y >= SUBMAP_SIZE) {
+    nulltile = tile();
     nulltile.set_type(0);
     return nulltile;
   }
@@ -129,6 +133,10 @@ tile& map::ter(int x, int y)
   int smx = x / SUBMAP_SIZE, smy = y / SUBMAP_SIZE;
   x %= SUBMAP_SIZE;
   y %= SUBMAP_SIZE;
+  if (smx < 0 || smy < 0 || smx >= 3 || smy >= 3 ||
+      x < 0 || y < 0 || x >= SUBMAP_SIZE * 3 || y >= SUBMAP_SIZE * 3) {
+    debugmsg("Nope!");
+  }
 
   return submaps[smx][smy].tiles[x][y];
 }
@@ -138,7 +146,12 @@ void map::draw(Window *w, int origx, int origy, int sightdist)
   int xdim = w->sizex() / 2, ydim = w->sizey() / 2;
   for (int x = origx - xdim; x <= origx + xdim; x++) {
     for (int y = origy - ydim; y <= origy + ydim; y++) {
-      glyph print = ter(x, y).type->symbol;
+      glyph print;
+      if (!ter(x, y).type) {
+        debugmsg("badtype");
+      }
+      //if (x != 191 || y != 187)
+      print = ter(x, y).type->symbol;
       w->putglyph(x + xdim - origx, y + ydim - origy, print);
     }
   }
@@ -205,7 +218,7 @@ map_type lookup_map_type(std::string name)
       return map_type(i);
     }
   }
-  map_type tmp;
+  map_type tmp = map_type();
   return tmp;
 }
 

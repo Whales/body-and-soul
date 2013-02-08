@@ -2,6 +2,7 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <fstream>
+#include <sstream>
 #include "globals.h"
 #include "window.h"
 #include "stringfunc.h"
@@ -170,4 +171,14 @@ int lookup_terrain_id(std::string name)
       return i;
   }
   return 0;
+}
+
+void examine_terrain()
+{
+  std::stringstream out;
+  for (int i = 0; i < TERRAIN_POOL.size(); i++) {
+    out << i << ": " << TERRAIN_POOL[i]->name << ": " << TERRAIN_POOL[i];
+    out << std::endl;
+  }
+  debugmsg(out.str().c_str());
 }

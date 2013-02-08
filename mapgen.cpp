@@ -31,6 +31,7 @@ void build_house(submap* sm, mapgen_spec_buildings* bg,
 void draw_road(submap* sm, bool vertical, int ter_id, 
                int x0, int y0, int width0,
                int x1, int y1, int width1);
+int flood(submap* sm, int x, int y, int orig_id, int new_id, int bound_id);
 
 void load_mapgen_specs()
 {
@@ -284,13 +285,14 @@ void submap::generate(mapgen_spec* spec, submap *north, submap *east,
     if (bspec->outside_id > 0) {
       for (int x = 0; x < SUBMAP_SIZE; x++) {
         for (int y = 0; y < SUBMAP_SIZE; y++) {
-          tiles[x][y].set_type(bspec->outside_id);
+          ter(x, y).set_type(bspec->outside_id);
         }
       }
     }
 /* Next, determine where to plunk down roads.  If there's nothing adjacent, we
  * can randomize it; otherwise, we'll need to get connectors.
  */
+/*
     int sm_end = SUBMAP_SIZE - 1;
     std::vector<map_connect> roads_north, roads_east, roads_south, roads_west;
     roads_north = (north ? get_connectors(north, bspec->road_id, -1, sm_end) :
@@ -319,6 +321,7 @@ void submap::generate(mapgen_spec* spec, submap *north, submap *east,
       //roads_east.erase( roads_east.begin() + n );
     }
     plan_blocks(this, bspec);
+*/
 /*
 // Finally, build "blocks" (i.e. where the houses are)
     plan_blocks(this, bspec);
@@ -341,16 +344,16 @@ void submap::generate(mapgen_spec* spec, submap *north, submap *east,
         std::vector<int> tmprow;
         for (int y = 0; y < SUBMAP_SIZE; y++) {
           if (x <= 10 && west) {
-            int ter_id = west->tiles[SUBMAP_SIZE - 1][y].type->uid;
+            int ter_id = west->ter(SUBMAP_SIZE - 1, y).type->uid;
             tmprow.push_back(rev_heightmap(ter_id, x, it));
           } else if (y <= 10 && north) {
-            int ter_id = north->tiles[x][SUBMAP_SIZE - 1].type->uid;
+            int ter_id = north->ter(x, SUBMAP_SIZE - 1).type->uid;
             tmprow.push_back(rev_heightmap(ter_id, y, it));
           } else if (x >= SUBMAP_SIZE - 11 && east) {
-            int ter_id = east->tiles[0][y].type->uid;
+            int ter_id = east->ter(0, y).type->uid;
             tmprow.push_back(rev_heightmap(ter_id, SUBMAP_SIZE - 1 - x, it));
           } else if (y >= SUBMAP_SIZE - 11 && south) {
-            int ter_id = south->tiles[x][0].type->uid;
+            int ter_id = south->ter(x, 0).type->uid;
             tmprow.push_back(rev_heightmap(ter_id, SUBMAP_SIZE - 1 - y, it));
           } else {
             tmprow.push_back(0);
@@ -366,13 +369,13 @@ void submap::generate(mapgen_spec* spec, submap *north, submap *east,
             if ((*it)[i].percentile < noise[x][y]) {
               done = true;
               if ((*it)[i].ter_id > 0) {
-                tiles[x][y].set_type((*it)[i].ter_id);
+                ter(x, y).set_type((*it)[i].ter_id);
               }
             }
           }
 /*
           if (!done && !it->empty() && it->back().ter_id > 0) {
-            tiles[x][y].set_type(it->back().ter_id);
+            ter(x, y).set_type(it->back().ter_id);
           }
 */
         }
@@ -462,10 +465,10 @@ std::vector<map_connect> get_connectors(submap* neighbor, int ter_id,
     int x = (xs == -1 ? i : xs);
     int y = (ys == -1 ? i : ys);
     if (tmppos == -1) {
-      if (neighbor->tiles[x][y].type->uid == ter_id) {
+      if (neighbor->ter(x, y).type->uid == ter_id) {
         tmppos = i;
       }
-    } else if (neighbor->tiles[x][y].type->uid != ter_id) {
+    } else if (neighbor->ter(x, y).type->uid != ter_id) {
       tmpwidth = i - 1 - tmppos;
       ret.push_back( map_connect(tmppos, tmpwidth) );
       tmppos = -1;
@@ -532,7 +535,7 @@ void draw_road(submap* sm, bool vertical, int ter_id,
     for (y = y0; y != y1 + y_step; y += y_step) {
       for (int xn = x; xn <= x + width; xn++) {
         if (xn >= 0 && xn < SUBMAP_SIZE && y >= 0 && y < SUBMAP_SIZE) {
-          sm->tiles[xn][y].set_type(ter_id);
+          sm->ter(xn, y).set_type(ter_id);
         }
       }
       if (y >= slopestart && x != x1) {
@@ -547,7 +550,7 @@ void draw_road(submap* sm, bool vertical, int ter_id,
     for (x = x0; x != x1 + x_step; x += x_step) {
       for (int yn = y; yn <= y + width; yn++) {
         if (yn >= 0 && yn < SUBMAP_SIZE && x >= 0 && x < SUBMAP_SIZE ) {
-          sm->tiles[x][yn].set_type(ter_id);
+          sm->ter(x, yn).set_type(ter_id);
         }
       }
       if (x >= slopestart && y != y1) {
@@ -570,7 +573,13 @@ void plan_blocks(submap* sm, mapgen_spec_buildings* bg)
 // TODO: Write free-standing blocks
     return;
   }
+/*
   int new_ter[SUBMAP_SIZE][SUBMAP_SIZE];
+  for (int x = 0; x < SUBMAP_SIZE; x++) {
+    for (int y = 0; y < SUBMAP_SIZE; y++) {
+      new_ter[x][y] = 0;
+    }
+  }
   for (int x = 0; x < SUBMAP_SIZE; x++) {
     for (int y = 0; y < SUBMAP_SIZE; y++) {
       if (sm->ter(x, y).type->uid == bg->outside_id) {
@@ -594,11 +603,47 @@ void plan_blocks(submap* sm, mapgen_spec_buildings* bg)
   }
   for (int x = 0; x < SUBMAP_SIZE; x++) {
     for (int y = 0; y < SUBMAP_SIZE; y++) {
-      sm->ter(x, y).set_type( new_ter[x][y] );
+      if (new_ter[x][y] > 0 && new_ter[x][y] < TERRAIN_POOL.size()) {
+        sm->ter(x, y).set_type( new_ter[x][y] );
+      }
     }
   }
+*/
 // Second pass: put floors in!
+/*
+  for (int x = 0; x < SUBMAP_SIZE; x++) {
+    for (int y = 0; y < SUBMAP_SIZE; y++) {
+      if (sm->ter(x, y).type->uid == bg->outside_id) {
+        flood(sm, x, y, bg->outside_id, bg->floor_id, bg->wall_id);
+      }
+    }
+  }
+*/
 // Third pass: remove extraneous walls
+/*
+  for (int x = 0; x < SUBMAP_SIZE; x++) {
+    for (int y = 0; y < SUBMAP_SIZE; y++) {
+      new_ter[x][y] = 0;
+    }
+  }
+  for (int x = 0; x < SUBMAP_SIZE; x++) {
+    for (int y = 0; y < SUBMAP_SIZE; y++) {
+      if (sm->ter(x, y).type->uid == bg->wall_id) {
+        bool floor = false;
+        for (int xf = x - 1; !floor && xf <= x + 1; xf++) {
+          for (int yf = y - 1; !floor && yf <= y + 1; yf++) {
+            if (sm->ter(xf, yf).type->uid == bg->floor_id) {
+              floor = true;
+            }
+          }
+        }
+        if (!floor) {
+          sm->ter(x, y).set_type(bg->outside_id);
+        }
+      }
+    }
+  }
+*/
 }
 
 
@@ -809,10 +854,10 @@ void build_house(submap* sm, mapgen_spec_buildings* bg,
     for (int y = y0; y <= y1 && y < SUBMAP_SIZE; y++) {
       if (x == x0 || x == x1 || y == y0 || y == y1) {
         if (bg->wall_id > 0) {
-          sm->tiles[x][y].set_type(bg->wall_id);
+          sm->ter(x, y).set_type(bg->wall_id);
         }
       } else if (bg->floor_id > 0) {
-        sm->tiles[x][y].set_type(bg->floor_id);
+        sm->ter(x, y).set_type(bg->floor_id);
       }
     }
   }
@@ -820,11 +865,41 @@ void build_house(submap* sm, mapgen_spec_buildings* bg,
 /*
   for (int x = 0; x < SUBMAP_SIZE; x++) {
     for (int y = 0; y < SUBMAP_SIZE; y++) {
-      glyph print = sm->tiles[x][y].type->symbol;
+      glyph print = sm->ter(x, y).type->symbol;
       w_tmp.putglyph(x, y, print);
     }
   }
 */
   //w_tmp.refresh();
   //getch();
+}
+
+int flood(submap* sm, int x, int y, int orig_id, int new_id, int bound_id)
+{
+  if (x < 0 || y < 0 || x >= SUBMAP_SIZE || y >= SUBMAP_SIZE) {
+    return 1;
+  }
+  int cur_id = sm->ter(x, y).type->uid;
+  if (cur_id == bound_id || cur_id == new_id) {
+    return 1;
+  }
+  if (cur_id != orig_id) {
+    return -1;
+  }
+  sm->ter(x, y).set_type(new_id);
+
+  int okay = true;
+  for (int xn = x - 1; okay && xn <= x + 1; xn++) {
+    for (int yn = y - 1; okay && yn <= y + 1; yn++) {
+      if (xn == x && yn == y) {
+      } else if (flood(sm, xn, yn, orig_id, new_id, bound_id) == -1) {
+        okay = false;
+      }
+    }
+  }
+  if (!okay) {
+    sm->ter(x, y).set_type(orig_id);
+    return -1;
+  }
+  return 1;
 }

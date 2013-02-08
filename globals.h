@@ -20,6 +20,8 @@ void init_environment();
 void init_data();
 void save_data();
 
+void examine_terrain();
+
 int lookup_terrain_id(std::string name);
 
 #endif
