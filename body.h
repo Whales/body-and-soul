@@ -56,6 +56,7 @@ struct body
  std::string name;
  std::vector<body_part> body_parts;
  glyph symbol;
+ int size;
 
  std::string save_data();
  void load_data(std::istream &datastream);

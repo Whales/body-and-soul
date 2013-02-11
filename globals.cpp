@@ -173,6 +173,16 @@ int lookup_terrain_id(std::string name)
   return 0;
 }
 
+int lookup_body_id(std::string name)
+{
+  name = no_caps(name);
+  for (int i = 0; i < BODIES_POOL.size(); i++) {
+    if (no_caps(BODIES_POOL[i].name) == name)
+      return i;
+  }
+  return 0;
+}
+
 void examine_terrain()
 {
   std::stringstream out;

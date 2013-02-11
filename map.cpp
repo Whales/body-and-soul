@@ -1,8 +1,13 @@
+#include <fstream>
 #include "map.h"
 #include "globals.h"
 #include "rng.h"
 #include "stringfunc.h"
-#include <fstream>
+#include "geometry.h"
+
+#define SGN(a) (((a)<0) ? -1 : 1)
+#define INBOUNDS(x,y) \
+  ((x) >= 0 && (y) >= 0 && (x) < SUBMAP_SIZE * 3 && (y) < SUBMAP_SIZE * 3)
 
 tile::tile()
 {
@@ -37,9 +42,7 @@ void tile::set_type(terrain_type* _type)
 
 void tile::apply_transformation(transform_type type, int amount)
 {
-  debugmsg("Before: %s=%d", get_transformation_name(type).c_str(), transforms[type]);
   transforms[type] -= amount;
-  debugmsg("After: %d", transforms[type]);
 }
 
 submap::submap()
@@ -141,7 +144,8 @@ tile& map::ter(int x, int y)
   return submaps[smx][smy].tiles[x][y];
 }
 
-void map::draw(Window *w, int origx, int origy, int sightdist)
+void map::draw(Window *w, int origx, int origy, int sight_dist,
+               glyph orig_glyph)
 {
   int xdim = w->sizex() / 2, ydim = w->sizey() / 2;
   for (int x = origx - xdim; x <= origx + xdim; x++) {
@@ -151,10 +155,142 @@ void map::draw(Window *w, int origx, int origy, int sightdist)
         debugmsg("badtype");
       }
       //if (x != 191 || y != 187)
-      print = ter(x, y).type->symbol;
-      w->putglyph(x + xdim - origx, y + ydim - origy, print);
+      if (x == origx && y == origy) {
+        w->putglyph(x + xdim - origx, y + ydim - origy, orig_glyph);
+      } else if (sees(origx, origy, x, y, sight_dist)) {
+        print = ter(x, y).type->symbol;
+        w->putglyph(x + xdim - origx, y + ydim - origy, print);
+      }
     }
   }
+}
+
+/*
+bool map::sees(int origx, int origy, int destx, int desty, int sight_dist)
+{
+  std::vector<point> line = line_to(origx, origy, destx, desty);
+  if (line.size() > sight_dist) { // Don't even bother iterating over it.
+    return false;
+  }
+  if (line.size() == 1) { // Trivial (sight_dist = 0 already returned false)
+    return true;
+  }
+  for (int i = 0; i < line.size() - 1; i++) {
+    terrain_type* tertype = ter( line[i].x, line[i].y ).type;
+    if (tertype->sight_cost < 0) {
+      return false;
+    } else if (tertype->sight_cost == 0) {
+      sight_dist--;
+    } else {
+      sight_dist -= tertype->sight_cost;
+    }
+    if (sight_dist <= 0) {
+      return false;
+    }
+  }
+  return true;
+}
+*/
+bool map::sees(int Fx, int Fy, int Tx, int Ty, int range, int *tc)
+{
+  bool deltc = false;
+  if (!tc) {
+    tc = new int;
+    deltc = true;
+  }
+  int dx = Tx - Fx;
+  int dy = Ty - Fy;
+  int ax = abs(dx) << 1;
+  int ay = abs(dy) << 1;
+  int sx = SGN(dx);
+  int sy = SGN(dy);
+  int x = Fx;
+  int y = Fy;
+  int t = 0;
+  int st;
+ 
+  if (range >= 0 && (abs(dx) > range || abs(dy) > range)) {
+    if (deltc) {
+      delete tc;
+    }
+    return false;	// Out of range!
+  }
+  if (ax > ay) { // Mostly-horizontal line
+    st = SGN(ay - (ax >> 1));
+// Doing it "backwards" prioritizes straight lines before diagonal.
+// This will help avoid creating a string of zombies behind you and will
+// promote "mobbing" behavior (zombies surround you to beat on you)
+    for ((*tc) = abs(ax); (*tc) >= -1; (*tc)--) {
+      t = (*tc) * st;
+      x = Fx;
+      y = Fy;
+      int sight_left = range;
+      do {
+        if (t > 0) {
+          y += sy;
+          t -= ax;
+        }
+        x += sx;
+        t += ay;
+        if (x == Tx && y == Ty) {
+          (*tc) *= st;
+          if (deltc) {
+            delete tc;
+          }
+          return true;
+        } else {
+          int cost = ter(x, y).type->sight_cost;
+          if (cost < 0) {
+            sight_left = 0;
+          } else {
+            sight_left -= (cost == 0 ? 1 : cost);
+          }
+        }
+      } while (sight_left > 0 && (INBOUNDS(x,y)));
+    }
+    if (deltc) {
+      delete tc;
+    }
+    return false;
+  } else { // Same as above, for mostly-vertical lines
+    st = SGN(ax - (ay >> 1));
+    for ((*tc) = abs(ay); (*tc) >= -1; (*tc)--) {
+      t = (*tc) * st;
+      x = Fx;
+      y = Fy;
+      int sight_left = range;
+      do {
+        if (t > 0) {
+          x += sx;
+          t -= ay;
+        }
+        y += sy;
+        t += ax;
+        if (x == Tx && y == Ty) {
+          (*tc) *= st;
+          if (deltc) {
+            delete tc;
+          }
+          return true;
+        } else {
+          int cost = ter(x, y).type->sight_cost;
+          if (cost < 0) {
+            sight_left = 0;
+          } else {
+            sight_left -= (cost == 0 ? 1 : cost);
+          }
+        }
+      } while (sight_left > 0 && (INBOUNDS(x,y)));
+    }
+    if (deltc) {
+      delete tc;
+    }
+    return false;
+  }
+  if (deltc) {
+    delete tc;
+  }
+  return false; // Shouldn't ever be reached, but there it is.
 }
 
 void map::generate(map_type type)

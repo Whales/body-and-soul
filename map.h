@@ -81,7 +81,8 @@ class map
 
 // Accessors
   tile& ter(int x, int y);
-  void draw(Window *w, int origx, int origy, int sight_dist);
+  void draw(Window *w, int origx, int origy, int sight_dist, glyph orig_glyph);
+  bool sees(int Fx, int Fy, int Tx, int Ty, int range, int *tc = NULL);
 
 // Mutators
   void generate(map_type type);

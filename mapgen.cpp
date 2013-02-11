@@ -6,6 +6,7 @@
 #include "stringfunc.h"
 #include "window.h"
 #include "rng.h"
+#include "geometry.h"
 
 void load_mapgen_file(std::istream &datastream);
 int get_mapgen_ter_id(std::istream &datastream, std::string name);
@@ -24,6 +25,8 @@ std::vector<map_connect> get_connectors(submap* neighbor, int ter_id,
 std::vector<map_connect> randomize_roads(mapgen_spec_buildings *bg);
 
 void plan_blocks(submap* sm, mapgen_spec_buildings* bg);
+void add_room(submap* sm, mapgen_spec_buildings* bg,
+              std::vector< std::vector<bool> > &used, int x, int y);
 void build_block(submap *sm, mapgen_spec_buildings *bg,
                  int x0, int y0, int x1, int y1, int depth = 0);
 void build_house(submap* sm, mapgen_spec_buildings* bg,
@@ -292,7 +295,7 @@ void submap::generate(mapgen_spec* spec, submap *north, submap *east,
 /* Next, determine where to plunk down roads.  If there's nothing adjacent, we
  * can randomize it; otherwise, we'll need to get connectors.
  */
-/*
+
     int sm_end = SUBMAP_SIZE - 1;
     std::vector<map_connect> roads_north, roads_east, roads_south, roads_west;
     roads_north = (north ? get_connectors(north, bspec->road_id, -1, sm_end) :
@@ -321,11 +324,6 @@ void submap::generate(mapgen_spec* spec, submap *north, submap *east,
       //roads_east.erase( roads_east.begin() + n );
     }
     plan_blocks(this, bspec);
-*/
-/*
-// Finally, build "blocks" (i.e. where the houses are)
-    plan_blocks(this, bspec);
-*/
   } break;
 
   case MAPGEN_LABYRINTH: {
@@ -573,7 +571,6 @@ void plan_blocks(submap* sm, mapgen_spec_buildings* bg)
 // TODO: Write free-standing blocks
     return;
   }
-/*
   int new_ter[SUBMAP_SIZE][SUBMAP_SIZE];
   for (int x = 0; x < SUBMAP_SIZE; x++) {
     for (int y = 0; y < SUBMAP_SIZE; y++) {
@@ -586,7 +583,8 @@ void plan_blocks(submap* sm, mapgen_spec_buildings* bg)
         int num_roads = 0;
         for (int rx = x - 1; rx <= x + 1; rx++) {
           for (int ry = y - 1; ry <= y + 1; ry++) {
-            if (sm->ter(rx, ry).type->uid == bg->road_id) {
+            if (rx >= SUBMAP_SIZE || ry >= SUBMAP_SIZE ||
+                sm->ter(rx, ry).type->uid == bg->road_id) {
               num_roads++;
             }
           }
@@ -608,9 +606,7 @@ void plan_blocks(submap* sm, mapgen_spec_buildings* bg)
       }
     }
   }
-*/
 // Second pass: put floors in!
-/*
   for (int x = 0; x < SUBMAP_SIZE; x++) {
     for (int y = 0; y < SUBMAP_SIZE; y++) {
       if (sm->ter(x, y).type->uid == bg->outside_id) {
@@ -618,14 +614,42 @@ void plan_blocks(submap* sm, mapgen_spec_buildings* bg)
       }
     }
   }
-*/
-// Third pass: remove extraneous walls
-/*
+// Third pass: remove extraneous floors
   for (int x = 0; x < SUBMAP_SIZE; x++) {
     for (int y = 0; y < SUBMAP_SIZE; y++) {
       new_ter[x][y] = 0;
     }
   }
+  for (int x = 0; x < SUBMAP_SIZE; x++) {
+    for (int y = 0; y < SUBMAP_SIZE; y++) {
+      if (sm->ter(x, y).type->uid == bg->floor_id) {
+        int floors = 0;
+        for (int xf = x - 1; floors <= 3 && xf <= x + 1; xf++) {
+          for (int yf = y - 1; floors <= 3 && yf <= y + 1; yf++) {
+            if (sm->ter(xf, yf).type->uid == bg->floor_id) {
+              floors++;
+            }
+          }
+        }
+        if (floors <= 3) {
+          new_ter[x][y] = bg->wall_id;
+        } else {
+          new_ter[x][y] = bg->floor_id;
+        }
+      } else {
+        new_ter[x][y] = sm->ter(x, y).type->uid;
+      }
+    }
+  }
+  for (int x = 0; x < SUBMAP_SIZE; x++) {
+    for (int y = 0; y < SUBMAP_SIZE; y++) {
+      if (new_ter[x][y] > 0 && new_ter[x][y] < TERRAIN_POOL.size()) {
+        sm->ter(x, y).set_type( new_ter[x][y] );
+      }
+    }
+  }
+
+// Pass 4: Remove extraneous walls, smooth roads
   for (int x = 0; x < SUBMAP_SIZE; x++) {
     for (int y = 0; y < SUBMAP_SIZE; y++) {
       if (sm->ter(x, y).type->uid == bg->wall_id) {
@@ -638,13 +662,162 @@ void plan_blocks(submap* sm, mapgen_spec_buildings* bg)
           }
         }
         if (!floor) {
-          sm->ter(x, y).set_type(bg->outside_id);
+          sm->ter(x, y).set_type(bg->road_id);
+        }
+      } else if (sm->ter(x, y).type->uid == bg->outside_id) {
+        sm->ter(x, y).set_type(bg->road_id);
+      }
+    }
+  }
+// Pass 5: make rooms
+  std::vector< std::vector<bool> > used;
+  for (int x = 0; x < SUBMAP_SIZE; x++) {
+    std::vector<bool> tmpused;
+    for (int y = 0; y < SUBMAP_SIZE; y++) {
+      tmpused.push_back(false);
+    }
+    used.push_back(tmpused);
+  }
+// Start offsetted, so that the top row isn't always doors
+  int xoff = rng(0, SUBMAP_SIZE - 1), yoff = rng(0, SUBMAP_SIZE - 1);
+
+  for (int x = 0; x < SUBMAP_SIZE; x++) {
+    for (int y = 0; y < SUBMAP_SIZE; y++) {
+      int px = (x + xoff) % SUBMAP_SIZE, py = (y + yoff) % SUBMAP_SIZE;
+      if (!used[px][py] && sm->ter(px, py).type->uid == bg->wall_id) {
+        int adj_roads = 0;
+        for (int rx = px - 1; adj_roads <= 3 && rx <= px + 1; rx++) {
+          for (int ry = py - 1; adj_roads <= 3 && ry <= py + 1; ry++) {
+            if (sm->ter(rx, ry).type->uid == bg->road_id) {
+              adj_roads++;
+            }
+          }
+        }
+        if (adj_roads >= 1 && adj_roads <= 3) {
+          add_room(sm, bg, used, px, py);
         }
       }
     }
   }
-*/
+// Sixth pass: Anything that's not a room reverts to outdoors
+  for (int x = 0; x < SUBMAP_SIZE; x++) {
+    for (int y = 0; y < SUBMAP_SIZE; y++) {
+      if (!used[x][y] && (sm->ter(x, y).type->uid == bg->wall_id ||
+                          sm->ter(x, y).type->uid == bg->floor_id  )) {
+        sm->ter(x, y).set_type(bg->road_id);
+      }
+    }
+  }
+  for (int x = 0; x < SUBMAP_SIZE; x++) {
+    for (int y = 0; y < SUBMAP_SIZE; y++) {
+      if (sm->ter(x, y).type->uid == bg->wall_id ||
+          sm->ter(x, y).type->uid == bg->door_id) {
+        bool okay = false;
+        for (int ax = x - 1; !okay && ax <= x + 1; ax++) {
+          for (int ay = y - 1; !okay && ay <= y + 1; ay++) {
+            if (sm->ter(ax, ay).type->uid == bg->floor_id) {
+              okay = true;
+            }
+          }
+        }
+        if (!okay) {
+          sm->ter(x, y).set_type(bg->road_id);
+        }
+      }
+    }
+  }
 }
+
+void add_room(submap* sm, mapgen_spec_buildings* bg,
+              std::vector< std::vector<bool> > &used, int x, int y)
+{
+  if (sm->ter(x, y).type->uid == bg->wall_id && bg->door_id > 0) {
+    sm->ter(x, y).set_type(bg->door_id);
+  }
+  bool done = false;
+  std::vector<point> parts;
+  used[x][y] = true;
+  int radius = 1;
+  for (radius = 1; !done && radius <= bg->maxsize; radius++) {
+    int avail = 0;
+    for (int rx = x - radius; rx <= x + radius; rx++) {
+      for (int ry = y - radius; ry <= y + radius; ry++) {
+        if (rx >= 0 && ry >= 0 && rx < SUBMAP_SIZE && ry < SUBMAP_SIZE &&
+            !used[rx][ry] &&
+            (sm->ter(rx, ry).type->uid == bg->floor_id ||
+             sm->ter(rx, ry).type->uid == bg->wall_id    )) {
+          avail++;
+          parts.push_back( point(rx, ry) );
+        }
+      }
+    }
+    //debugmsg("avail %d", avail);
+    if (avail == 0) {
+      done = true;
+    }
+  }
+  radius--;
+  if (radius > bg->minsize) {
+    for (int cx = x - radius; cx <= x + radius; cx++) {
+      if (cx >= 0 && cx < SUBMAP_SIZE) {
+        if (y - radius >= 0 && !used[cx][y - radius] &&
+            sm->ter(cx, y - radius).type->uid == bg->floor_id) {
+          sm->ter(cx, y - radius).set_type(bg->wall_id);
+        }
+        if (y + radius < SUBMAP_SIZE && !used[cx][y + radius] &&
+            sm->ter(cx, y + radius).type->uid == bg->floor_id) {
+          sm->ter(cx, y + radius).set_type(bg->wall_id);
+        }
+      }
+    }
+    for (int cy = y - radius; cy <= y + radius; cy++) {
+      if (cy >= 0 && cy < SUBMAP_SIZE) {
+        if (x - radius >= 0 && !used[x - radius][cy] &&
+            sm->ter(x - radius, cy).type->uid == bg->floor_id) {
+          sm->ter(x - radius, cy).set_type(bg->wall_id);
+        }
+        if (x + radius < SUBMAP_SIZE && !used[x + radius][cy] &&
+            sm->ter(x + radius, cy).type->uid == bg->floor_id) {
+          sm->ter(x + radius, cy).set_type(bg->wall_id);
+        }
+      }
+    }
+    for (int i = 0; i < parts.size(); i++) {
+      used[ parts[i].x ][ parts[i].y ] = true;
+    }
+  } else { // Radius !> bg->minsize
+    for (int rx = x - radius; rx <= x + radius; rx++) {
+      for (int ry = y - radius; ry <= y + radius; ry++) {
+        if (rx >= 0 && ry >= 0 && rx < SUBMAP_SIZE && ry < SUBMAP_SIZE &&
+            !used[rx][ry] &&
+            (sm->ter(rx, ry).type->uid == bg->wall_id ||
+             sm->ter(rx, ry).type->uid == bg->floor_id  )) {
+          sm->ter(rx, ry).set_type(bg->outside_id);
+        }
+      }
+    }
+    for (int i = 0; i < parts.size(); i++) {
+      used[ parts[i].x ][ parts[i].y ] = true;
+    }
+  }
+}
+
+/*
+  int lines[SUBMAP_SIZE][SUBMAP_SIZE];
+  for (int x = 0; x < SUBMAP_SIZE; x++) {
+    for (int y = 0; y < SUBMAP_SIZE; y++) {
+      lines[x][y] = false;
+    }
+  }
+  int next = rng(bg->minsize, bg->maxsize);
+  for (int y = 0; y < SUBMAP_SIZE; y++) {
+    if (next == 0) {
+      lines[0][y] = rng(bg->minsize, bg->maxsize);
+    
+  for (int x = 1; x < SUBMAP_SIZE - 1; x++) {
+    for (int y = 1; y < SUBMAP_SIZE - 1; y++) {
+      if (!used[x][y] && 
+*/
 
 
 /* The algorithm works like this:

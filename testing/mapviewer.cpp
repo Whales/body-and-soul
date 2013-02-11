@@ -16,8 +16,8 @@ int main()
   map demo;
   demo.generate(MAP_CITY);
 
-  Window w_map(0, 0, 80, 24);
-  int posx = 0, posy = 0;
+  Window w_map(30, 0, 50, 24);
+  int posx = 80, posy = 80;
   bool quit = false;
   do {
     demo.draw(&w_map,  posx, posy, 0);
@@ -33,6 +33,7 @@ int main()
     case 'b': posy++; posx--; break;
     case 'n': posy++; posx++; break;
     case 'q': quit = true;    break;
+    case '?': examine_terrain(); break;
     case '.': demo.apply_transformation(posx, posy, TRANS_HEAT, 50);
               demo.process_transformations(); break;
     }

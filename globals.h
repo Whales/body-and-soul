@@ -23,5 +23,6 @@ void save_data();
 void examine_terrain();
 
 int lookup_terrain_id(std::string name);
+int lookup_body_id(std::string name);
 
 #endif

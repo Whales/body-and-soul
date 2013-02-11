@@ -7,6 +7,14 @@
 class game
 {
  public:
+  game() {};
+  ~game(){};
+
+  void init();
+  bool do_turn();
+  void draw();
+  void pl_move(int dx, int dy);
+
   entity player;
   map curMap;
 

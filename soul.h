@@ -15,5 +15,5 @@ struct soul
  int mp; // For casting spells
  int points; // Permanent soul points
  int karma; // Karma; -100 to 100
- int level[SOUL_ABIL_MAX]; // Ability levels
+ //int level[SOUL_ABIL_MAX]; // Ability levels
 };

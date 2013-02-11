@@ -1,6 +1,8 @@
 #ifndef _GEOMETRY_H_
 #define _GEOMETRY_H_
 
+#include <vector>
+
 struct point
 {
  int x;
@@ -21,5 +23,7 @@ struct pointcomp
   return false;
  };
 };
+
+std::vector<point> line_to(int x0, int y0, int x1, int y1);
 
 #endif
