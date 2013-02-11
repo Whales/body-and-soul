@@ -18,7 +18,8 @@ void print_scrollbar(Window *win, int posx, int posy, int length, int offset,
   (ele)->sizex = szx;\
   (ele)->sizey = szy;\
   (ele)->selected = false;\
-  (ele)->selectable = selectable
+  (ele)->selectable = selectable;\
+  (ele)->align = ALIGN_LEFT
 
 std::string cuss::element_type_name(cuss::element_type type)
 {
@@ -40,15 +41,17 @@ std::string element::save_data()
 {
  std::stringstream ret;
  ret << name << " " << STD_DELIM << " " << posx << " " << posy << " " <<
-        sizex << " " << sizey << " " << selectable;
+        sizex << " " << sizey << " " << selectable << " " << align;
  return ret.str();
 }
 
 void element::load_data(std::istream &datastream)
 {
  name = load_to_delim(datastream, STD_DELIM);
+ int tmpalign;
 
- datastream >> posx >> posy >> sizex >> sizey >> selectable;
+ datastream >> posx >> posy >> sizex >> sizey >> selectable >> tmpalign;
+ align = alignment(tmpalign);
 }
 
 bool element::set_data(nc_color FG, nc_color BG)
@@ -138,8 +141,13 @@ void ele_textbox::draw(Window *win)
  std::vector<std::string> broken = break_into_lines(*text, sizex);
  win->clear_area(posx, posy, posx + sizex - 1, posy + sizey - 1);
 
- for (int i = 0; i + offset < broken.size() && i < sizey; i++)
-  win->putstr_n(posx, posy + i, fg, bg, sizex, broken[i + offset]);
+ for (int i = 0; i + offset < broken.size() && i < sizey; i++) {
+  if (align == ALIGN_RIGHT) {
+    win->putstr_r(posx, posy + i, fg, bg, sizex, broken[i + offset]);
+  } else {
+    win->putstr_n(posx, posy + i, fg, bg, sizex, broken[i + offset]);
+  }
+ }
 
  if (selectable)
   print_scrollbar(win, posx + sizex - 1, posy, sizey, offset, broken.size(),
@@ -237,7 +245,11 @@ void ele_list::draw(Window *win)
   nc_color hilite = (selection == i + offset ? SELECTCOLOR : bg);
   if (!selected)
    hilite = bg;
-  win->putstr_n(posx, posy + i, fg, hilite, sizex, (*list)[i + offset]);
+  if (align == ALIGN_RIGHT) {
+    win->putstr_r(posx, posy + i, fg, hilite, sizex, (*list)[i + offset]);
+  } else {
+    win->putstr_n(posx, posy + i, fg, hilite, sizex, (*list)[i + offset]);
+  }
  }
 
  if (selectable)
@@ -424,7 +436,11 @@ bool ele_textentry::ref_data(std::string *data)
 void ele_number::draw(Window *win)
 {
  nc_color hilite = (selected ? SELECTCOLOR : bg);
- win->putstr_n(posx, posy, fg, hilite, sizex, "%d", (*value));
+ if (align == ALIGN_RIGHT) {
+  win->putstr_r(posx, posy, fg, hilite, sizex, "%d", (*value));
+ } else {
+  win->putstr_n(posx, posy, fg, hilite, sizex, "%d", (*value));
+ }
 }
 
 std::string ele_number::save_data()
@@ -477,7 +493,11 @@ bool ele_number::ref_data(int *data)
 // *** MENU ELEMENT ***
 void ele_menu::draw(Window *win)
 {
- win->putstr_n(posx + 1, posy, fg, bg, sizex - 2, title);
+ if (align == ALIGN_RIGHT) {
+  win->putstr_r(posx + 1, posy, fg, bg, sizex - 2, title);
+ } else {
+  win->putstr_n(posx + 1, posy, fg, bg, sizex - 2, title);
+ }
  if (!selected)
   return; // Just print the title if we're not selected/open
 // The rest is for when it's selected, i.e. open
@@ -503,7 +523,11 @@ void ele_menu::draw(Window *win)
     win->putch(x, line, fg, bg, LINE_OXOX);
   } else {
    nc_color back = (n == selection ? SELECTCOLOR : bg);
-   win->putstr_n(posx + 1, posy, fg, back, sizex - 2, (*list)[n]);
+   if (align == ALIGN_RIGHT) {
+     win->putstr_r(posx + 1, posy, fg, back, sizex - 2, (*list)[n]);
+   } else {
+     win->putstr_n(posx + 1, posy, fg, back, sizex - 2, (*list)[n]);
+   }
   }
  }
 }
@@ -771,6 +795,7 @@ void interface::draw_prototype(Window *win)
   if (elements[i]->name != "BG") {
    int x1 = elements[i]->posx, y1 = elements[i]->posy;
    int x2 = x1 + elements[i]->sizex - 1, y2 = y1 + elements[i]->sizey - 1;
+// Draw the background color
    for (int x = x1; x <= x2; x++) {
     for (int y = y1; y <= y2; y++) {
      element_type type = elements[i]->type();
@@ -778,6 +803,7 @@ void interface::draw_prototype(Window *win)
                 type == ELE_DRAWING ? c_dkgray : nc_color(2 + type), ' ');
     }
    }
+// Draw the corner/side delineators
    if (y1 == y2) {
     win->putch(x1, y1, c_white, c_black, LINE_XXXO);
     win->putch(x2, y2, c_white, c_black, LINE_XOXX);
@@ -788,8 +814,13 @@ void interface::draw_prototype(Window *win)
     win->putch(x1, y1, c_white, c_black, LINE_OXXO);
     win->putch(x2, y2, c_white, c_black, LINE_XOOX);
    }
-   win->putstr_n(x1 + 1, y1, (elements[i]->selected ? c_magenta : c_yellow),
-                 c_black, elements[i]->sizex - 2, elements[i]->name);
+   if (elements[i]->align == ALIGN_RIGHT) {
+    win->putstr_r(x1 + 1, y1, (elements[i]->selected ? c_magenta : c_yellow),
+                  c_black, elements[i]->sizex - 2, elements[i]->name);
+   } else {
+    win->putstr_n(x1 + 1, y1, (elements[i]->selected ? c_magenta : c_yellow),
+                  c_black, elements[i]->sizex - 2, elements[i]->name);
+   }
   }
   if (elements[i]->type() == ELE_DRAWING)
    elements[i]->draw(win);

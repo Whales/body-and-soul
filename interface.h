@@ -22,6 +22,13 @@ namespace cuss {
     ELE_MAX
   };
 
+  enum alignment
+  {
+    ALIGN_LEFT = 0,
+    ALIGN_RIGHT = 1,
+    ALIGN_MAX
+  };
+
   std::string element_type_name(element_type type);
 
   struct element
@@ -36,6 +43,7 @@ namespace cuss {
     bool owns_data;
     nc_color fg;
     nc_color bg;
+    alignment align;
 
     element() { name = ""; posx = 0; posy = 0; sizex = 0; sizey = 0;
                 selected = false; selectable = false;
@@ -65,6 +73,8 @@ namespace cuss {
 
 // This is used to set fg & bg, and hence is defined for element!
     virtual bool set_data(nc_color FG, nc_color BG = c_null);
+
+    virtual bool set_alignment(alignment al) { align = al; };
 
     virtual void clear_data() {};
 

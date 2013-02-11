@@ -3,13 +3,14 @@
 
 void game::init()
 {
-  w_body.init( 0,  0, 27, 25);
-  //w_terrain = Window(27,  0, 25, 24);
-  w_soul.init(52,  0, 28, 25);
-  //w_terrain = Window(0, 0, 80, 24);
-  w_terrain.init(0, 0, 80, 25);
+  w_body.init   ( 0,  0, 27, 24);
+  w_terrain.init(27,  0, 25, 24);
+  w_soul.init   (52,  0, 28, 24);
 
-  curMap.generate(MAP_WOODS);
+  int_body.load_from_file("cuss/i_body.cuss");
+  int_soul.load_from_file("cuss/i_soul.cuss");
+
+  curMap.generate(MAP_CITY);
   player.pos = point(80, 80);
   player.my_body = BODIES_POOL[ lookup_body_id("human") ];
 }
@@ -41,7 +42,15 @@ void game::draw()
   curMap.draw(&w_terrain, player.pos.x, player.pos.y, 10,
               player.my_body.symbol);
 
-  w_terrain.refresh();
+  int_body.set_data("num_str", player.my_body.get_str());
+  int_body.set_data("num_dex", player.my_body.get_str());
+  int_body.set_data("num_per", player.my_body.get_str());
+  int_body.set_data("list_parts", player.my_body.body_part_names());
+  int_body.set_data("list_hp",    player.my_body.body_part_hps());
+  int_body.set_data("list_ac",    player.my_body.body_part_acs());
+  int_body.draw(&w_body);
+  int_soul.draw(&w_soul);
+  refresh_all();
 }
 
 void game::pl_move(int dx, int dy)

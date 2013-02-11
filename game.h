@@ -3,6 +3,7 @@
 
 #include "entity.h"
 #include "map.h"
+#include "interface.h"
 
 class game
 {
@@ -22,6 +23,9 @@ class game
   Window w_terrain;
   Window w_body;
   Window w_soul;
+
+  cuss::interface int_body;
+  cuss::interface int_soul;
 };
 
 #endif

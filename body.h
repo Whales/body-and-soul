@@ -58,6 +58,14 @@ struct body
  glyph symbol;
  int size;
 
+ int get_str();
+ int get_dex();
+ int get_per();
+
+ std::vector<std::string> body_part_names();
+ std::vector<std::string> body_part_hps();
+ std::vector<std::string> body_part_acs();
+
  std::string save_data();
  void load_data(std::istream &datastream);
 };

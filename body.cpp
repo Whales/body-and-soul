@@ -29,6 +29,87 @@ void body::load_data(std::istream &datastream)
  }
 }
 
+int body::get_str()
+{
+  std::vector<int> vals;
+  for (int i = 0; i < body_parts.size(); i++) {
+    if (body_parts[i].strength > 0) {
+      bool inserted = false;
+      for (int j = 0; !inserted && j < vals.size(); j++) {
+        if (vals[j] < body_parts[i].strength) {
+          vals.insert( vals.begin() + j, body_parts[i].strength );
+          inserted = true;
+        }
+      }
+      if (!inserted) {
+        vals.push_back( body_parts[i].strength );
+      }
+    }
+  }
+  int ret = 0;
+  for (int i = 0; i < vals.size(); i++) {
+    int penalty = i * 2;
+    if (vals[i] >= penalty) {
+      ret += vals[i] - penalty;
+    }
+  }
+  return ret;
+}
+
+int body::get_dex()
+{
+  std::vector<int> vals;
+  for (int i = 0; i < body_parts.size(); i++) {
+    if (body_parts[i].strength > 0) {
+      bool inserted = false;
+      for (int j = 0; !inserted && j < vals.size(); j++) {
+        if (vals[j] < body_parts[i].dexterity) {
+          vals.insert( vals.begin() + j, body_parts[i].dexterity );
+          inserted = true;
+        }
+      }
+      if (!inserted) {
+        vals.push_back( body_parts[i].dexterity );
+      }
+    }
+  }
+  int ret = 0;
+  for (int i = 0; i < vals.size(); i++) {
+    int penalty = i * 2;
+    if (vals[i] >= penalty) {
+      ret += vals[i] - penalty;
+    }
+  }
+  return ret;
+}
+
+int body::get_per()
+{
+  std::vector<int> vals;
+  for (int i = 0; i < body_parts.size(); i++) {
+    if (body_parts[i].perception > 0) {
+      bool inserted = false;
+      for (int j = 0; !inserted && j < vals.size(); j++) {
+        if (vals[j] < body_parts[i].perception) {
+          vals.insert( vals.begin() + j, body_parts[i].perception );
+          inserted = true;
+        }
+      }
+      if (!inserted) {
+        vals.push_back( body_parts[i].perception );
+      }
+    }
+  }
+  int ret = 0;
+  for (int i = 0; i < vals.size(); i++) {
+    int penalty = i * 2;
+    if (vals[i] >= penalty) {
+      ret += vals[i] - penalty;
+    }
+  }
+  return ret;
+}
+
 std::string body_ability::save_data()
 {
   std::stringstream ret;
@@ -103,4 +184,30 @@ std::string body_ability_name(body_ability_id type)
   }
 
   return "Bug-EscapedSwitch";
+}
+
+std::vector<std::string> body::body_part_names()
+{
+  std::vector<std::string> ret;
+  for (int i = 0; i < body_parts.size(); i++) {
+    ret.push_back(body_parts[i].name);
+  }
+  return ret;
+}
+
+std::vector<std::string> body::body_part_hps()
+{
+  std::vector<std::string> ret;
+  for (int i = 0; i < body_parts.size(); i++) {
+    std::stringstream hp_data;
+    int hp = body_parts[i].curhp, max = body_parts[i].maxhp;
+    hp_data << percentage_coloring(hp, maxhp) << hp << "<c=/>";
+  }
+  return ret;
+}
+
+std::vector<std::string> body::body_part_acs()
+{
+  std::vector<std::string> ret;
+  return ret;
 }

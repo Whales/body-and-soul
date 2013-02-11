@@ -196,6 +196,12 @@ int main()
     } else if (ch == '>') {
      sel = edited.select_next(true);
 
+    } else if (ch == '{' && sel) {
+     sel->align = ALIGN_LEFT;
+
+    } else if (ch == '}' && sel) {
+     sel->align = ALIGN_RIGHT;
+
     } else if (ch == 'm' && sel) {
      dm = DM_MOVE_ELE;
      bufx = sel->posx; bufy = sel->posy;

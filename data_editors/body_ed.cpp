@@ -26,8 +26,8 @@ int main()
 
   cuss::interface i_editor;
   Window w_editor(0, 0, 80, 24);
-  if (!i_editor.load_from_file("cuss/i_body.cuss")) {
-    debugmsg("Couldn't load cuss/i_body.cuss!");
+  if (!i_editor.load_from_file("cuss/i_body_ed.cuss")) {
+    debugmsg("Couldn't load cuss/i_body_ed.cuss!");
     end_display();
     return 1;
   }
