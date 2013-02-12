@@ -23,9 +23,11 @@ class game
   Window w_terrain;
   Window w_body;
   Window w_soul;
+  Window w_messages;
 
   cuss::interface int_body;
   cuss::interface int_soul;
+  cuss::interface int_messages;
 };
 
 #endif

@@ -3,12 +3,14 @@
 
 void game::init()
 {
-  w_body.init   ( 0,  0, 27, 24);
-  w_terrain.init(27,  0, 25, 24);
-  w_soul.init   (52,  0, 28, 24);
+  w_body.init    ( 0,  0, 27, 24);
+  w_terrain.init (27,  0, 25, 17);
+  w_soul.init    (52,  0, 28, 17);
+  w_messages.init(27, 17, 53,  7);
 
   int_body.load_from_file("cuss/i_body.cuss");
   int_soul.load_from_file("cuss/i_soul.cuss");
+  int_messages.load_from_file("cuss/i_messages.cuss");
 
   curMap.generate(MAP_CITY);
   player.pos = point(80, 80);
@@ -40,7 +42,7 @@ void game::draw()
   //debugmsg("%d/%d", player.pos.x, player.pos.y);
   //debugmsg("%d:%d", w_terrain.sizex(), w_terrain.sizey());
   w_terrain.clear();
-  curMap.draw(&w_terrain, player.pos.x, player.pos.y, 10,
+  curMap.draw(&w_terrain, player.pos.x, player.pos.y, 8,
               player.my_body.symbol);
 
   int_body.set_data("num_str", player.my_body.get_str());
@@ -59,7 +61,7 @@ void game::pl_move(int dx, int dy)
   int destx = player.pos.x + dx, desty = player.pos.y + dy;
   tile* dest = &(curMap.ter(destx, desty));
   if (dest->type->move_cost == 0) {
-    curMap.apply_transformation(destx, desty, TRANS_OPEN, 100);
+    curMap.apply_transformation(destx, desty, TRANS_OPEN, 1);
     return;
   }
   player.pos = point(destx, desty);
