@@ -3,6 +3,7 @@
 
 void game::init()
 {
+  w_terrain.init ( 0,  0, 
   w_body.init    ( 0,  0, 27, 24);
   w_terrain.init (27,  0, 25, 17);
   w_soul.init    (52,  0, 28, 17);

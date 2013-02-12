@@ -102,3 +102,9 @@ Songs include:
   Trumpet: Summon Mists 4, Rile 3, Enrage 3, Frighten 4, Quake 4
   
 Soul Egg
+  Any mundane item (or weapon) (or armor) may be a soul egg--an item into which
+  a slice of one's soul has been placed.  This may be achieved through the high-
+  level (and SP-costing) power Create Soul Egg.
+  The item gains one or more of the soul's powers, and its Shell and Power Pts
+  properties.  It also holds one or more SP.
+  Creating a soul egg costs 1 + X SP.  The resulting egg has X * .8 SP
