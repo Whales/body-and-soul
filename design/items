@@ -28,48 +28,57 @@ One-Time Use
 Weapons have a speed, accuracy, and damage, and each class has two kinds:
 )Weapons (melee or launcher)
   Staff/Bowstaff;   uses slash, stab, bludgeon
-    Staff: Dmg  5, Hit  5
-    Bowst: Dmg  8, Hit  2
+    Staff: Dmg  5, Hit  5, Time 12  (Points: 14)
+    Bowst: Dmg  8, Hit  3, Time 14  (Points: 13)
   Sword/Sabre;      uses slash, stab
-    Sword: Dmg  7, Hit  3
-    Sabre: Dmg  8, Hit  2
+    Sword: Dmg  7, Hit  3, Time 10  (Points: 14)
+    Sabre: Dmg  8, Hit  2, Time 11  (Points: 13)
   Axe/Battleaxe     uses slash,       bludgeon
-    Axe:   Dmg  8, Hit  2
-    Battl: Dmg 12, Hit -2
+    Axe:   Dmg 10, Hit  3, Time 12  (Points: 15)
+    Battl: Dmg 14, Hit  0, Time 15  (Points: 13)
   Halberd/Glaive    uses        stab, bludgeon
-    Halbe: Dmg 10, Hit  0
-    Glaiv: Dmg 12, Hit -2
+    Halbe: Dmg 12, Hit  2, Time 14  (Points: 14)
+    Glaiv: Dmg 14, Hit  0, Time 15  (Points: 13)
   Sickle/Scythe     uses slash
-    Sickl: Dmg  7, Hit  3
-    Scyth: Dmg 10, Hit  0
+    Sickl: Dmg  7, Hit  3, Time 10  (Points: 12)
+    Scyth: Dmg 14, Hit  0, Time 14  (Points: 12)
   Spear/Lance       uses        stab
-    Spear: Dmg  6, Hit  4
-    Lance: Dmg 10, Hit  0
+    Spear: Dmg  6, Hit  4, Time  8  (Points: 14)
+    Lance: Dmg 10, Hit  0, Time 12  (Points: 10)
   Hammer/Warhammer  uses              bludgeon
-    Hamme: Dmg  9, Hit  1
-    Warha: Dmg 12, Hit -2
+    Hamme: Dmg 11, Hit  1, Time 12  (Points: 12)
+    Warha: Dmg 14, Hit  0, Time 14  (Points: 12)
 
   Bow/Longbow
-    Bow:   Dmg  8, Hit  0, Time 10
-    Longb: Dmg 12, Hit  2, Time 15
+    Bow:   Dmg  8, Hit  0, Time 10  (Points:  8)
+    Longb: Dmg 12, Hit  2, Time 15  (Points:  9)
   Minicrossbow/Crossbow
-    Minic: Dmg  6, Hit  4, Time 12
-    Cross: Dmg 12, Hit  3, Time 18
+    Minic: Dmg  6, Hit  4, Time 12  (Points:  8)
+    Cross: Dmg 12, Hit  5, Time 18  (Points:  9)
   Revolver/Shotgun
-    Revol: Dmg 14, Hit -2, Time  8
-    Shotg: Dmg 18, Hit  0, Time 12
+    Revol: Dmg 14, Hit -2, Time  8  (Points: 14)
+    Shotg: Dmg 20, Hit  0, Time 12  (Points: 18)
   Laser Pistol/Plasma Rifle
-    Laser: Dmg 10, Hit  0, Time  6
-    Plasm: Dmg 16, Hit  0, Time 10
+    Laser: Dmg 10, Hit  6, Time  6  (Points: 20)
+    Plasm: Dmg 16, Hit  6, Time 10  (Points: 22)
 (Missiles
-  Rock/Boulder
-  Dart/Javelin
+  Rock/Boulder      uses Bludgeon
+    Rock:  Dmg  4, Hit  0, Time 10  (Points:  4)
+    Bould: Dmg 20, Hit -1, Time 15  (Points: 14)
+  Dart/Javelin      uses stab
+    Dart:  Dmg  7, Hit  2, Time 10  (Points:  9)
+    Javel: Dmg 10, Hit  1, Time 12  (Points:  9)
+  Chakram/Boomerang uses slash
+    Chakr: Dmg  8, Hit  2, Time 10  (Points: 10)
+    Boome: Dmg  8, Hit -2, Time 12  (Points:  4 - but chance to return, so 10)
+  
   Arrow, Bolt, Ammo, ECPack
+    Scarcity of these (and missiles) should be informed by the points above
 
 Attack types:
-  Slash:    Strong vs. dodge, weak vs. block
-  Stab:     Strong vs. block, weak vs. armor
-  Bludgeon: Strong vs. armor, weak vs. dodge
+Slash:    Strong vs. dodge, weak vs. block, boosted by Dex
+Stab:     Strong vs. block, weak vs. armor, boosted by Per
+Bludgeon: Strong vs. armor, weak vs. dodge, boosted by Str
 
 &Instruments:
 All instruments can play one to three songs, randomly selected from the pool
@@ -87,7 +96,7 @@ Songs include:
   Confuse: Confuse listeners.
   Quake: Cause heavy erosion to random nearby tiles.
   
-  Lyre: Charm 5, Sleepy 3, Summon Forest 3, Soothe 4, Rile 2, Confuse 2 
+  Lyre: Charm 5, Sleep 3, Summon Forest 3, Soothe 4, Rile 2, Confuse 2 
   Flute: Charm 4, Sleep 4, Summon Sea 4, Summon Air 4
   Drum: Summon Caverns 3, Summon Fire 3, Rile 2, Enrage 3, Frighten 3, Quake 4
   Trumpet: Summon Mists 4, Rile 3, Enrage 3, Frighten 4, Quake 4
