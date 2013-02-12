@@ -58,6 +58,8 @@ struct body
  glyph symbol;
  int size;
 
+ void init();
+
  int get_str();
  int get_dex();
  int get_per();

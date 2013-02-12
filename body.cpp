@@ -29,6 +29,13 @@ void body::load_data(std::istream &datastream)
  }
 }
 
+void body::init()
+{
+  for (int i = 0; i < body_parts.size(); i++) {
+    body_parts[i].curhp = body_parts[i].maxhp;
+  }
+}
+
 int body::get_str()
 {
   std::vector<int> vals;
@@ -200,8 +207,9 @@ std::vector<std::string> body::body_part_hps()
   std::vector<std::string> ret;
   for (int i = 0; i < body_parts.size(); i++) {
     std::stringstream hp_data;
-    int hp = body_parts[i].curhp, max = body_parts[i].maxhp;
+    int hp = body_parts[i].curhp, maxhp = body_parts[i].maxhp;
     hp_data << percentage_coloring(hp, maxhp) << hp << "<c=/>";
+    ret.push_back(hp_data.str());
   }
   return ret;
 }

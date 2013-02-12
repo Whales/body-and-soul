@@ -13,6 +13,7 @@ void game::init()
   curMap.generate(MAP_CITY);
   player.pos = point(80, 80);
   player.my_body = BODIES_POOL[ lookup_body_id("human") ];
+  player.my_body.init();
 }
 
 bool game::do_turn()

@@ -1,4 +1,5 @@
 #include <curses.h>
+#include <sstream>
 #include "color.h"
 
 void init_colors()
@@ -262,4 +263,25 @@ nc_color contract(nc_color orig)
   default:        return c_null;
  }
  return c_null;
+}
+
+std::string percentage_coloring(int a, int b)
+{
+  std::stringstream ret;
+  ret << "<c=";
+  int percent = (100 * a) / b;
+  nc_color col;
+  if (percent >= 100) {
+    col = c_green;
+  } else if (percent >= 80) {
+    col = c_ltgreen;
+  } else if (percent >= 60) {
+    col = c_yellow;
+  } else if (percent >= 40) {
+    col = c_ltred;
+  } else {
+    col = c_red;
+  }
+  ret << color_tag_name(col) << ">";
+  return ret.str();
 }

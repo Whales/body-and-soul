@@ -38,4 +38,6 @@ nc_color hilight (nc_color orig);
 nc_color opposite(nc_color orig);
 nc_color contrast(nc_color orig);
 
+std::string percentage_coloring(int a, int b);
+
 #endif
