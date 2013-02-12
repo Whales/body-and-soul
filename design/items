@@ -28,21 +28,48 @@ One-Time Use
 Weapons have a speed, accuracy, and damage, and each class has two kinds:
 )Weapons (melee or launcher)
   Staff/Bowstaff;   uses slash, stab, bludgeon
+    Staff: Dmg  5, Hit  5
+    Bowst: Dmg  8, Hit  2
   Sword/Sabre;      uses slash, stab
+    Sword: Dmg  7, Hit  3
+    Sabre: Dmg  8, Hit  2
   Axe/Battleaxe     uses slash,       bludgeon
+    Axe:   Dmg  8, Hit  2
+    Battl: Dmg 12, Hit -2
   Halberd/Glaive    uses        stab, bludgeon
+    Halbe: Dmg 10, Hit  0
+    Glaiv: Dmg 12, Hit -2
   Sickle/Scythe     uses slash
+    Sickl: Dmg  7, Hit  3
+    Scyth: Dmg 10, Hit  0
   Spear/Lance       uses        stab
+    Spear: Dmg  6, Hit  4
+    Lance: Dmg 10, Hit  0
   Hammer/Warhammer  uses              bludgeon
+    Hamme: Dmg  9, Hit  1
+    Warha: Dmg 12, Hit -2
 
   Bow/Longbow
+    Bow:   Dmg  8, Hit  0, Time 10
+    Longb: Dmg 12, Hit  2, Time 15
   Minicrossbow/Crossbow
+    Minic: Dmg  6, Hit  4, Time 12
+    Cross: Dmg 12, Hit  3, Time 18
   Revolver/Shotgun
+    Revol: Dmg 14, Hit -2, Time  8
+    Shotg: Dmg 18, Hit  0, Time 12
   Laser Pistol/Plasma Rifle
+    Laser: Dmg 10, Hit  0, Time  6
+    Plasm: Dmg 16, Hit  0, Time 10
 (Missiles
   Rock/Boulder
   Dart/Javelin
   Arrow, Bolt, Ammo, ECPack
+
+Attack types:
+  Slash:    Strong vs. dodge, weak vs. block
+  Stab:     Strong vs. block, weak vs. armor
+  Bludgeon: Strong vs. armor, weak vs. dodge
 
 &Instruments:
 All instruments can play one to three songs, randomly selected from the pool

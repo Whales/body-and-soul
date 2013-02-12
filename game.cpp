@@ -12,7 +12,7 @@ void game::init()
   int_soul.load_from_file("cuss/i_soul.cuss");
   int_messages.load_from_file("cuss/i_messages.cuss");
 
-  curMap.generate(MAP_CITY);
+  curMap.generate(MAP_WOODS);
   player.pos = point(80, 80);
   player.my_body = BODIES_POOL[ lookup_body_id("human") ];
   player.my_body.init();
@@ -53,6 +53,7 @@ void game::draw()
   int_body.set_data("list_ac",    player.my_body.body_part_acs());
   int_body.draw(&w_body);
   int_soul.draw(&w_soul);
+  int_messages.draw(&w_messages);
   refresh_all();
 }
 

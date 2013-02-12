@@ -64,6 +64,10 @@ struct body
  int get_dex();
  int get_per();
 
+ int get_dodge();
+ int get_block();
+ int get_damage();
+
  std::vector<std::string> body_part_names();
  std::vector<std::string> body_part_hps();
  std::vector<std::string> body_part_acs();
