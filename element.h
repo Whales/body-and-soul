@@ -16,6 +16,7 @@ struct element
   void load_data(std::istream datastream);
 
   std::string name;
+  int id;
   nc_color color;
   std::vector<transform_type> transformations;
   std::vector<damage_type> damages;

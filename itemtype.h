@@ -123,7 +123,7 @@ struct it_crystal : public itemtype
   virtual std::string save_data();
   virtual void load_data(std::istream datastream);
 
-  element_id element;
+  int element_id;
 };
 
 #endif
