@@ -11,8 +11,9 @@ One-Time Use
     Healing     Heal some HP
     Energizing  Regain some PP
     Changing    Temporary, partial change of form
-    Shrinking   Size--
-    Growing     Size++
+    Morphing    Permanent limb change (or minor part addition)
+  ? Shrinking   Size--
+  ? Growing     Size++
     Numbing     Lose strength, morale moves towards 0
 * Crystal
     Red         Throw to spawn fire
@@ -26,59 +27,74 @@ One-Time Use
     Cyan        Throw to create permanence
 
 Weapons have a speed, accuracy, and damage, and each class has two kinds:
+They also have a handedness; 1H is fine with one arm, /H suffers penalties to
+ all stats with one arm, 2H is unusable with one arm.
+They also have a primary stat orientation; Dex or Str.  The time is reduced by
+ some scale based on that stat (and likely based on the original Time; i.e.
+ Times above 10 are easier to reduce)
 )Weapons (melee or launcher)
   Staff/Bowstaff;   uses slash, stab, bludgeon
-    Staff: Dmg  5, Hit  5, Time 12  (Points: 14)
-    Bowst: Dmg  8, Hit  3, Time 14  (Points: 13)
-  Sword/Sabre;      uses slash, stab
-    Sword: Dmg  7, Hit  3, Time 10  (Points: 14)
-    Sabre: Dmg  8, Hit  2, Time 11  (Points: 13)
+    Staff: Dmg  6, Hit  5, Time 12, Block 10  (Dam  5.0, Hit 50, ) /H
+    Bowst: Dmg  9, Hit  5, Time 13  Block 12  (Dam  7.5, Hit 75 Points: 26) 2H
+  Sabre/Broadsword; uses slash, stab
+    Sabre: Dmg  7, Hit  1, Time  9, Block  8  (Dam  7.8, Hit Points: 23) 1H
+    Broad: Dmg  9, Hit  2, Time 11, Block  5  (Dam  8.2, Points: 19) /H
   Axe/Battleaxe     uses slash,       bludgeon
-    Axe:   Dmg 10, Hit  3, Time 12  (Points: 15)
-    Battl: Dmg 14, Hit  0, Time 15  (Points: 13)
+    Axe:   Dmg 10, Hit  3, Time 12, Block  2  (Dam  8.3, Points: 17) /H
+    Battl: Dmg 18, Hit  0, Time 15, Block  0  (Dam 12.0, Points: 14) 2H
   Halberd/Glaive    uses        stab, bludgeon
-    Halbe: Dmg 12, Hit  2, Time 14  (Points: 14)
-    Glaiv: Dmg 14, Hit  0, Time 15  (Points: 13)
+    Halbe: Dmg 15, Hit  3, Time 14, Block  6  (Dam 10.7, Points: 21) 2H
+    Glaiv: Dmg 16, Hit  2, Time 15, Block  5  (Dam 10.7, Points: 19) 2H
   Sickle/Scythe     uses slash
-    Sickl: Dmg  7, Hit  3, Time 10  (Points: 12)
-    Scyth: Dmg 14, Hit  0, Time 14  (Points: 12)
+    Sickl: Dmg  8, Hit  3, Time 10, Block  2  (Dam  8.0, Points: 17) 1H
+    Scyth: Dmg 15, Hit  4, Time 14, Block  8  (Dam 10.7, Points: 22) 2H
   Spear/Lance       uses        stab
-    Spear: Dmg  6, Hit  4, Time  8  (Points: 14)
-    Lance: Dmg 10, Hit  0, Time 12  (Points: 10)
+    Spear: Dmg  7, Hit  4, Time  8, Block  5  (Dam  8.8, Points: 20) /H
+    Lance: Dmg 15, Hit  2, Time 12, Block  0  (Dam 12.5, Points: 14) 2H
   Hammer/Warhammer  uses              bludgeon
-    Hamme: Dmg 11, Hit  1, Time 12  (Points: 12)
-    Warha: Dmg 14, Hit  0, Time 14  (Points: 12)
+    Hamme: Dmg 12, Hit  1, Time 12, Block  2  (Dam 10.0, Points: 17) 1H
+    Warha: Dmg 24, Hit  0, Time 16, Block  0  (Dam 15.0, Points: 14) 2H
 
   Bow/Longbow
-    Bow:   Dmg  8, Hit  0, Time 10  (Points:  8)
-    Longb: Dmg 12, Hit  2, Time 15  (Points:  9)
+    Bow:   Dmg 12, Hit  0, Time 10  (Dam 12.0, Bad 46, Gd Points:  9) 2H
+    Longb: Dmg 14, Hit  2, Time 15  (Dam  9.3, Points:  8) 2H
   Minicrossbow/Crossbow
-    Minic: Dmg  6, Hit  4, Time 12  (Points:  8)
-    Cross: Dmg 12, Hit  5, Time 18  (Points:  9)
+    Minic: Dmg  6, Hit  4, Time 12  (Dam  5.0, Points: 10) 1H
+    Cross: Dmg 12, Hit  5, Time 18  (Dam  6.7, Points:  9) /H
   Revolver/Shotgun
-    Revol: Dmg 14, Hit -2, Time  8  (Points: 14)
-    Shotg: Dmg 20, Hit  0, Time 12  (Points: 18)
+    Revol: Dmg 14, Hit -2, Time  8  (Dam 17.5, Points: 16) 1H
+    Shotg: Dmg 20, Hit  0, Time 12  (Dam 16.7, Points: 15) 2H
   Laser Pistol/Plasma Rifle
-    Laser: Dmg 10, Hit  6, Time  6  (Points: 20)
-    Plasm: Dmg 16, Hit  6, Time 10  (Points: 22)
+    Laser: Dmg 10, Hit  6, Time  6  (Dam 16.7, Points: 22) 1H
+    Plasm: Dmg 16, Hit  6, Time 10  (Dam 16.0, Points: 19) 2H
 (Missiles
   Rock/Boulder      uses Bludgeon
-    Rock:  Dmg  4, Hit  0, Time 10  (Points:  4)
-    Bould: Dmg 20, Hit -1, Time 15  (Points: 14)
+    Rock:  Dmg  4, Hit  0, Time 10  (Dam , Points:  6) 1H
+    Bould: Dmg 20, Hit  0, Time 15  (Dam , Points: 12) 2H
   Dart/Javelin      uses stab
-    Dart:  Dmg  7, Hit  2, Time 10  (Points:  9)
-    Javel: Dmg 10, Hit  1, Time 12  (Points:  9)
-  Chakram/Boomerang uses slash
-    Chakr: Dmg  8, Hit  2, Time 10  (Points: 10)
-    Boome: Dmg  8, Hit -2, Time 12  (Points:  4 - but chance to return, so 10)
+    Dart:  Dmg  7, Hit  2, Time 10  (Dam , Points: 11) 1H
+    Javel: Dmg 10, Hit  1, Time 12  (Dam , Points: 11) 1H
+  Shuriken/Chakram uses slash
+    Shuri: Dmg  7, Hit -2, Time  6  (Dam , Points: 11) 1H
+    Chakr: Dmg 12, Hit -1, Time 10  (Dam , Points: 11) /H
+
+
+    Boome: Dmg  8, Hit -2, Time 12  (Dam , Points:  4 - but chance to return, so 10)
   
   Arrow, Bolt, Ammo, ECPack
     Scarcity of these (and missiles) should be informed by the points above
 
 Attack types:
-Slash:    Strong vs. dodge, weak vs. block, boosted by Dex
-Stab:     Strong vs. block, weak vs. armor, boosted by Per
 Bludgeon: Strong vs. armor, weak vs. dodge, boosted by Str
+  Boost Dam, then Spd
+Swipe:    Strong vs. dodge, weak vs. block, boosted by Dex
+  Boost Acc, then Dam
+Stab:     Strong vs. block, weak vs. armor, boosted by Per
+  Boost Spd, then Acc
+
+Damage types:
+Blunt:    Strong vs. armor
+
 
 &Instruments:
 All instruments can play one to three songs, randomly selected from the pool
@@ -108,3 +124,7 @@ Soul Egg
   The item gains one or more of the soul's powers, and its Shell and Power Pts
   properties.  It also holds one or more SP.
   Creating a soul egg costs 1 + X SP.  The resulting egg has X * .8 SP
+
+
+Weapon Variation
+  Melee stats: Speed, Damage, Accuracy, Damage types, Special flags

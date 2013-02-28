@@ -228,10 +228,12 @@ void set_symbol(body* _body)
   w_col.refresh();
   ch = getch();
 
-  if (ch >= '1' && ch <= '8')
+  if (ch >= '1' && ch <= '8') {
     _body->symbol.fg = nc_color(ch - '1');
-  if (ch >= 'a' && ch <= 'h')
+  }
+  if (ch >= 'a' && ch <= 'h') {
     _body->symbol.fg = nc_color(ch - 'a' + c_dkgray);
+  }
   _body->symbol.bg = c_black;
 }
 

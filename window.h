@@ -45,9 +45,9 @@ int         int_input_popup   (const char *mes, ...);
 long        popup_getkey      (const char *mes, ...);
 
 int  menu_vec(const char *mes, std::vector<std::string> options);
-int  menu(const char *mes, ...);
+int  menu    (const char *mes, ...);
 
-void popup(const char *mes, ...);
+void popup           (const char *mes, ...);
 void popup_fullscreen(const char *mes, ...);
 
 class Window

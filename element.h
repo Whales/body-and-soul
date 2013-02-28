@@ -5,7 +5,7 @@
 #include <vector>
 #include <istream>
 #include "terrain.h"
-#include "combat.h"
+#include "attack.h"
 
 struct element
 {
@@ -13,7 +13,7 @@ struct element
   ~element();
 
   std::string save_data();
-  void load_data(std::istream datastream);
+  void load_data(std::istream &datastream);
 
   std::string name;
   int id;

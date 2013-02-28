@@ -186,6 +186,7 @@ std::string body_ability_name(body_ability_id type)
     case BODY_ABILITY_EVASION:  return "Evasion";
     case BODY_ABILITY_DEFENSE:  return "Defense";
     case BODY_ABILITY_ATTACK:   return "Attack";
+    case BODY_ABILITY_ANCHOR:   return "Anchor";
 
     default: return "Bug-Unnamed";
   }

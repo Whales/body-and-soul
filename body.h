@@ -15,7 +15,17 @@ BODY_ABILITY_ENCUMBER,// Takes an encumbrance amount
 BODY_ABILITY_EVASION, // Takes an evasion boost/penalty
 BODY_ABILITY_DEFENSE, // Takes a blocking chance
 BODY_ABILITY_ATTACK,  // Takes a damage amount
+BODY_ABILITY_ANCHOR,  // Anchors other body parts
 BODY_ABILITY_MAX
+};
+
+enum armor_type {
+ARMOR_TYPE_NULL = 0,
+ARMOR_TYPE_HELMET,
+ARMOR_TYPE_BODY,
+ARMOR_TYPE_BOOTS,
+ARMOR_TYPE_GLOVES,
+ARMOR_TYPE_MAX
 };
 
 std::string body_ability_name(body_ability_id type);

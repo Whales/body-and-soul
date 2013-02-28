@@ -14,6 +14,7 @@ std::string CUSSDIR;
 std::vector<body_part> BODY_PARTS_POOL;
 std::vector<body> BODIES_POOL;
 std::vector<terrain_type*> TERRAIN_POOL;
+std::vector<element> ELEMENTS_POOL;
 std::vector< std::vector<mapgen_spec*> > MAPGEN_POOL;
 
 std::list<Window*> WINDOWLIST;
@@ -110,6 +111,21 @@ void init_data()
     }
   }
 
+  filename = DATADIR + "/elements.txt";
+  fin.open( filename.c_str() );
+  if (fin.is_open()) {
+    int numele;
+    fin >> numele;
+    for (int i = 0; i < numele && !fin.eof(); i++) {
+      element tmp;
+      tmp.load_data(fin);
+      if (!tmp.name.empty()) {
+        ELEMENTS_POOL.push_back(tmp);
+      }
+    }
+    fin.close();
+  }
+
 /* Loading mapgen specs is special because:
  * A) They may be spread across multiple files
  * B) A file may contain multiple specs
@@ -152,12 +168,23 @@ void save_data()
  }
 
   filename = DATADIR + "/terrain.txt";
-  fout.open (filename.c_str() );
+  fout.open( filename.c_str() );
   if (fout.is_open()) {
     fout << TERRAIN_POOL.size() << std::endl;
     for (std::vector<terrain_type*>::iterator it = TERRAIN_POOL.begin();
          it != TERRAIN_POOL.end(); it++)
       fout << (*it)->save_data() << std::endl;
+    fout.close();
+  }
+
+  filename = DATADIR + "/elements.txt";
+  fout.open( filename.c_str() );
+  if (fout.is_open()) {
+    fout << ELEMENTS_POOL.size() << std::endl;
+    for (std::vector<element>::iterator it = ELEMENTS_POOL.begin();
+         it != ELEMENTS_POOL.end(); it++) {
+      fout << (*it).save_data() << std::endl;
+    }
     fout.close();
   }
 

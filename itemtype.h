@@ -4,14 +4,8 @@
 #include <istream>
 #include <vector>
 #include <string>
-
-enum attack_type {
-ATT_NULL = 0,
-ATT_SLASH,
-ATT_STAB,
-ATT_BLUDGEON,
-ATT_MAX
-};
+#include "body.h"
+#include "attack.h"
 
 enum item_category {
 ITEMCAT_NULL = 0,
@@ -32,17 +26,17 @@ struct itemtype
   virtual item_category type() { return ITEMCAT_NULL; };
 
   virtual std::string save_data();
-  virtual void load_data(std::istream datastream);
+  virtual void load_data(std::istream &datastream);
+
+  virtual bool covers(std::string partname) { return false; }
+
+  std::string name;
 
   int uid;
   int value;
   glyph symbol;
 
   int weight;
-
-  int damage;
-  int to_hit;
-  int hit_time;
 };
 
 struct it_weapon : public itemtype
@@ -51,25 +45,30 @@ struct it_weapon : public itemtype
   ~it_weapon();
 
   virtual item_category type() { return ITEMCAT_WEAPON; };
-
   virtual std::string save_data();
-  virtual void load_data(std::istream datastream);
+  virtual void        load_data(std::istream &datastream);
+
+  int damage;
+  int accuracy;
+  int hit_time;
+  int block;
 
   std::vector<bool> attack_types;
+  std::vector<damage_type> damage_types;
 };
 
 struct it_armor : public itemtype
 {
-  it_armor();
+  it_armor(); // Must init parts_covered!
   ~it_armor();
 
   virtual item_category type() { return ITEMCAT_ARMOR; };
-
   virtual std::string save_data();
-  virtual void load_data(std::istream datastream);
+  virtual void        load_data(std::istream &datastream);
 
   int ac;
-  bool covers(std::string partname);
+  virtual bool covers(std::string partname);
+
 private:
   std::vector<std::string> parts_covered;
 };
@@ -80,9 +79,8 @@ struct it_food : public itemtype
   ~it_food();
 
   virtual item_category type() { return ITEMCAT_FOOD; };
-
   virtual std::string save_data();
-  virtual void load_data(std::istream datastream);
+  virtual void        load_data(std::istream &datastream);
 
   int nutrition;
 };
@@ -95,7 +93,7 @@ struct it_potion : public itemtype
   virtual item_category type() { return ITEMCAT_POTION; };
 
   virtual std::string save_data();
-  virtual void load_data(std::istream datastream);
+  virtual void        load_data(std::istream &datastream);
 // Nothing special - this is handled in a switch somewhere
 // TODO: Or is it?????
 };
@@ -108,7 +106,7 @@ struct it_instrument : public itemtype
   virtual item_category type() { return ITEMCAT_INSTRUMENT; };
 
   virtual std::string save_data();
-  virtual void load_data(std::istream datastream);
+  virtual void        load_data(std::istream &datastream);
 
   //std::vector<song> songs;
 };
@@ -121,7 +119,7 @@ struct it_crystal : public itemtype
   virtual item_category type() { return ITEMCAT_CRYSTAL; };
 
   virtual std::string save_data();
-  virtual void load_data(std::istream datastream);
+  virtual void        load_data(std::istream &datastream);
 
   int element_id;
 };
