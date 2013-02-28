@@ -45,7 +45,6 @@ int main()
 { 
  init_display();
  cuss::interface edited;
- bool done = starting_window(edited);
 
  int sizex = 80, sizey = 24;
  Window w(0, 0, sizex, sizey);
@@ -56,7 +55,10 @@ int main()
  int posx = 0, posy = 0, bufx = -1, bufy = -1;
  pen = glyph('x', c_white, c_black);
 
- do {
+ bool really_done = starting_window(edited);
+while (!really_done) {
+ bool done = false;
+ while (!done) {
   if (dm == DM_DRAW)
    paint(edited, posx, posy);
 
@@ -263,6 +265,8 @@ int main()
      if (quitconf == 'y' || quitconf == 'Y' || quitconf == 's' ||
          quitconf == 'S')
       done = true;
+     if (ch == 'S')
+      really_done = true;
 
     } else if (ch == '\n') {
      switch (dm) {
@@ -375,19 +379,22 @@ int main()
    } // Not typing
   } // ch != ERR
 
- } while (!done);
+ } // while !done
+ really_done = starting_window(edited);
+}
 
- std::ofstream fout;
- std::stringstream foutname;
- foutname << "cuss/" << edited.name << ".cuss";
- std::string fname = foutname.str();
-  debugmsg("%s", fname.c_str());
- fout.open(fname.c_str());
- if (fout.is_open()) {
-  fout << edited.save_data();
-  fout.close();
- } else
-  popup("Couldn't open %s for saving", fname.c_str());
+  if (!edited.name.empty()) {
+    std::ofstream fout;
+    std::stringstream foutname;
+    foutname << "cuss/" << edited.name << ".cuss";
+    std::string fname = foutname.str();
+    fout.open(fname.c_str());
+    if (fout.is_open()) {
+      fout << edited.save_data();
+      fout.close();
+    } else
+      popup("Couldn't open %s for saving", fname.c_str());
+  }
 
  endwin();
  return 0;
