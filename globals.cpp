@@ -7,6 +7,7 @@
 #include "window.h"
 #include "stringfunc.h"
 #include "rng.h"
+#include "itemtype.h"
 
 std::string DATADIR;
 std::string CUSSDIR;
@@ -15,6 +16,7 @@ std::vector<body_part> BODY_PARTS_POOL;
 std::vector<body> BODIES_POOL;
 std::vector<terrain_type*> TERRAIN_POOL;
 std::vector<element> ELEMENTS_POOL;
+std::vector<item_type*> ITEMS_POOL;
 std::vector< std::vector<mapgen_spec*> > MAPGEN_POOL;
 
 std::list<Window*> WINDOWLIST;
@@ -126,6 +128,18 @@ void init_data()
     fin.close();
   }
 
+  filename = DATADIR + "/items.txt";
+  fin.open( filename.c_str() );
+  if (fin.is_open()) {
+    int numitem;
+    fin >> numitem;
+    for (int i = 0; i < numitem && !fin.eof(); i++) {
+      item_type* tmp = load_item_type(fin);
+      ITEMS_POOL.push_back(tmp);
+    }
+    fin.close();
+  }
+
 /* Loading mapgen specs is special because:
  * A) They may be spread across multiple files
  * B) A file may contain multiple specs
@@ -139,33 +153,35 @@ void init_data()
 
 void save_data()
 {
- if (DATADIR.empty()) {
-  debugmsg("DATADIR not initialized - can't save data!");
-  return;
- }
+  if (DATADIR.empty()) {
+    debugmsg("DATADIR not initialized - can't save data!");
+    return;
+  }
 
- std::ofstream fout;
- std::string filename;
+  std::ofstream fout;
+  std::string filename;
 
- filename = DATADIR + "/parts.txt";
- fout.open( filename.c_str() );
- if (fout.is_open()) {
-  fout << BODY_PARTS_POOL.size() << " ";
-  for (std::vector<body_part>::iterator it = BODY_PARTS_POOL.begin();
-       it != BODY_PARTS_POOL.end(); it++)
-   fout << it->save_data() << " ";
-  fout.close();
- }
+  filename = DATADIR + "/parts.txt";
+  fout.open( filename.c_str() );
+  if (fout.is_open()) {
+    fout << BODY_PARTS_POOL.size() << " ";
+    for (std::vector<body_part>::iterator it = BODY_PARTS_POOL.begin();
+         it != BODY_PARTS_POOL.end(); it++) {
+      fout << it->save_data() << " ";
+    }
+    fout.close();
+  }
 
- filename = DATADIR + "/bodies.txt";
- fout.open( filename.c_str() );
- if (fout.is_open()) {
-  fout << BODIES_POOL.size() << " ";
-  for (std::vector<body>::iterator it = BODIES_POOL.begin();
-       it != BODIES_POOL.end(); it++)
-   fout << it->save_data() << " ";
-  fout.close();
- }
+  filename = DATADIR + "/bodies.txt";
+  fout.open( filename.c_str() );
+  if (fout.is_open()) {
+    fout << BODIES_POOL.size() << " ";
+    for (std::vector<body>::iterator it = BODIES_POOL.begin();
+         it != BODIES_POOL.end(); it++) {
+      fout << it->save_data() << " ";
+    }
+    fout.close();
+  }
 
   filename = DATADIR + "/terrain.txt";
   fout.open( filename.c_str() );
@@ -183,7 +199,19 @@ void save_data()
     fout << ELEMENTS_POOL.size() << std::endl;
     for (std::vector<element>::iterator it = ELEMENTS_POOL.begin();
          it != ELEMENTS_POOL.end(); it++) {
-      fout << (*it).save_data() << std::endl;
+      fout << it->save_data() << std::endl;
+    }
+    fout.close();
+  }
+
+  filename = DATADIR + "/items.txt";
+  fout.open( filename.c_str() );
+  if (fout.is_open()) {
+    fout << ITEMS_POOL.size() << std::endl;
+    for (std::vector<item_type*>::iterator it = ITEMS_POOL.begin();
+         it != ITEMS_POOL.end(); it++) {
+      fout << get_item_category_name( (*it)->type() ) << ": " <<
+              (*it)->save_data() << std::endl;
     }
     fout.close();
   }

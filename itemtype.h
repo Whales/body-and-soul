@@ -1,5 +1,5 @@
-#ifndef _ITEMTYPE_H_
-#define _ITEMTYPE_H_
+#ifndef _item_type_H_
+#define _item_type_H_
 
 #include <istream>
 #include <vector>
@@ -18,10 +18,13 @@ ITEMCAT_CRYSTAL,
 ITEMCAT_MAX
 };
 
-struct itemtype
+std::string get_item_category_name(item_category cat);
+item_category lookup_item_category(std::string name);
+
+struct item_type
 {
-  itemtype();
-  ~itemtype();
+  item_type();
+  ~item_type();
 
   virtual item_category type() { return ITEMCAT_NULL; };
 
@@ -39,7 +42,7 @@ struct itemtype
   int weight;
 };
 
-struct it_weapon : public itemtype
+struct it_weapon : public item_type
 {
   it_weapon();
   ~it_weapon();
@@ -57,7 +60,7 @@ struct it_weapon : public itemtype
   std::vector<damage_type> damage_types;
 };
 
-struct it_armor : public itemtype
+struct it_armor : public item_type
 {
   it_armor(); // Must init parts_covered!
   ~it_armor();
@@ -73,7 +76,7 @@ private:
   std::vector<std::string> parts_covered;
 };
 
-struct it_food : public itemtype
+struct it_food : public item_type
 {
   it_food();
   ~it_food();
@@ -85,7 +88,7 @@ struct it_food : public itemtype
   int nutrition;
 };
 
-struct it_potion : public itemtype
+struct it_potion : public item_type
 {
   it_potion();
   ~it_potion();
@@ -98,7 +101,7 @@ struct it_potion : public itemtype
 // TODO: Or is it?????
 };
 
-struct it_instrument : public itemtype
+struct it_instrument : public item_type
 {
   it_instrument();
   ~it_instrument();
@@ -111,7 +114,7 @@ struct it_instrument : public itemtype
   //std::vector<song> songs;
 };
 
-struct it_crystal : public itemtype
+struct it_crystal : public item_type
 {
   it_crystal();
   ~it_crystal();
@@ -123,5 +126,7 @@ struct it_crystal : public itemtype
 
   int element_id;
 };
+
+item_type* load_item_type(std::istream &datastream);
 
 #endif
