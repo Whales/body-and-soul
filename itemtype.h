@@ -60,6 +60,11 @@ struct it_weapon : public item_type
   std::vector<damage_type> damage_types;
 };
 
+struct it_launcher : public item_type
+{
+  
+}
+
 struct it_armor : public item_type
 {
   it_armor(); // Must init parts_covered!
