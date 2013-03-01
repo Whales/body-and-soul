@@ -10,12 +10,24 @@
 enum item_category {
 ITEMCAT_NULL = 0,
 ITEMCAT_WEAPON,
+ITEMCAT_LAUNCHER,
+ITEMCAT_MISSILE,
 ITEMCAT_ARMOR,
 ITEMCAT_FOOD,
 ITEMCAT_POTION,
 ITEMCAT_INSTRUMENT,
 ITEMCAT_CRYSTAL,
 ITEMCAT_MAX
+};
+
+enum missile_category {
+MISSILECAT_NULL = 0,
+MISSILECAT_THROWN,
+MISSILECAT_ARROW,
+MISSILECAT_BOLT,
+MISSILECAT_AMMO,
+MISSILECAT_EC,
+MISSILECAT_MAX
 };
 
 std::string get_item_category_name(item_category cat);
@@ -55,6 +67,7 @@ struct it_weapon : public item_type
   int accuracy;
   int hit_time;
   int block;
+  int str_req;
 
   std::vector<bool> attack_types;
   std::vector<damage_type> damage_types;
@@ -62,8 +75,37 @@ struct it_weapon : public item_type
 
 struct it_launcher : public item_type
 {
-  
-}
+  it_launcher();
+  ~it_launcher();
+
+  virtual item_category type() { return ITEMCAT_LAUNCHER; };
+  virtual std::string save_data();
+  virtual void        load_data(std::istream &datastream);
+
+  int damage;
+  int accuracy;
+  int fire_time;
+  int str_req;
+  missile_category ammo;
+  bool two_handed;
+
+  std::vector<damage_type> damage_types;
+};
+
+struct it_missile : public item_type
+{
+  it_missile();
+  ~it_missile();
+  virtual item_category type() { return ITEMCAT_MISSILE; };
+  virtual std::string save_data();
+  virtual void        load_data(std::istream &datastrea);
+
+  int damage;
+  int accuracy;
+  int fire_time;
+  int str_req;
+  missile_category ammo;
+};
 
 struct it_armor : public item_type
 {

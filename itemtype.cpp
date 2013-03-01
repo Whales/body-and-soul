@@ -34,7 +34,7 @@ void item_type::load_data(std::istream &datastream)
 
 it_weapon::it_weapon()
 {
-  symbol.symbol = ')';
+  symbol.symbol = '/';
   damage = 0;
   accuracy = 0;
   hit_time = 10;
@@ -80,6 +80,76 @@ void it_weapon::load_data(std::istream &datastream)
     datastream >> tmpdam;
     damage_types.push_back( damage_type(tmpdam) );
   }
+}
+
+it_launcher::it_launcher()
+{
+  symbol.symbol = ')';
+  damage = 0;
+  accuracy = 0;
+  fire_time = 0;
+  str_req = 0;
+  ammo = MISSILECAT_NULL;
+  two_handed = false;
+}
+
+it_launcher::~it_launcher()
+{
+}
+
+std::string it_launcher::save_data()
+{
+  std::stringstream ret;
+  ret << item_type::save_data() << " " << damage << " " << accuracy << " " <<
+         fire_time << " " << str_req << " " << int(ammo) << " " << two_handed <<
+         " ";
+  ret << damage_types.size() << " ";
+  for (int i = 0; i < damage_types.size(); i++) {
+    ret << damage_types[i] << " ";
+  }
+}
+
+void it_launcher::load_data(std::istream &datastream)
+{
+  item_type::load_data(datastream);
+  int tmpammo, tmpsize;
+  datastream >> damage >> accuracy >> fire_time >> str_req >> tmpammo >>
+                two_handed >> tmpsize;
+  ammo = missile_category(tmpammo);
+  for (int i = 0; i < tmpsize; i++) {
+    int tmpdam;
+    datastream >> tmpdam;
+    damage_types.push_back( damage_type(tmpdam) );
+  }
+}
+
+it_missile::it_missile()
+{
+  symbol.symbol = ':';
+  damage = 0;
+  accuracy = 0;
+  fire_time = 0;
+  str_req = 0;
+  ammo = MISSILECAT_NULL;
+}
+
+it_missile::~it_missile()
+{
+}
+
+std::string it_missile::save_data()
+{
+  std::stringstream ret;
+  ret << item_type::save_data() << " " << damage << " " << accuracy << " " <<
+         fire_time << " " << str_req << " " << int(ammo);
+}
+
+void it_missile::load_data(std::istream &datastream)
+{
+  int tmpammo;
+  item_type::load_data(datastream);
+  datastream >> damage >> accuracy >> fire_time >> str_req >> tmpammo;
+  ammo = missile_category(tmpammo);
 }
 
 it_armor::it_armor()
@@ -215,6 +285,8 @@ std::string get_item_category_name(item_category cat)
   switch (cat) {
     case ITEMCAT_NULL:       return "nullitem";
     case ITEMCAT_WEAPON:     return "weapon";
+    case ITEMCAT_LAUNCHER:   return "launcher";
+    case ITEMCAT_MISSILE:    return "missile";
     case ITEMCAT_ARMOR:      return "armor";
     case ITEMCAT_FOOD:       return "food";
     case ITEMCAT_POTION:     return "potion";
@@ -248,6 +320,16 @@ item_type* load_item_type(std::istream &datastream)
   }
   case ITEMCAT_WEAPON: {
     it_weapon* ret = new it_weapon;
+    ret->load_data(datastream);
+    return ret;
+  }
+  case ITEMCAT_LAUNCHER: {
+    it_launcher* ret = new it_launcher;
+    ret->load_data(datastream);
+    return ret;
+  }
+  case ITEMCAT_MISSILE: {
+    it_missile* ret = new it_missile;
     ret->load_data(datastream);
     return ret;
   }

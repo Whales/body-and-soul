@@ -56,13 +56,14 @@ They also have a primary stat orientation; Dex or Str.  The time is reduced by
     Warha: Dmg 24, Hit  0, Time 16, Block  0  (Dam 15.0, Points: 14) 2H
 
   Bow/Longbow
-    Bow:   Dmg 12, Hit  0, Time 10  (Dam 12.0, Bad 46, Gd Points:  9) 2H
-    Longb: Dmg 14, Hit  2, Time 15  (Dam  9.3, Points:  8) 2H
+    Bow:   Dmg 12, Hit  0, Time 10  (Dam 12.0, Points:  9) 2H 12 Str
+    Longb: Dmg 14, Hit  2, Time 15  (Dam  9.3, Points:  8) 2H 15 Str
   Minicrossbow/Crossbow
-    Minic: Dmg  6, Hit  4, Time 12  (Dam  5.0, Points: 10) 1H
-    Cross: Dmg 12, Hit  5, Time 18  (Dam  6.7, Points:  9) /H
-  Revolver/Shotgun
+    Minic: Dmg  6, Hit  4, Time 12  (Dam  5.0, Points: 10) 1H  8 Str
+    Cross: Dmg 12, Hit  5, Time 18  (Dam  6.7, Points:  9) /H 12 Str
+  Revolver/Rifle
     Revol: Dmg 14, Hit -2, Time  8  (Dam 17.5, Points: 16) 1H
+    Rifle: Dmg 16, Hit  3, Time 14  (Dam 11.4, Points: 15) 2H
     Shotg: Dmg 20, Hit  0, Time 12  (Dam 16.7, Points: 15) 2H
   Laser Pistol/Plasma Rifle
     Laser: Dmg 10, Hit  6, Time  6  (Dam 16.7, Points: 22) 1H
