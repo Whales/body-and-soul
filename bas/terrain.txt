@@ -2,7 +2,7 @@
 Null; 0 0 0 120 9 2
 Endtype
 
-Floor; 1 10 0 46 5 0
+Floor; 1 10 0 46 13 0
 Transformations: forest>Dirt, 9 wastes>Sand, 9 sea>Water, 16 Done
 Endtype
 

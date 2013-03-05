@@ -40,7 +40,7 @@ int main()
   i_editor.ref_data("list_elements", &element_names);
   i_editor.ref_data("list_transformations", &transform_names);
   i_editor.ref_data("list_damagetypes", &damage_names);
-  i_editor.select("list_elements");
+  i_editor.select  ("list_elements");
 
   bool quit = false;
   while (!quit) {
