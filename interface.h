@@ -71,6 +71,8 @@ namespace cuss {
 
     virtual bool set_data(glyph gl, int posx, int posy) { return false; };
 
+    virtual bool handle_keypress(long ch) { return false; };
+
 // This is used to set fg & bg, and hence is defined for element!
     virtual bool set_data(nc_color FG, nc_color BG = c_null);
 
@@ -101,6 +103,8 @@ namespace cuss {
     virtual bool set_data(glyph gl, int posx, int posy);
 
     virtual bool set_data(nc_color FG, nc_color BG = c_null);
+
+    virtual bool handle_keypress(long ch) { return false; };
 
     virtual void clear_data() { drawing.clear();};
 
@@ -147,6 +151,8 @@ namespace cuss {
     virtual bool set_data(int data);
     virtual bool add_data(int data);
 
+    virtual bool handle_keypress(long ch) { return false; };
+
     virtual void clear_data() { (*text) = ""; offset = 0;};
 
     virtual std::string get_str() { return (*text); }
@@ -182,6 +188,9 @@ namespace cuss {
     virtual bool set_data(int data);
     virtual bool add_data(int data);
 
+// TODO: Implement search function
+    virtual bool handle_keypress(long ch) { return false; };
+
     virtual void clear_data() { list->clear(); offset = 0; selection = 0;};
 
     virtual int get_int();
@@ -210,6 +219,8 @@ namespace cuss {
     virtual bool add_data(std::string data);
     virtual bool ref_data(std::string *data);
 
+    virtual bool handle_keypress(long ch);
+
     virtual void clear_data() { text->clear(); };
 
     virtual std::string get_str() { return (*text); };
@@ -234,6 +245,8 @@ namespace cuss {
     virtual bool set_data(int data);
     virtual bool add_data(int data);
     virtual bool ref_data(int *data);
+
+    virtual bool handle_keypress(long ch);
 
     virtual void clear_data() { value = 0; };
 
@@ -271,6 +284,8 @@ namespace cuss {
 // Change the selection
     virtual bool set_data(int data);
     virtual bool add_data(int data);
+
+    virtual bool handle_keypress(long ch) { return false; };
 
     virtual void clear_data() { title.clear(); list->clear(); offset = 0;
                                 selection = 0; };
@@ -386,6 +401,7 @@ namespace cuss {
     bool set_use_bindings(bool set = true);
 
     bool handle_action(long ch);
+    bool handle_keypress(long ch); // May redirect to current object
 
     std::string name;
     int sizex, sizey;

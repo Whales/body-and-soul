@@ -309,9 +309,61 @@ item_category lookup_item_category(std::string name)
   return ITEMCAT_NULL;
 }
 
+item_type* new_item_type(item_category cat)
+{
+  switch (cat) {
+  case ITEMCAT_NULL: {
+    item_type* ret = new item_type;
+    return ret;
+  }
+  case ITEMCAT_WEAPON: {
+    it_weapon* ret = new it_weapon;
+    return ret;
+  }
+  case ITEMCAT_LAUNCHER: {
+    it_launcher* ret = new it_launcher;
+    return ret;
+  }
+  case ITEMCAT_MISSILE: {
+    it_missile* ret = new it_missile;
+    return ret;
+  }
+  case ITEMCAT_ARMOR: {
+    it_armor* ret = new it_armor;
+    return ret;
+  }
+  case ITEMCAT_FOOD: {
+    it_food* ret = new it_food;
+    return ret;
+  }
+  case ITEMCAT_POTION: {
+    it_potion* ret = new it_potion;
+    return ret;
+  }
+  case ITEMCAT_INSTRUMENT: {
+    it_instrument* ret = new it_instrument;
+    return ret;
+  }
+  case ITEMCAT_CRYSTAL: {
+    it_crystal* ret = new it_crystal;
+    return ret;
+  }
+  case ITEMCAT_MAX:
+    debugmsg("Whaaaaat");
+    return NULL;
+  }
+  return NULL;
+}
+
+
 item_type* load_item_type(std::istream &datastream)
 {
   std::string ident = load_to_character(datastream, ":;", true);
+  item_type* ret = new_item_type( lookup_item_category(ident) );
+  ret->load_data(datastream);
+  return ret;
+}
+/*
   switch (lookup_item_category(ident)) {
   case ITEMCAT_NULL: {
     item_type* ret = new item_type;
@@ -364,3 +416,4 @@ item_type* load_item_type(std::istream &datastream)
   }
   return NULL;
 }
+*/

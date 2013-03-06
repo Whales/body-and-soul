@@ -431,6 +431,18 @@ bool ele_textentry::ref_data(std::string *data)
  return true;
 }
 
+bool ele_textentry::handle_keypress(long ch)
+{
+  if (is_backspace(ch) && !text->empty()) {
+    (*text) = text->substr(0, text->length() - 1);
+    return true;
+  }
+  if (ch >= 32 && ch <= 126) { // Printable chars
+    text += char(ch);
+    return true;
+  }
+  return false;
+}
 
 // *** NUMBER ELEMENT ***
 void ele_number::draw(Window *win)
@@ -489,6 +501,18 @@ bool ele_number::ref_data(int *data)
  return true;
 }
 
+bool ele_number::handle_keypress(long ch)
+{
+  if (ch >= '0' && ch <= '9') {
+    (*value) *= 10;
+    (*value) += (ch - '0');
+    return true;
+  } else if (is_backspace(ch)) {
+    (*value) /= 10;
+    return true;
+  }
+  return false;
+}
 
 // *** MENU ELEMENT ***
 void ele_menu::draw(Window *win)
@@ -1435,6 +1459,18 @@ bool interface::handle_action(long ch)
  }
 
  return false;
+}
+
+bool interface::handle_keypress(long ch)
+{
+  if (handle_action(ch)) {
+    return true; // We had a keybinding for it!
+  }
+  if (!selected()) {
+    return false;
+  } else {
+    return selected()->handle_keypress(ch);
+  }
 }
 
 bool cuss::action_needs_element(cuss::action_id act)

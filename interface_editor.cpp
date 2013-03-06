@@ -44,7 +44,6 @@ glyph pen;
 int main()
 { 
  init_display();
- cuss::interface edited;
 
  int sizex = 80, sizey = 24;
  Window w(0, 0, sizex, sizey);
@@ -55,9 +54,10 @@ int main()
  int posx = 0, posy = 0, bufx = -1, bufy = -1;
  pen = glyph('x', c_white, c_black);
 
- bool really_done = starting_window(edited);
+ bool really_done = false;
 while (!really_done) {
- bool done = false;
+ cuss::interface edited;
+ bool done = starting_window(edited);
  while (!done) {
   if (dm == DM_DRAW)
    paint(edited, posx, posy);
@@ -380,9 +380,6 @@ while (!really_done) {
   } // ch != ERR
 
  } // while !done
- really_done = starting_window(edited);
-}
-
   if (!edited.name.empty()) {
     std::ofstream fout;
     std::stringstream foutname;
@@ -395,6 +392,8 @@ while (!really_done) {
     } else
       popup("Couldn't open %s for saving", fname.c_str());
   }
+}
+
 
  endwin();
  return 0;
@@ -450,6 +449,15 @@ bool starting_window(interface &edited)
    std::stringstream filename;
    filename << "cuss/" << i_start.get_str("list_interfaces");
    edited.load_from_file(filename.str());
+  }
+  if (ch == 'c' || ch == 'C') {
+    done = true;
+    std::stringstream filename;
+    std::string name;
+    name = i_start.get_str("list_interfaces");
+    filename << "cuss/" << name;
+    edited.load_from_file(filename.str());
+    edited.name = string_edit_popup(name, "Name: ");
   }
   if (ch == 'n' || ch == 'N') {
    std::string name = string_input_popup("Name: ");
