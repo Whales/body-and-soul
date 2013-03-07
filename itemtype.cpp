@@ -20,14 +20,15 @@ item_type::~item_type()
 std::string item_type::save_data()
 {
   std::stringstream ret;
-  ret << name << ": " << symbol.save_data() << " " << uid << " " << value <<
-         " " << weight;
+  ret << name << ": " << description << " " << STD_DELIM << " " <<
+         symbol.save_data() << " " << uid << " " << value << " " << weight;
   return ret.str();
 }
 
 void item_type::load_data(std::istream &datastream)
 {
   name = load_to_character(datastream, ":", true);
+  description = load_to_delim(datastream, STD_DELIM);
   symbol.load_data(datastream);
   datastream >> uid >> value >> weight;
 }

@@ -46,6 +46,7 @@ struct item_type
   virtual bool covers(std::string partname) { return false; }
 
   std::string name;
+  std::string description;
 
   int uid;
   int value;

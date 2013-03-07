@@ -9,6 +9,7 @@ std::vector<std::string> get_item_names();
 void delete_item(int index);
 void add_item();
 void edit_item(item_type* itype);
+void update_item_editor(cuss::interface *i_editor, item_type *itype);
 
 int main()
 {
@@ -109,7 +110,24 @@ void edit_item(item_type* itype)
   }
 
   if (!i_editor.load_from_file(fname)) {
-    debugmsg("Can't load %s", fname.c_str();
+    debugmsg("Can't load %s", fname.c_str());
     return;
   }
+
+  update_item_editor(&i_editor, itype);
+  bool quit = false;
+  while (!quit) {
 }
+
+void update_item_editor(cuss::interface *i_editor, item_type *itype)
+{
+  i_editor->ref_data("entry_name", &(itype->name));
+  i_editor->ref_data("entry_description", &(itype->description));
+  switch (itype->type()) {
+    case ITEMCAT_WEAPON: {
+      it_weapon* weap = static_cast<it_weapon*>(itype);
+      i_editor->ref_data("num_damage", &(weap->damage));
+      i_editor->ref_data("num_accuracy", &(weap->accuracy));
+      i_editor->ref_data("num_hit_time", &(weap->hit_time));
+      i_editor->ref_data("num_block", &(weap->block));
+      i_editor->ref_data("num_str_req", &(weap->str_req));
