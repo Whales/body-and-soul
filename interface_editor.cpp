@@ -57,7 +57,8 @@ int main()
  bool really_done = false;
 while (!really_done) {
  cuss::interface edited;
- bool done = starting_window(edited);
+ really_done = starting_window(edited);
+ bool done = really_done;
  while (!done) {
   if (dm == DM_DRAW)
    paint(edited, posx, posy);
@@ -679,13 +680,17 @@ void elements_window(interface &edited)
     selected = edited.select(cur->get_str());
     update_elements_window(i_ele, edited);
    }
-   if (ch == '>') {
+   if (cur && ch == '>') {
+    int pos = i_ele.get_int("e_elelist");
     if (edited.move_element_up(cur->get_str()))
      i_ele.set_data("e_elelist", edited.element_names());
+    i_ele.set_data("e_elelist", pos + 1);
    }
-   if (ch == '<') {
+   if (cur && ch == '<') {
+    int pos = i_ele.get_int("e_elelist");
     if (edited.move_element_down(cur->get_str()))
      i_ele.set_data("e_elelist", edited.element_names());
+    i_ele.set_data("e_elelist", pos - 1);
    }
    if (ch == '\t')
     cur = i_ele.select_next();
@@ -693,9 +698,17 @@ void elements_window(interface &edited)
     cur = i_ele.select_next();
    if (ch == '[')
     cur = i_ele.select_last();
+   if (cur && ch == '{')
+    cur->alignment = ALIGN_LEFT;
+   if (cur && ch == '}')
+    cur->alignment = ALIGN_RIGHT;
 
   } else {
-   if (ch == '\t') {
+   if (cur && ch == '{')
+    cur->alignment = ALIGN_LEFT;
+   else if (cur && ch == '}')
+    cur->alignment = ALIGN_RIGHT;
+   else if (ch == '\t') {
     cur = i_ele.select_next();
     if (cur && cur->name == "e_list_values")
      cur->set_data(99999); // Scroll to bottom
@@ -835,6 +848,8 @@ void update_elements_window(interface &editor, interface &edited)
   editor.set_data("e_elename", selected->name);
   editor.set_data("e_eletype", element_type_name(selected->type()) );
   editor.set_data("e_editable", (selected->selectable ? "Yes" : "No"));
+  editor.set_data("e_alignment",
+                  (selected->align == ALIGN_LEFT ? "Left" : "Right"));
 // Set up the "basic value" area
   switch (selected->type()) {
 
