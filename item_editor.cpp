@@ -9,6 +9,7 @@ std::vector<std::string> get_item_names();
 void delete_item(int index);
 void add_item();
 void edit_item(item_type* itype);
+void reference_item_editor(cuss::interface *i_editor, item_type *itype);
 void update_item_editor(cuss::interface *i_editor, item_type *itype);
 
 int main()
@@ -114,20 +115,110 @@ void edit_item(item_type* itype)
     return;
   }
 
-  update_item_editor(&i_editor, itype);
+  reference_item_editor(&i_editor, itype);
   bool quit = false;
   while (!quit) {
+    update_item_editor(&i_editor, itype);
+}
+
+void reference_item_editor(cuss::interface *i_editor, item_type *itype)
+{
+  if (!itype) {
+    return;
+  }
+  i_editor->ref_data("entry_name",        &(itype->name));
+  i_editor->ref_data("entry_description", &(itype->description));
+  i_editor->ref_data("num_value",         &(itype->value));
+  i_editor->ref_data("num_weight",        &(itype->weight));
+
+  switch (itype->type()) {
+
+    case ITEMCAT_WEAPON: {
+      it_weapon* it = static_cast<it_weapon*>(itype);
+      i_editor->ref_data("num_damage",   &(it->damage));
+      i_editor->ref_data("num_accuracy", &(it->accuracy));
+      i_editor->ref_data("num_hit_time", &(it->hit_time));
+      i_editor->ref_data("num_block",    &(it->block));
+      i_editor->ref_data("num_str_req",  &(it->str_req));
+    } break;
+
+    case ITEMCAT_LAUNCHER: {
+      it_launcher* it = static_cast<it_launcher*>(itype);
+      i_editor->ref_data("num_damage",    &(it->damage));
+      i_editor->ref_data("num_accuracy",  &(it->accuracy));
+      i_editor->ref_data("num_fire_time", &(it->fire_time));
+      i_editor->ref_data("num_str_req",   &(it->str_req));
+    } break;
+
+    case ITEMCAT_MISSILE: {
+      it_missile* it = static_cast<it_missile*>(itype);
+      i_editor->ref_data("num_damage",    &(it->damage));
+      i_editor->ref_data("num_accuracy",  &(it->accuracy));
+      i_editor->ref_data("num_fire_time", &(it->fire_time));
+      i_editor->ref_data("num_str_req",   &(it->str_req));
+    } break;
+
+    case ITEMCAT_ARMOR: {
+      it_armor* it = static_cast<it_armor*>(itype);
+      i_editor->ref_data("num_ac",       &(it->ac));
+      i_editor->ref_data("list_covers",  &(it->parts_covered));
+    } break;
+
+    case ITEMCAT_FOOD: {
+      it_food* it = static_cast<it_food*>(itype);
+      i_editor->ref_data("num_nutrition", &(it->nutrition));
+    } break;
+// TODO: The rest of the item categories
+  }
 }
 
 void update_item_editor(cuss::interface *i_editor, item_type *itype)
 {
-  i_editor->ref_data("entry_name", &(itype->name));
-  i_editor->ref_data("entry_description", &(itype->description));
+  if (!itype) {
+    return;
+  }
+  std::stringstream symstring;
+  symstring << "<c=" << color_tag_name(itype->symbol.fg) << ">" <<
+               itype->symbol.symbol << "<c=/>";
+  i_editor->set_data("text_symbol", symstring.str());
   switch (itype->type()) {
+
     case ITEMCAT_WEAPON: {
-      it_weapon* weap = static_cast<it_weapon*>(itype);
-      i_editor->ref_data("num_damage", &(weap->damage));
-      i_editor->ref_data("num_accuracy", &(weap->accuracy));
-      i_editor->ref_data("num_hit_time", &(weap->hit_time));
-      i_editor->ref_data("num_block", &(weap->block));
-      i_editor->ref_data("num_str_req", &(weap->str_req));
+      it_weapon* it = static_cast<it_weapon*>(itype);
+      std::vector<std::string> attack_names;
+      for (int i = 0; i < ATT_MAX; i++) {
+        if (it->attack_types[i]) {
+          attack_names.push_back( get_attack_type_name( attack_type(i) ) );
+        }
+      }
+      i_editor->set_data("list_attacks", attack_names);
+      std::vector<std::string> damage_names;
+      for (int i = 0; i < it->damage_types.size(); i++) {
+        damage_names.push_back( get_damage_type_name( it->damage_types[i] ) );
+      }
+      i_editor->set_data("list_damages", damage_names);
+    } break;
+
+    case ITEMCAT_LAUNCHER: {
+      it_launcher* it = static_cast<it_launcher*>(itype);
+      std::vector<std::string> damage_names;
+      for (int i = 0; i < it->damage_types.size(); i++) {
+        damage_names.push_back( get_damage_type_name( it->damage_types[i] ) );
+      }
+      i_editor->set_data("list_damages", damage_names);
+      i_editor->set_data("text_ammo_type", get_missile_category_name(it->ammo));
+    } break;
+
+    case ITEMCAT_MISSILE: {
+      it_missile* it = static_cast<it_missile*>(itype);
+      std::vector<std::string> damage_names;
+      for (int i = 0; i < it->damage_types.size(); i++) {
+        damage_names.push_back( get_damage_type_name( it->damage_types[i] ) );
+      }
+      i_editor->set_data("list_damages", damage_names);
+      i_editor->set_data("text_ammo_type", get_missile_category_name(it->ammo));
+      i_editor->set_data("text_attack_type",get_attack_type_name(it->att_type));
+    } break;
+
+// TODO: The rest of them!
+

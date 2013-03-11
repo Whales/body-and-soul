@@ -33,6 +33,8 @@ MISSILECAT_MAX
 std::string get_item_category_name(item_category cat);
 item_category lookup_item_category(std::string name);
 
+std::string get_missile_category_name(missile_category cat);
+
 struct item_type
 {
   item_type();
@@ -87,9 +89,9 @@ struct it_launcher : public item_type
   int accuracy;
   int fire_time;
   int str_req;
-  missile_category ammo;
   bool two_handed;
 
+  missile_category ammo;
   std::vector<damage_type> damage_types;
 };
 
@@ -105,7 +107,10 @@ struct it_missile : public item_type
   int accuracy;
   int fire_time;
   int str_req;
+
   missile_category ammo;
+  attack_type att_type;
+  std::vector<damage_type> damage_types;
 };
 
 struct it_armor : public item_type
@@ -119,9 +124,8 @@ struct it_armor : public item_type
 
   int ac;
   virtual bool covers(std::string partname);
-
-private:
   std::vector<std::string> parts_covered;
+
 };
 
 struct it_food : public item_type

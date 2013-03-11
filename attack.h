@@ -28,7 +28,7 @@ ATT_MAX
 };
 
 std::string get_damage_type_name(damage_type type);
-
+std::string get_attack_type_name(attack_type type);
 
 
 #endif

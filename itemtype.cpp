@@ -142,15 +142,27 @@ std::string it_missile::save_data()
 {
   std::stringstream ret;
   ret << item_type::save_data() << " " << damage << " " << accuracy << " " <<
-         fire_time << " " << str_req << " " << int(ammo);
+         fire_time << " " << str_req << " " << int(ammo) << " " << 
+         int(att_type) << " ";
+  ret << damage_types.size() << " ";
+  for (int i = 0; i < damage_types.size(); i++) {
+    ret << damage_types[i] << " ";
+  }
 }
 
 void it_missile::load_data(std::istream &datastream)
 {
-  int tmpammo;
+  int tmpammo, tmpatt, tmpsize;
   item_type::load_data(datastream);
-  datastream >> damage >> accuracy >> fire_time >> str_req >> tmpammo;
+  datastream >> damage >> accuracy >> fire_time >> str_req >> tmpammo >>
+                tmpatt >> tmpsize;
   ammo = missile_category(tmpammo);
+  att_type = attack_type(tmpatt);
+  for (int i = 0; i < tmpsize; i++) {
+    int tmpdam;
+    datastream >> tmpdam;
+    damage_types.push_back( damage_type(tmpdam) );
+  }
 }
 
 it_armor::it_armor()
@@ -418,3 +430,17 @@ item_type* load_item_type(std::istream &datastream)
   return NULL;
 }
 */
+
+std::string get_missile_category_name(missile_category cat)
+{
+  switch (cat) {
+    case MISSILECAT_NULL:   return "NULL";
+    case MISSILECAT_THROWN: return "thrown";
+    case MISSILECAT_ARROW:  return "arrow";
+    case MISSILECAT_BOLT:   return "bolt";
+    case MISSILECAT_AMMO:   return "ammo";
+    case MISSILECAT_EC:     return "EC pack";
+    default:                return "BUG - unknown missile_category";
+  }
+  return "BUG - escaped missile_category switch";
+}
