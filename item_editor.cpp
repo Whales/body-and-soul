@@ -6,11 +6,17 @@
 #include "window.h"
 
 std::vector<std::string> get_item_names();
+
 void delete_item(int index);
 void add_item();
 void edit_item(item_type* itype);
+
+void set_symbol(item_type* itype);
+void add_value (item_type* itype, const std::string &form_name);
+void del_value (item_type* itype, const std::string &form_name);
+
 void reference_item_editor(cuss::interface *i_editor, item_type *itype);
-void update_item_editor(cuss::interface *i_editor, item_type *itype);
+void    update_item_editor(cuss::interface *i_editor, item_type *itype);
 
 int main()
 {
@@ -97,7 +103,8 @@ void edit_item(item_type* itype)
   Window w_editor(0, 0, 80, 25);
   cuss::interface i_editor;
   std::string fname = "cuss/";
-  switch (itype->type()) {
+  item_category itype_cat = itype->type();
+  switch (itype_cat) {
     case ITEMCAT_NULL: return;
     case ITEMCAT_WEAPON:      fname += "i_edit_weapon.cuss";
     case ITEMCAT_LAUNCHER:    fname += "i_edit_launcher.cuss";
@@ -115,10 +122,31 @@ void edit_item(item_type* itype)
     return;
   }
 
+// Set up data references
   reference_item_editor(&i_editor, itype);
+
   bool quit = false;
   while (!quit) {
     update_item_editor(&i_editor, itype);
+    long ch = getch();
+    if (!i_editor.handle_keypress(ch)) {
+      cuss::element *selected_ele = i_editor.selected();
+             if (ch == 'c' || ch == 'C') {
+        set_symbol(itype);
+      } else if (ch == 'a' || ch == 'A' &&
+                 selected_ele->type() == cuss::ELE_LIST) {
+        add_value(itype, selected_ele->name);
+      } else if (ch == 'd' || ch == 'D' &&
+                 selected_ele->type() == cuss::ELE_LIST) {
+        del_value(itype, selected_ele->name);
+      } else if (ch == 'h' || ch == 'H' && itype_cat == ITEMCAT_LAUNCHER) {
+        it_launcher* it = static_cast<it_launcher*>(itype);
+        it->two_handed = !it->two_handed;
+      } else if (ch == 's' || ch == 'S' && query_yn("Save and quit?")) {
+        quit = true;
+      }
+    }
+  }
 }
 
 void reference_item_editor(cuss::interface *i_editor, item_type *itype)
@@ -219,6 +247,39 @@ void update_item_editor(cuss::interface *i_editor, item_type *itype)
       i_editor->set_data("text_ammo_type", get_missile_category_name(it->ammo));
       i_editor->set_data("text_attack_type",get_attack_type_name(it->att_type));
     } break;
-
 // TODO: The rest of them!
+  }
+}
 
+void set_symbol(item_type* itype)
+{
+  Window w_col(1, 1, 20, 6);
+  w_col.outline();
+  for (int i = 0; i < c_dkgray; i++) {
+    w_col.putch(i + 1, 1, nc_color(i), c_black, '#');
+    w_col.putch(i + 1, 3, nc_color(i + 8), c_black, '#');
+  }
+  w_col.putstr(1, 2, c_white, c_black, "12345678");
+  w_col.putstr(1, 4, c_white, c_black, "abcdefgh");
+
+  w_col.refresh();
+  ch = getch();
+
+  if (ch >= '1' && ch <= '8')
+    itype->symbol.fg = nc_color(ch - '1');
+  if (ch >= 'a' && ch <= 'h')
+    itype->symbol.fg = nc_color(ch - 'a' + c_dkgray);
+  itype->symbol.bg = c_black;
+}
+
+void add_value (item_type* itype, const std::string &form_name)
+{
+  switch (itype->type()) {
+    case ITEMCAT_WEAPON: {
+      if (form_name == "list_attacks") {
+}
+
+void del_value (item_type* itype, const std::string &form_name)
+{
+
+}

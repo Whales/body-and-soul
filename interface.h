@@ -400,7 +400,7 @@ namespace cuss {
     bool rem_all_bindings(std::string target);
     bool set_use_bindings(bool set = true);
 
-    bool handle_action(long ch);
+    bool handle_action  (long ch); // Only does keybindings
     bool handle_keypress(long ch); // May redirect to current object
 
     std::string name;
