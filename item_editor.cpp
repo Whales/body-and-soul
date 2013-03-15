@@ -18,6 +18,9 @@ void del_value (item_type* itype, const std::string &form_name);
 void reference_item_editor(cuss::interface *i_editor, item_type *itype);
 void    update_item_editor(cuss::interface *i_editor, item_type *itype);
 
+int pick_attack();
+int pick_damage();
+
 int main()
 {
   init_display();
@@ -276,10 +279,74 @@ void add_value (item_type* itype, const std::string &form_name)
 {
   switch (itype->type()) {
     case ITEMCAT_WEAPON: {
+      it_weapon* it = static_cast<it_weapon*>(itype);
       if (form_name == "list_attacks") {
+        int sel = pick_attack();
+        if (sel != 0) {
+          it->attack_types[i] = true;
+        }
+      } else if (form_name == "list_damages") {
+        int sel = pick_damage();
+        if (sel != 0) {
+          it->damage_types.push_back( damage_type(sel) );
+        }
+      }
+    } break;
+
+    case ITEMCAT_LAUNCHER: {
+      it_launcher* it = static_cast<it_launcher*>(itype);
+      int sel = pick_damage();
+      if (sel != 0) {
+        it->damage_types.push_back( damage_type(sel) );
+      }
+    } break;
+
+    case ITEMCAT_MISSLE: {
+      it_missile* it = static_cast<it_missile*>(itype);
+      int sel = pick_damage();
+      if (sel != 0) {
+        it->damage_types.push_back( damage_type(sel) );
+      }
+    } break;
+
+    case ITEMCAT_ARMOR: {
+      it_armor* it = static_cast<it_armor*>(itype);
+      if (form_name == "list_covers") {
+        std::vector<std::string> options;
+        options.push_back("Cancel");
+        for (int i = 0; i < BODY_PARTS_POOL.size(); i++) {
+          options.push_back( BODY_PARTS_POOL[i].name );
+        }
+        int sel = menu_vec(options);
+        if (sel != 0) {
+          it->parts_covered.push_back( BODY_PARTS_POOL[sel - 1].name );
+        }
+      }
+    } break;
+  } // switch (itype->type())
 }
 
 void del_value (item_type* itype, const std::string &form_name)
 {
 
+}
+
+int pick_attack()
+{
+  std::vector<std::string> options;
+  options.push_back("Cancel");
+  for (int i = 1 ; i < ATT_MAX; i++) {
+    options.push_back( get_attack_type_name( attack_type(i) ) );
+  }
+  return menu_vec(options);
+}
+
+int pick_damage()
+{
+  std::vector<std::string> options;
+  options.push_back("Cancel");
+  for (int i = 1 ; i < DAMTYPE_MAX; i++) {
+    options.push_back( get_damage_type_name( damage_type(i) ) );
+  }
+  return menu_vec(options);
 }

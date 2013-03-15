@@ -72,7 +72,7 @@ struct it_weapon : public item_type
   int block;
   int str_req;
 
-  std::vector<bool> attack_types;
+  std::vector<bool>        attack_types;
   std::vector<damage_type> damage_types;
 };
 
