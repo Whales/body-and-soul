@@ -136,15 +136,35 @@ void edit_item(item_type* itype)
       cuss::element *selected_ele = i_editor.selected();
              if (ch == 'c' || ch == 'C') {
         set_symbol(itype);
-      } else if (ch == 'a' || ch == 'A' &&
+      } else if ((ch == 'a' || ch == 'A') &&
                  selected_ele->type() == cuss::ELE_LIST) {
         add_value(itype, selected_ele->name);
-      } else if (ch == 'd' || ch == 'D' &&
+      } else if ((ch == 'd' || ch == 'D') &&
                  selected_ele->type() == cuss::ELE_LIST) {
         del_value(itype, selected_ele->name);
-      } else if (ch == 'h' || ch == 'H' && itype_cat == ITEMCAT_LAUNCHER) {
+      } else if ((ch == 'h' || ch == 'H') && itype_cat == ITEMCAT_LAUNCHER) {
         it_launcher* it = static_cast<it_launcher*>(itype);
         it->two_handed = !it->two_handed;
+      } else if (ch == 't' || ch == 'T') {
+        if (itype_cat == ITEMCAT_LAUNCHER) {
+          it_launcher* it = static_cast<it_launcher*>(itype);
+          int sel = pick_ammo();
+          if (sel != 0) {
+            it->ammo = sel;
+          }
+        } else if (itype_cat == ITEMCAT_MISSILE) {
+          it_missile* it = static_cast<it_missile*>(itype);
+          int sel = pick_ammo();
+          if (sel != 0) {
+            it->ammo = sel;
+          }
+        }
+      } else if ((ch == 'm' || ch == 'M') && itype_cat == ITEMCAT_MISSILE) {
+        it_missile* it = static_cast<it_missile*>(itype);
+        int sel = pick_attack();
+        if (sel != 0) {
+          it->att_type = attack_type(sel);
+        }
       } else if (ch == 's' || ch == 'S' && query_yn("Save and quit?")) {
         quit = true;
       }
@@ -347,6 +367,16 @@ int pick_damage()
   options.push_back("Cancel");
   for (int i = 1 ; i < DAMTYPE_MAX; i++) {
     options.push_back( get_damage_type_name( damage_type(i) ) );
+  }
+  return menu_vec(options);
+}
+
+int pick_ammo()
+{
+  std::vector<std::string> options;
+  options.push_back("Cancel");
+  for (int i = 1; i < MISSILECAT_MAX; i++) {
+    options.push_back( get_missile_category_name( missile_category(i) ) );
   }
   return menu_vec(options);
 }
