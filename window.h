@@ -43,6 +43,7 @@ std::string string_edit_popup (std::string orig, const char *mes, ...);
 std::string string_input_popup(const char *mes, ...);
 int         int_input_popup   (const char *mes, ...);
 long        popup_getkey      (const char *mes, ...);
+bool        query_yn          (const char *mes, ...);
 
 int  menu_vec(const char *mes, std::vector<std::string> options);
 int  menu    (const char *mes, ...);

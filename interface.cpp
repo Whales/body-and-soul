@@ -438,7 +438,7 @@ bool ele_textentry::handle_keypress(long ch)
     return true;
   }
   if (ch >= 32 && ch <= 126) { // Printable chars
-    text += char(ch);
+    (*text) += char(ch);
     return true;
   }
   return false;

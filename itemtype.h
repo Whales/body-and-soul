@@ -179,6 +179,7 @@ struct it_crystal : public item_type
   int element_id;
 };
 
+item_type* new_item_type (item_category cat);
 item_type* load_item_type(std::istream &datastream);
 
 #endif

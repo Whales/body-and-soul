@@ -525,6 +525,49 @@ long popup_getkey(const char *mes, ...)
  return ch;
 }
 
+bool query_yn(const char *mes, ...)
+{
+ va_list ap;
+ va_start(ap, mes);
+ char buff[8192];
+ vsprintf(buff, mes, ap);
+ va_end(ap);
+ std::string tmp = buff;
+ int width = 0;
+ int height = 2;
+ size_t pos = tmp.find('\n');
+ while (pos != std::string::npos) {
+  height++;
+  if (pos > width)
+   width = pos;
+  tmp = tmp.substr(pos + 1);
+  pos = tmp.find('\n');
+ }
+ if (width == 0 || tmp.length() > width)
+  width = tmp.length();
+ width += 2;
+ if (height > 25)
+  height = 25;
+ Window w(int((80 - width) / 2), int((25 - height) / 2), width, height + 1);
+ w.outline();
+ tmp = buff;
+ pos = tmp.find('\n');
+ int line_num = 0;
+ while (pos != std::string::npos) {
+  std::string line = tmp.substr(0, pos);
+  line_num++;
+  w.putstr(1, line_num, c_white, c_black, line);
+  tmp = tmp.substr(pos + 1);
+  pos = tmp.find('\n');
+ }
+ line_num++;
+ w.putstr(1, line_num, c_white, c_black, std::string(tmp));
+ 
+ w.refresh();
+ long ch = getch();
+ return (ch == 'y' || ch == 'Y');
+}
+
 int menu_vec(const char *mes, std::vector<std::string> options)
 {
  if (options.size() == 0) {

@@ -63,6 +63,7 @@ std::string it_weapon::save_data()
   for (int i = 0; i < damage_types.size(); i++) {
     ret << damage_types[i] << " ";
   }
+  return ret.str();
 }
 
 void it_weapon::load_data(std::istream &datastream)
@@ -70,9 +71,7 @@ void it_weapon::load_data(std::istream &datastream)
   item_type::load_data(datastream);
   datastream >> damage >> accuracy >> hit_time >> block;
   for (int i = 0; i < ATT_MAX; i++) {
-    int tmpatt;
-    datastream >> tmpatt;
-    attack_types.push_back( attack_type(tmpatt) );
+    datastream >> attack_types[i];
   }
   int tmpsize;
   datastream >> tmpsize;
@@ -108,6 +107,7 @@ std::string it_launcher::save_data()
   for (int i = 0; i < damage_types.size(); i++) {
     ret << damage_types[i] << " ";
   }
+  return ret.str();
 }
 
 void it_launcher::load_data(std::istream &datastream)
@@ -148,6 +148,7 @@ std::string it_missile::save_data()
   for (int i = 0; i < damage_types.size(); i++) {
     ret << damage_types[i] << " ";
   }
+  return ret.str();
 }
 
 void it_missile::load_data(std::istream &datastream)
@@ -365,6 +366,7 @@ item_type* new_item_type(item_category cat)
     debugmsg("Whaaaaat");
     return NULL;
   }
+  debugmsg("Escaped switch!");
   return NULL;
 }
 
@@ -376,60 +378,6 @@ item_type* load_item_type(std::istream &datastream)
   ret->load_data(datastream);
   return ret;
 }
-/*
-  switch (lookup_item_category(ident)) {
-  case ITEMCAT_NULL: {
-    item_type* ret = new item_type;
-    ret->load_data(datastream);
-    return ret;
-  }
-  case ITEMCAT_WEAPON: {
-    it_weapon* ret = new it_weapon;
-    ret->load_data(datastream);
-    return ret;
-  }
-  case ITEMCAT_LAUNCHER: {
-    it_launcher* ret = new it_launcher;
-    ret->load_data(datastream);
-    return ret;
-  }
-  case ITEMCAT_MISSILE: {
-    it_missile* ret = new it_missile;
-    ret->load_data(datastream);
-    return ret;
-  }
-  case ITEMCAT_ARMOR: {
-    it_armor* ret = new it_armor;
-    ret->load_data(datastream);
-    return ret;
-  }
-  case ITEMCAT_FOOD: {
-    it_food* ret = new it_food;
-    ret->load_data(datastream);
-    return ret;
-  }
-  case ITEMCAT_POTION: {
-    it_potion* ret = new it_potion;
-    ret->load_data(datastream);
-    return ret;
-  }
-  case ITEMCAT_INSTRUMENT: {
-    it_instrument* ret = new it_instrument;
-    ret->load_data(datastream);
-    return ret;
-  }
-  case ITEMCAT_CRYSTAL: {
-    it_crystal* ret = new it_crystal;
-    ret->load_data(datastream);
-    return ret;
-  }
-  case ITEMCAT_MAX:
-    debugmsg("Whaaaaat");
-    return NULL;
-  }
-  return NULL;
-}
-*/
 
 std::string get_missile_category_name(missile_category cat)
 {

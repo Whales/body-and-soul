@@ -208,10 +208,10 @@ void save_data()
   fout.open( filename.c_str() );
   if (fout.is_open()) {
     fout << ITEMS_POOL.size() << std::endl;
-    for (std::vector<item_type*>::iterator it = ITEMS_POOL.begin();
-         it != ITEMS_POOL.end(); it++) {
-      fout << get_item_category_name( (*it)->type() ) << ": " <<
-              (*it)->save_data() << std::endl;
+    for (int i = 0; i < ITEMS_POOL.size(); i++) {
+      item_type* it = ITEMS_POOL[i];
+      fout << get_item_category_name( it->type() ) << ": " <<
+              it->save_data() << std::endl;
     }
     fout.close();
   }
