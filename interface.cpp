@@ -510,6 +510,8 @@ bool ele_number::handle_keypress(long ch)
   } else if (is_backspace(ch)) {
     (*value) /= 10;
     return true;
+  } else if (ch == '-') {
+    (*value)*= -1;
   }
   return false;
 }

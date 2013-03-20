@@ -55,7 +55,7 @@ int main()
     } else if (ch == 'd' || ch == 'D') {
       delete_item(selnum);
       i_list.set_data("list_items", get_item_names());
-    } else if (ch == 'e' || ch == 'E') {
+    } else if (ch == 'e' || ch == 'E' || ch == '\n') {
       edit_item(curtype);
       i_list.set_data("list_items", get_item_names());
     } else if (ch == 'a' || ch == 'A') {
@@ -155,6 +155,8 @@ void edit_item(item_type* itype)
       } else if ((ch == 'h' || ch == 'H') && itype_cat == ITEMCAT_LAUNCHER) {
         it_launcher* it = static_cast<it_launcher*>(itype);
         it->two_handed = !it->two_handed;
+      } else if (ch == '*') {
+        itype->artifact = !itype->artifact;
       } else if (ch == 't' || ch == 'T') {
         if (itype_cat == ITEMCAT_LAUNCHER) {
           it_launcher* it = static_cast<it_launcher*>(itype);
@@ -175,7 +177,8 @@ void edit_item(item_type* itype)
         if (sel != 0) {
           it->att_type = attack_type(sel);
         }
-      } else if (ch == 's' || ch == 'S' && query_yn("Save and quit?")) {
+      } else if ((ch == 's' || ch == 'S' || ch == KEY_ESC) &&
+                 query_yn("Save and quit?")) {
         quit = true;
       }
     }
@@ -240,8 +243,9 @@ void update_item_editor(cuss::interface *i_editor, item_type *itype)
   }
   std::stringstream symstring;
   symstring << "<c=" << color_tag_name(itype->symbol.fg) << ">" <<
-               itype->symbol.symbol << "<c=/>";
-  i_editor->set_data("text_symbol", symstring.str());
+               char(itype->symbol.symbol) << "<c=/>";
+  i_editor->set_data("text_symbol",   symstring.str());
+  i_editor->set_data("text_artifact", (itype->artifact ? "Yes" : "No"));
   switch (itype->type()) {
 
     case ITEMCAT_WEAPON: {
@@ -268,6 +272,7 @@ void update_item_editor(cuss::interface *i_editor, item_type *itype)
       }
       i_editor->set_data("list_damages", damage_names);
       i_editor->set_data("text_ammo_type", get_missile_category_name(it->ammo));
+      i_editor->set_data("text_handedness", (it->two_handed ? "Yes" : "No") );
     } break;
 
     case ITEMCAT_MISSILE: {
