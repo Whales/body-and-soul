@@ -6,11 +6,12 @@
 
 item_type::item_type()
 {
-  name = "nothing";
+  name = "";
   uid = 0;
   value = 0;
   symbol = glyph('x', c_white, c_red);
   weight = 0;
+  artifact = false;
 }
 
 item_type::~item_type()
@@ -36,10 +37,13 @@ void item_type::load_data(std::istream &datastream)
 it_weapon::it_weapon()
 {
   symbol.symbol = '/';
+  symbol.fg = c_white;
+  symbol.bg = c_black;
   damage = 0;
   accuracy = 0;
-  hit_time = 10;
+  hit_time = 0;
   block = 0;
+  str_req = 0;
   for (int i = 0; i < ATT_MAX; i++) {
     attack_types.push_back(false);
   }
@@ -71,7 +75,9 @@ void it_weapon::load_data(std::istream &datastream)
   item_type::load_data(datastream);
   datastream >> damage >> accuracy >> hit_time >> block;
   for (int i = 0; i < ATT_MAX; i++) {
-    datastream >> attack_types[i];
+    bool tmpbool;
+    datastream >> tmpbool;
+    attack_types[i] = tmpbool;
   }
   int tmpsize;
   datastream >> tmpsize;
@@ -85,6 +91,8 @@ void it_weapon::load_data(std::istream &datastream)
 it_launcher::it_launcher()
 {
   symbol.symbol = ')';
+  symbol.fg = c_white;
+  symbol.bg = c_black;
   damage = 0;
   accuracy = 0;
   fire_time = 0;
@@ -127,6 +135,8 @@ void it_launcher::load_data(std::istream &datastream)
 it_missile::it_missile()
 {
   symbol.symbol = ':';
+  symbol.fg = c_white;
+  symbol.bg = c_black;
   damage = 0;
   accuracy = 0;
   fire_time = 0;
@@ -169,6 +179,8 @@ void it_missile::load_data(std::istream &datastream)
 it_armor::it_armor()
 {
   symbol.symbol = '[';
+  symbol.fg = c_white;
+  symbol.bg = c_black;
   ac = 0;
 }
 
@@ -212,6 +224,8 @@ bool it_armor::covers(std::string partname)
 it_food::it_food()
 {
   symbol.symbol = '%';
+  symbol.fg = c_white;
+  symbol.bg = c_black;
   nutrition = 0;
 }
 
@@ -235,6 +249,8 @@ void it_food::load_data(std::istream &datastream)
 it_potion::it_potion()
 {
   symbol.symbol = '!';
+  symbol.fg = c_white;
+  symbol.bg = c_black;
 }
 
 it_potion::~it_potion()
@@ -254,6 +270,8 @@ void it_potion::load_data(std::istream &datastream)
 it_instrument::it_instrument()
 {
   symbol.symbol = '}';
+  symbol.fg = c_white;
+  symbol.bg = c_black;
 }
 
 it_instrument::~it_instrument()
@@ -273,6 +291,8 @@ void it_instrument::load_data(std::istream &datastream)
 it_crystal::it_crystal()
 {
   symbol.symbol = '*';
+  symbol.fg = c_white;
+  symbol.bg = c_black;
   element_id = 0;
 }
 

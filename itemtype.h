@@ -50,11 +50,14 @@ struct item_type
   std::string name;
   std::string description;
 
-  int uid;
-  int value;
   glyph symbol;
 
+  int uid;
+  int value;
   int weight;
+
+  bool artifact;
+
 };
 
 struct it_weapon : public item_type
