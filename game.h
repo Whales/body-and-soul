@@ -2,6 +2,7 @@
 #define _GAME_H_
 
 #include "entity.h"
+#include "item.h"
 #include "map.h"
 #include "interface.h"
 
