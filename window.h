@@ -20,6 +20,7 @@
 
 #define KEY_ESC 27
 
+
 enum Window_type
 {
  WINDOW_TYPE_GENERAL,
@@ -97,5 +98,7 @@ class Window
   Window_type type;
   int xdim, ydim;
 };
+
+extern std::list<Window*> WINDOWLIST;
 
 #endif

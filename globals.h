@@ -19,8 +19,6 @@ extern std::vector<element> ELEMENTS_POOL;
 extern std::vector<item_type*> ITEMS_POOL;
 extern std::vector< std::vector<mapgen_spec*> > MAPGEN_POOL;
 
-extern std::list<Window*> WINDOWLIST;
-
 void init_environment();
 void init_data();
 void save_data();

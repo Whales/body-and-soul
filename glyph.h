@@ -4,6 +4,8 @@
 #include <istream>
 #include "color.h"
 
+#define HILITE_COLOR c_blue
+
 struct glyph
 {
  long symbol;
@@ -12,6 +14,9 @@ struct glyph
 
  glyph() { symbol = ' '; fg = c_black; bg = c_black; };
  glyph(long S, nc_color F, nc_color B) : symbol (S), fg (F), bg (B) { };
+
+ glyph invert();
+ glyph hilite();
 
  bool operator==(const glyph &rhs);
 
