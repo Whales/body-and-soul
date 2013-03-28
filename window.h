@@ -3,6 +3,7 @@
 
 #include <curses.h>
 #include <vector>
+#include <list>
 #include "glyph.h"
 
 //      LINE_NESW  - X for on, O for off

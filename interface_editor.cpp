@@ -406,7 +406,7 @@ bool starting_window(interface &edited)
  cuss::interface i_start;
  cuss::interface selected;
 
- if (!i_start.load_from_file("cuss/i_start.cuss"))
+ if (!i_start.load_from_file("cuss/editor/i_start.cuss"))
   debugmsg("Couldn't load starting interface!");
 
  i_start.set_data("list_interfaces", files_in("cuss", "cuss"));
@@ -479,8 +479,8 @@ void bindings_window(interface &edited)
 
  cuss::interface i_bindings;
  std::vector<long> bind_keys; // For temp use only
- if (!i_bindings.load_from_file("cuss/i_bindings.cuss")) {
-  debugmsg("Couldn't load cuss/i_bindings.cuss!");
+ if (!i_bindings.load_from_file("cuss/editor/i_bindings.cuss")) {
+  debugmsg("Couldn't load cuss/editor/i_bindings.cuss!");
   return;
  }
  i_bindings.set_data("e_list_bindings", edited.binding_list());
@@ -643,8 +643,8 @@ void elements_window(interface &edited)
  Window w_elements(0, 0, 80, 24);
 
  cuss::interface i_ele;
- if (!i_ele.load_from_file("cuss/i_elements.cuss")) {
-  debugmsg("Couldn't load cuss/i_elements.cuss!");
+ if (!i_ele.load_from_file("cuss/editor/i_elements.cuss")) {
+  debugmsg("Couldn't load cuss/editor/i_elements.cuss!");
   return;
  }
 

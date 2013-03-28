@@ -31,7 +31,7 @@ bool game::do_turn()
     case 'b': pl_move(-1,  1); break;
     case 'n': pl_move( 1,  1); break;
     case 'i':
-      item
+      //item
     case 'q': return false;
   }
   curMap.process_transformations();
