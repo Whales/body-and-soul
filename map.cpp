@@ -144,6 +144,29 @@ tile& map::ter(int x, int y)
   return submaps[smx][smy].tiles[x][y];
 }
 
+std::vector<item>& map::items_at(int x, int y)
+{
+  if (x < 0 || y < 0 || x >= SUBMAP_SIZE * 3 || y >= SUBMAP_SIZE * 3) {
+    nullitems.clear();
+    return nullitems;
+  }
+
+  int smx = x / SUBMAP_SIZE, smy = y / SUBMAP_SIZE;
+  x %= SUBMAP_SIZE;
+  y %= SUBMAP_SIZE;
+  if (smx < 0 || smy < 0 || smx >= 3 || smy >= 3 ||
+        x < 0 ||   y < 0 || x >= SUBMAP_SIZE * 3 || y >= SUBMAP_SIZE * 3) {
+    debugmsg("Nope!");
+  }
+
+  return submaps[smx][smy].items[x][y];
+}
+
+void map::add_item(int x, int y, item it)
+{
+  items_at(x, y).push_back(it);
+}
+
 void map::draw(Window *w, int origx, int origy, int sight_dist,
                glyph orig_glyph)
 {
@@ -154,11 +177,14 @@ void map::draw(Window *w, int origx, int origy, int sight_dist,
       if (!ter(x, y).type) {
         debugmsg("badtype");
       }
-      //if (x != 191 || y != 187)
       if (x == origx && y == origy) {
         w->putglyph(x + xdim - origx, y + ydim - origy, orig_glyph);
       } else if (sees(origx, origy, x, y, sight_dist)) {
-        print = ter(x, y).type->symbol;
+        if (items_at(x, y).empty()) {
+          print = ter(x, y).type->symbol;
+        } else {
+          print = items_at(x, y).back().get_symbol();
+        }
         w->putglyph(x + xdim - origx, y + ydim - origy, print);
       }
     }

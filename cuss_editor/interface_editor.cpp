@@ -1,6 +1,6 @@
 #include <fstream>
 #include <sstream>
-#include "interface.h"
+#include "cuss.h"
 #include "files.h"
 #include "stringfunc.h"
 
@@ -11,7 +11,7 @@ void bindings_window(interface &edited);
 void elements_window(interface &edited);
 void update_elements_window(interface &editor, interface &edited);
 
-void init_interface(interface &edited, std::string name);
+void init_interface(interface &edited, std::string name, int x=80, int y=24);
 void draw_line(interface &edited, int x1, int y1, int x2, int y2);
 void draw_box (interface &edited, int x1, int y1, int x2, int y2);
 void temp_line(Window &w,         int x1, int y1, int x2, int y2);
@@ -406,7 +406,7 @@ bool starting_window(interface &edited)
  cuss::interface i_start;
  cuss::interface selected;
 
- if (!i_start.load_from_file("cuss/i_start.cuss"))
+ if (!i_start.load_from_file("cuss/editor/i_start.cuss"))
   debugmsg("Couldn't load starting interface!");
 
  i_start.set_data("list_interfaces", files_in("cuss", "cuss"));
@@ -417,6 +417,8 @@ bool starting_window(interface &edited)
   filename << "cuss/" << selname;
   selected.load_from_file(filename.str());
   i_start.set_data("list_elements", selected.element_names());
+  i_start.set_data("num_x", selected.sizex);
+  i_start.set_data("num_y", selected.sizey);
  }
  i_start.select("list_interfaces");
 
@@ -433,6 +435,8 @@ bool starting_window(interface &edited)
     filename << "cuss/" << selname;
     selected.load_from_file(filename.str());
     i_start.set_data("list_elements", selected.element_names());
+    i_start.set_data("num_x", selected.sizex);
+    i_start.set_data("num_y", selected.sizey);
    }
   }
   if (ch == 'k' || ch == '8' || ch == KEY_UP) {
@@ -463,8 +467,11 @@ bool starting_window(interface &edited)
   if (ch == 'n' || ch == 'N') {
    std::string name = string_input_popup("Name: ");
    if (name != "") {
-    done = true;
-    init_interface(edited, name);
+    int x = int_input_popup("X dim:"), y = int_input_popup("Y dim:");
+    if (x > 0 && y > 0) {
+      done = true;
+      init_interface(edited, name, x, y);
+    }
    }
   }
   if (ch == 'q' || ch == 'Q')
@@ -479,8 +486,8 @@ void bindings_window(interface &edited)
 
  cuss::interface i_bindings;
  std::vector<long> bind_keys; // For temp use only
- if (!i_bindings.load_from_file("cuss/i_bindings.cuss")) {
-  debugmsg("Couldn't load cuss/i_bindings.cuss!");
+ if (!i_bindings.load_from_file("cuss/editor/i_bindings.cuss")) {
+  debugmsg("Couldn't load cuss/editor/i_bindings.cuss!");
   return;
  }
  i_bindings.set_data("e_list_bindings", edited.binding_list());
@@ -643,8 +650,8 @@ void elements_window(interface &edited)
  Window w_elements(0, 0, 80, 24);
 
  cuss::interface i_ele;
- if (!i_ele.load_from_file("cuss/i_elements.cuss")) {
-  debugmsg("Couldn't load cuss/i_elements.cuss!");
+ if (!i_ele.load_from_file("cuss/editor/i_elements.cuss")) {
+  debugmsg("Couldn't load cuss/editor/i_elements.cuss!");
   return;
  }
 
@@ -923,7 +930,7 @@ void update_elements_window(interface &editor, interface &edited)
 }
 
 
-void init_interface(interface &edited, std::string name)
+void init_interface(interface &edited, std::string name, int x, int y)
 {
  std::stringstream filename;
  filename << "cuss/" << name << ".cuss";
@@ -934,9 +941,9 @@ void init_interface(interface &edited, std::string name)
   fin.close();
  } else {
   edited.name = name;
-  edited.sizex = 80;
-  edited.sizey = 25;
-  edited.add_element(ELE_DRAWING, "BG", 0, 0, 80, 25, false);
+  edited.sizex = x;
+  edited.sizey = y;
+  edited.add_element(ELE_DRAWING, "BG", 0, 0, x, y, false);
  }
 }
 

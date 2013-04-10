@@ -17,6 +17,9 @@ class game
   void draw();
   void pl_move(int dx, int dy);
 
+  void add_msg(std::string message);
+  void print_messages();
+
   entity player;
   map curMap;
 
@@ -29,6 +32,9 @@ class game
   cuss::interface int_body;
   cuss::interface int_soul;
   cuss::interface int_messages;
+
+  std::vector<std::string> messages;
+  int messages_to_print;
 };
 
 #endif

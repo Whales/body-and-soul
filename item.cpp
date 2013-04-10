@@ -22,6 +22,15 @@ void item::set_type(std::string name)
   type = NULL;
 }
 
+void item::set_type(int index)
+{
+  if (index < 0 || index >= ITEMS_POOL.size()) {
+    type = NULL;
+    return;
+  }
+  type = ITEMS_POOL[index];
+}
+
 glyph item::get_symbol()
 {
   if (!type) {

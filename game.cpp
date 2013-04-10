@@ -1,4 +1,5 @@
 #include "game.h"
+#include "rng.h"
 #include "globals.h"
 
 void game::init()
@@ -16,6 +17,8 @@ void game::init()
   player.pos = point(80, 80);
   player.my_body = BODIES_POOL[ lookup_body_id("human") ];
   player.my_body.init();
+
+  messages_to_print = 0;
 }
 
 bool game::do_turn()
@@ -30,8 +33,11 @@ bool game::do_turn()
     case 'u': pl_move( 1, -1); break;
     case 'b': pl_move(-1,  1); break;
     case 'n': pl_move( 1,  1); break;
-    case 'i':
-      item
+    case 'i': {
+      item tmp;
+      tmp.set_type( rng(0, ITEMS_POOL.size() - 1) );
+      curMap.add_item( player.pos.x, player.pos.y, tmp);
+    } break;
     case 'q': return false;
   }
   curMap.process_transformations();
@@ -68,4 +74,15 @@ void game::pl_move(int dx, int dy)
     return;
   }
   player.pos = point(destx, desty);
+}
+
+void game::add_msg(std::string message)
+{
+  messages.push_back(message);
+  messages_to_print++;
+}
+
+void game::print_messages()
+{
+  
 }

@@ -65,7 +65,7 @@ struct submap
   tile tiles[SUBMAP_SIZE][SUBMAP_SIZE];
   tile nulltile;
 
-  item items[SUBMAP_SIZE][SUBMAP_SIZE];
+  std::vector<item> items[SUBMAP_SIZE][SUBMAP_SIZE];
   std::vector<int> unprocessed_transformations;
 };
 
@@ -85,7 +85,7 @@ class map
 
 // Accessors
   tile& ter(int x, int y);
-  item& item_at(int x, int y);
+  std::vector<item>& items_at(int x, int y);
   void draw(Window *w, int origx, int origy, int sight_dist, glyph orig_glyph);
   bool sees(int Fx, int Fy, int Tx, int Ty, int range, int *tc = NULL);
 
@@ -95,6 +95,7 @@ class map
   void resize(int x, int y);
   void apply_transformation(int x, int y, transform_type type, int amount);
   void process_transformations();
+
   void add_item(int x, int y, item it);
 
  private:
@@ -102,6 +103,7 @@ class map
   
   bool bounded;
   tile nulltile;
+  std::vector<item> nullitems;
 };
 
 #endif

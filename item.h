@@ -10,6 +10,7 @@ struct item
   ~item();
 
   void set_type(std::string name);
+  void set_type(int index);
 
   glyph get_symbol();
 
