@@ -33,16 +33,11 @@ bool game::do_turn()
     case 'u': pl_move( 1, -1); break;
     case 'b': pl_move(-1,  1); break;
     case 'n': pl_move( 1,  1); break;
-<<<<<<< HEAD:game.cpp
     case 'i': {
       item tmp;
       tmp.set_type( rng(0, ITEMS_POOL.size() - 1) );
       curMap.add_item( player.pos.x, player.pos.y, tmp);
     } break;
-=======
-    case 'i':
-      //item
->>>>>>> 2efa22bff7c63dbbe52deca64bb4645d71f7a238:game.cpp
     case 'q': return false;
   }
   curMap.process_transformations();
