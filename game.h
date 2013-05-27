@@ -4,7 +4,7 @@
 #include "entity.h"
 #include "item.h"
 #include "map.h"
-#include "interface.h"
+#include "cuss.h"
 
 class game
 {
