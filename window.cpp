@@ -10,6 +10,8 @@ bool parse_color_tags(std::string text, std::vector<std::string> &segments,
                       std::vector<long> &color_pairs, nc_color fg = c_white,
                       nc_color bg = c_black);
 
+std::list<Window*> WINDOWLIST;
+
 Window::Window()
 {
  w = newwin(0, 0, 0, 0);

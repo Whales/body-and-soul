@@ -145,11 +145,16 @@ while (!really_done) {
        sel->posx = 0;
       if (sel->posx + sel->sizex - 1 >= sizex)
        sel->posx = sizex - sel->sizex;
+      if (sel->posx + sel->sizex - 1 >= edited.sizex)
+       sel->posx = edited.sizex - sel->sizex;
+
       sel->posy += movey;
       if (sel->posy < 0)
        sel->posy = 0;
       if (sel->posy + sel->sizey - 1 >= sizey)
        sel->posy = sizey - sel->sizey;
+      if (sel->posy + sel->sizey - 1 >= edited.sizey)
+       sel->posy = edited.sizey - sel->sizey;
 
      } else if (dm == DM_RESIZE_ELE && sel) {
       sel->sizex += movex;
@@ -157,19 +162,26 @@ while (!really_done) {
        sel->sizex = 1;
       if (sel->posx + sel->sizex - 1 >= sizex)
        sel->sizex = sizex - sel->posx;
+      if (sel->posx + sel->sizex - 1 >= edited.sizex)
+       sel->sizex = edited.sizex - sel->posx;
+
       sel->sizey += movey;
       if (sel->sizey < 1)
        sel->sizey = 1;
       if (sel->posy + sel->sizey - 1 >= sizey)
        sel->sizey = sizey - sel->posy;
+      if (sel->posy + sel->sizey - 1 >= edited.sizey)
+       sel->sizey = edited.sizey - sel->posy;
 
      } else { // Normal cursor movement
       posx += movex;
       if (posx < 0) posx = 0;
       if (posx >= sizex) posx = sizex - 1;
+      if (posx >= edited.sizex) posx = edited.sizex - 1;
       posy += movey;
       if (posy < 0) posy = 0;
       if (posy >= sizey) posy = sizey - 1;
+      if (posy >= edited.sizey) posy = edited.sizey - 1;
      }
 
     } else if (ch == 'g') {
@@ -447,6 +459,8 @@ bool starting_window(interface &edited)
     filename << "cuss/" << selname;
     selected.load_from_file(filename.str());
     i_start.set_data("list_elements", selected.element_names());
+    i_start.set_data("num_x", selected.sizex);
+    i_start.set_data("num_y", selected.sizey);
    }
   }
   if (ch == 'l' || ch == 'L' || ch == '\n') {

@@ -3,6 +3,7 @@
 
 #include <curses.h>
 #include <vector>
+#include <list>
 #include "glyph.h"
 
 //      LINE_NESW  - X for on, O for off
@@ -19,6 +20,7 @@
 #define LINE_XXXX 4194414
 
 #define KEY_ESC 27
+
 
 enum Window_type
 {
@@ -97,5 +99,7 @@ class Window
   Window_type type;
   int xdim, ydim;
 };
+
+extern std::list<Window*> WINDOWLIST;
 
 #endif

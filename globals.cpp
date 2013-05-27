@@ -19,8 +19,6 @@ std::vector<element> ELEMENTS_POOL;
 std::vector<item_type*> ITEMS_POOL;
 std::vector< std::vector<mapgen_spec*> > MAPGEN_POOL;
 
-std::list<Window*> WINDOWLIST;
-
 void init_environment()
 {
  #if (defined _WIN32 || defined WINDOWS || defined __WIN32__)
