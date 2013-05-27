@@ -1,4 +1,4 @@
-#include "interface.h"
+#include "cuss.h"
 #include "stringfunc.h"
 #include <sstream>
 #include <fstream>
